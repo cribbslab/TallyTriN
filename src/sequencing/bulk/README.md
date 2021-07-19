@@ -1,5 +1,7 @@
 # simulate
 
+## download cdna lib at http://ftp.ensembl.org/pub/release-104/fasta/homo_sapiens/cdna/Homo_sapiens.GRCh38.cdna.all.fa.gz
+
 ## define the data path
 ```html
 DEFINE = {

@@ -1,6 +1,8 @@
 from src.util.sequence.convert.ManyToSingle import manyToSingle as sm2s
 from src.sequencing.bulk.reads.simulate.Native import native as simunat
 
+# download cdna lib at http://ftp.ensembl.org/pub/release-104/fasta/homo_sapiens/cdna/Homo_sapiens.GRCh38.cdna.all.fa.gz
+
 # define the data path
 DEFINE = {
     'fasta_fpn': 'data/omics/genomics/fasta/cdna/GRCh38/Homo_sapiens.GRCh38.cdna.all.fa',
