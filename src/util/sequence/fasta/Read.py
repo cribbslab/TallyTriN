@@ -4,19 +4,20 @@ __license__ = "GPL v3.0"
 __lab__ = "Adam Cribbs lab"
 
 import os, sys
-dis = os.path.abspath("../../../")
+dis = os.path.abspath("../../../../")
 print(dis)
 sys.path.append(dis)
 from Bio import SeqIO
-from Path import to
+from src.sequencing.reads.umi.Library import library as liblogginger
 
 
-class fasta(object):
+class read(object):
 
     def __init__(self):
         pass
 
-    def get(self, fasta_path, fasta_name):
+    @liblogginger()
+    def seqIO(self, fasta_path, fasta_name, lib_fpn='./seq.txt', is_sv=True):
         sequence = []
         for seq in SeqIO.parse(fasta_path + fasta_name + '.fasta', "fasta"):
             # print(seq.seq)
@@ -39,7 +40,8 @@ class fasta(object):
 
 
 if __name__ == "__main__":
-    p = fasta()
+    p = read()
+    from Path import to
     offset = '../' * 7
     print(offset)
     print(p.get(

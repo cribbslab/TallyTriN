@@ -17,6 +17,13 @@ class design(seqpseudo):
     @liblogginger()
     def general(self, **kwargs):
         return ''.join([
+            self.kwargs['dna_map'][i] for i in
+            self.kwargs['pseudorandom_num']
+        ])
+
+    @liblogginger()
+    def reoccur(self, **kwargs):
+        return ''.join([
             self.kwargs['dna_map'][i] * self.kwargs['umi_unit_pattern'] for i in
             self.kwargs['pseudorandom_num']
         ])

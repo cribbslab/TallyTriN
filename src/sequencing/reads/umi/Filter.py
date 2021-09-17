@@ -9,13 +9,29 @@ import pandas as pd
 from collections import Counter
 
 
-class extract(object):
+class filter(object):
 
-    def __init__(self, *args):
-        self.args = args[0]
-        self.rfastq = rfastq
+    def __init__(self, ):
+        pass
 
-    def filter(self, x, rule):
+    def method(self, ):
+        return {
+            'single_start': self.singleStart,
+            'paired': self.paired,
+        }
+
+    def singleStart(self, x, start, end):
+        return x[start: end]
+        # len_dict = {}
+        # for key, val in start_len.items():
+        #     len_dict[key] = 0
+        #     for j in val:
+        #         len_dict[key] += self.read_summary[j]['len']
+        # print(len_dict)
+        # # return x[b_len: b_len+self.read_summary['umi']['len']]
+        # # return x[a_len: a_len+self.args['umi']['len']]
+
+    def paired(self, x, rule):
         a_len = 0
         b_len = 0
         for j in rule[0]:
@@ -25,32 +41,18 @@ class extract(object):
         return x[b_len: b_len+self.args['umi']['len']]
         # return x[a_len: a_len+self.args['umi']['len']]
 
-    def cus(self):
-        print('reading...')
-        seqs = self.rfastq().fromgz(
-            fastq_path=self.args['fastq']['path'],
-            fastq_name=self.args['fastq']['name'],
-        )
-        df_seq = pd.DataFrame(seqs)
-        dd = self.args['seq_struct'].split('*')
-        umi_pos = [i for i, d in enumerate(dd) if d == 'umi']
-        rule = []
-        if len(umi_pos) != 1:
-            rule.append(dd[:umi_pos[0]])
-            rule.append(dd[umi_pos[1]+1:])
-        else:
-            rule.append(dd[:umi_pos[0]])
-        umis = df_seq.apply(lambda x: self.filter(x[0], rule), axis=1)
-        return umis
-
 
 if __name__ == "__main__":
     DEFINE = {
         'umi': {
-            'len': 36,
+            'len': 12,
         },
+        # 'seq_struct': 'umi*seq',
         'seq_struct': 'primer*umi*seq*umi*primer',
         'primer': {
+            'len': 20,
+        },
+        'seq': {
             'len': 20,
         },
         'fastq': {
@@ -58,7 +60,7 @@ if __name__ == "__main__":
             'name': 'simu',
         },
     }
-    p = extract(DEFINE)
+    p = filter(DEFINE)
 
     umis = p.cus()
 

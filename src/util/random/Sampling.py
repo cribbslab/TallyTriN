@@ -26,14 +26,14 @@ class sampling(object):
         def switch(dself, *args, **kwargs):
             # print(args)
             # print(kwargs)
-            print('sampling...')
+            print('------>sampling...')
             res2p = deal(dself, **kwargs)
             # print(res2p)
             res2p['data_spl'] = compiler(
                 data=res2p['data'],
-                num=res2p['num'],
-                use_seed=res2p['use_seed'],
-                seed=res2p['seed'],
+                num=res2p['ipcr_num'],
+                # use_seed=res2p['use_seed'],
+                # seed=res2p['seed'],
                 # replace=res2p['replace'],
             )
             # print(res2p['data'])

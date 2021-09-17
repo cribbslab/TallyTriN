@@ -3,7 +3,7 @@ __copyright__ = "Copyright 2021"
 __license__ = "GPL v3.0"
 __author__ = "Adam Cribbs lab"
 
-from src.sequencing.reads.umi.Extract import extract as umiextr
+from src.sequencing.reads.umi.trim.Template import template as umitrim
 from Path import to
 from src.util.file.read.Reader import reader as gfreader
 from collections import Counter
@@ -13,11 +13,11 @@ class reoccurence(object):
 
     def __init__(self, *args):
         self.args = args[0]
-        self.umiextr = umiextr
+        self.umitrim = umitrim
         self.gfreader = gfreader()
 
     def pinrun(self, ):
-        umis = self.umiextr(self.args).cus()
+        umis = self.umitrim(self.args).cus()
         # print(umis.unique().tolist())
         umi_lib = self.gfreader.generic(df_fpn=self.args['umi']['lib_path'])[0].tolist()
         umi_diff = list(set(umis).difference(umi_lib))

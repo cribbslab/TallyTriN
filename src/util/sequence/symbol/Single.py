@@ -58,9 +58,9 @@ class single(object):
     def getLisTrimmed(self, lis_loo=[], gap=False, universal=False):
         return self._get(gap=gap, universal=universal)
 
-    def todict(self, bases, reverse=False):
+    def todict(self, nucleotides, reverse=False):
         aa_dict = {}
-        for k, v in enumerate(bases):
+        for k, v in enumerate(nucleotides):
             aa_dict[v] = k
         if reverse:
             aa_dict = {v: k for k, v in aa_dict.items()}

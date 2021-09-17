@@ -3,6 +3,7 @@ __copyright__ = "Copyright 2021"
 __license__ = "GPL v3.0"
 __author__ = "Adam Cribbs lab"
 
+import time
 import pandas as pd
 from src.util.random.Number import number as rannum
 from src.util.sequence.symbol.Single import single as dnasgl
@@ -19,44 +20,84 @@ class error(object):
             func = self.tomap
         @wraps(deal)
         def indexing(ph, *args, **kwargs):
-            print('indexing...')
+            print('--->sequencing...')
             res2p = deal(ph, **kwargs)
             # print(func(res2p))
             return func(res2p)
         return indexing
 
     def tomap(self, res2p):
-        data = pd.DataFrame(res2p['data'], columns=['read', 'sam_id', 'source'])
-        df_read_len = data['read'].apply(lambda x: len(x))
-        data['read'] = data.apply(lambda x: list(x['read']), axis=1)
-        print(data.shape)
-        # print(data)
-        num_bases = df_read_len.sum()
-        # print(num_bases)
-        seq_err_num = rannum().binomial(n=num_bases, p=res2p['seq_error'], use_seed=True, seed=1)
-        # print(seq_err_num)
-        err_lin_ids = rannum().uniform(low=0, high=num_bases, num=seq_err_num, use_seed=True, seed=1)
+        """
+
+        :param res2p:
+        :return:
+        """
+        # print(res2p.keys())
+        seq_stime = time.time()
+        data_seq = pd.DataFrame(res2p['data'], columns=['read', 'sam_id', 'source'])
+        print('------>{} reads to be sequenced'.format(data_seq.shape[0]))
+        print('------>constructing the position table starts...')
+        pcr_postable_stime = time.time()
+        seq_ids = []
+        seq_pos_ids = []
+        data_seq.apply(lambda x: self.postable(x, seq_ids, seq_pos_ids), axis=1)
+        pos_table = {'seq_ids': seq_ids, 'seq_pos_ids': seq_pos_ids}
+        pcr_postable_etime = time.time()
+        print('------>time for constructing the position table  {time:.3f}s'.format(time=pcr_postable_etime - pcr_postable_stime))
+        seq_nt_num = len(seq_ids)
+        data_seq['read'] = data_seq.apply(lambda x: list(x['read']), axis=1)
+        print('------>determining PCR error numbers starts...')
+        seq_err_num_simu_stime = time.time()
+        if res2p['err_num_met'] == 'bionom':
+            seq_err_num = rannum().binomial(n=seq_nt_num, p=res2p['seq_error'], use_seed=True, seed=1)
+        elif res2p['err_num_met'] == 'nbionom':
+            seq_err_num = rannum().nbinomial(
+                n=seq_nt_num * (1 - res2p['seq_error']),
+                p=1 - res2p['seq_error'],
+                use_seed=True,
+                seed=1
+            )
+        else:
+            seq_err_num = rannum().binomial(n=seq_nt_num, p=res2p['seq_error'], use_seed=True, seed=1)
+        print('------>{} nucleotides to be erroneous in sequencing'.format(seq_err_num))
+        err_lin_ids = rannum().uniform(low=0, high=seq_nt_num, num=seq_err_num, use_seed=True, seed=1)
         # print(err_lin_ids)
-        err_arr2d_pos = self.epos(err_lin_ids=err_lin_ids, t=df_read_len.tolist())
-        print('err len: ', len(err_arr2d_pos))
-        pseudo_nums = rannum().uniform(low=0, high=3, num=seq_err_num, use_seed=True, seed=1)
+        arr_err_pos = []# [[row1, col1], [row2, col2], ...]
+        for i in err_lin_ids:
+            arr_err_pos.append([pos_table['seq_ids'][i], pos_table['seq_pos_ids'][i]])
+        pseudo_nums = rannum().uniform(low=0, high=3, num=seq_err_num, use_seed=False)
         # print(pseudo_nums)
-        for pos_err, pseudo_num in zip(err_arr2d_pos, pseudo_nums):
-            pcr_err_base = data.loc[pos_err[0], 'read'][pos_err[1]]
+        seq_err_num_simu_etime = time.time()
+        print('------>time for determining sequencing error numbers  {time:.3f}s'.format(time=seq_err_num_simu_etime - seq_err_num_simu_stime))
+        print('------>assigning sequencing errors starts...')
+        seq_err_assign_stime = time.time()
+        for pos_err, pseudo_num in zip(arr_err_pos, pseudo_nums):
+            pcr_err_base = data_seq.loc[pos_err[0], 'read'][pos_err[1]]
             dna_map = dnasgl().todict(
-                bases=dnasgl().getEleTrimmed(
+                nucleotides=dnasgl().getEleTrimmed(
                     ele_loo=pcr_err_base,
                     universal=True,
                 ),
                 reverse=True,
             )
-            # print('before', data.loc[pos_err[0], 'read'][pos_err[1]])
-            data.loc[pos_err[0], 'read'][pos_err[1]] = dna_map[pseudo_num]
-            # print('after', data.loc[pos_err[0], 'read'][pos_err[1]])
-        data['read'] = data.apply(lambda x: ''.join(x['read']), axis=1)
-        res2p['data'] = data.values
-        print(res2p['data'].shape)
+            # print('before', data_seq.loc[pos_err[0], 'read'][pos_err[1]])
+            data_seq.loc[pos_err[0], 'read'][pos_err[1]] = dna_map[pseudo_num]
+            # print('after', data_seq.loc[pos_err[0], 'read'][pos_err[1]])
+        seq_err_assign_etime = time.time()
+        print('------>time for assigning sequencing errors {time:.2f}s'.format(time=seq_err_assign_etime - seq_err_assign_stime))
+        data_seq['read'] = data_seq.apply(lambda x: ''.join(x['read']), axis=1)
+        res2p['data'] = data_seq.values
+        seq_etime = time.time()
+        print('------>sequencing time: {}'.format(seq_etime - seq_stime))
         return res2p
+
+    def postable(self, x, ids, pos_ids):
+        l = len(x['read'])
+        for i in range(l):
+            pos_ids.append(i)
+        for i in [x.name] * l:
+            ids.append(i)
+        return ids, pos_ids
 
     def epos(self, err_lin_ids, t):
         pos_err = []

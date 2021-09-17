@@ -22,12 +22,12 @@ class number(object):
             pass
         @wraps(deal)
         def switch(ph, *args, **kwargs):
-            print('numbering...')
+            print('------>numbering...')
             # print(kwargs)
             res = deal(ph, **kwargs)
-            res['num'] = distrib(
+            res['ipcr_num'] = distrib(
                 n=len(res['data']),
-                p=res['p'],
+                p=res['ampl_rate'],
             )
             # print(res)
             return res
@@ -42,6 +42,27 @@ class number(object):
             )
         else:
             return np.random.binomial(
+                n,
+                p,
+            )
+
+    def nbinomial(self, n, p, use_seed=True, seed=1):
+        """
+
+        :param n: the number of success to be expected, better, n = the total number of trails * p
+        :param p: the prob of success
+        :param use_seed:
+        :param seed:
+        :return:
+        """
+        if use_seed:
+            state = np.random.RandomState(seed)
+            return state.negative_binomial(
+                n,
+                p,
+            )
+        else:
+            return np.random.negative_binomial(
                 n,
                 p,
             )

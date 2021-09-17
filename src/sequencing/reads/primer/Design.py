@@ -4,6 +4,7 @@ __license__ = "GPL v3.0"
 __lab__ = "Adam Cribbs lab"
 
 from src.sequencing.reads.simulate.inf.Pseudo import pseudo as seqpseudo
+from src.sequencing.reads.umi.Library import library as liblogginger
 
 
 class design(seqpseudo):
@@ -13,8 +14,14 @@ class design(seqpseudo):
         self.args = args
         self.kwargs = kwargs
 
-    def general(self, primer_lib_fpn='./primer.txt'):
+    @liblogginger()
+    def general(self, lib_fpn='./primer.txt', is_sv=True):
         return ''.join([
             self.kwargs['dna_map'][i] for i in
             self.kwargs['pseudorandom_num']
         ])
+
+    @liblogginger()
+    def tsoatdbio(self, lib_fpn='./primer.txt', is_sv=True):
+        return 'AAGCAGTGGTATCAACGCAGAGTAC'
+        # return 'AAGCAGTGGTATCAACGCAGAGTGAAT'

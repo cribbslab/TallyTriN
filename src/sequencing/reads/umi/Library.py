@@ -17,7 +17,8 @@ class library(object):
         @wraps(deal)
         def build(ph, *args, **kwargs):
             res = deal(ph, **kwargs)
-            with open(kwargs['umi_lib_fpn'], 'a') as file:
-                file.write(res + "\n")
+            if kwargs['is_sv'] is True:
+                with open(kwargs['lib_fpn'], 'a') as file:
+                    file.write(res + "\n")
             return res
         return build

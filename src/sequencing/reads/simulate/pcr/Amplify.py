@@ -18,15 +18,17 @@ class amplify(object):
         import numpy as np
         std_flow_params = {
             'data': np.array(self.pcr_params['init_seqs']),
-            'p': self.pcr_params['ampl_rate'],
+            'ampl_rate': self.pcr_params['ampl_rate'],
             'pcr_error': self.pcr_params['pcr_error'],
+            'err_num_met': self.pcr_params['err_num_met'],
             'use_seed': self.pcr_params['use_seed'],
             'seed': self.pcr_params['seed'],
-            'recorder_num_bases': [],
-            'recorder_num_pcr_errs': [],
-            'recorder_num_pcr_reads': [],
+            'recorder_nucleotide_num': [],
+            'recorder_pcr_err_num': [],
+            'recorder_pcr_read_num': [],
         }
-        for ipcr in range(self.pcr_params['num_pcr']):
+        for ipcr in range(self.pcr_params['pcr_num']):
+            print('--->at PCR {}'.format(ipcr+1))
             std_flow_params['ipcr'] = ipcr
             std_flow_params = self.flow(params=std_flow_params)
             # print(std_flow_params.keys())
@@ -38,7 +40,3 @@ class amplify(object):
     @ranord(method='uniform')
     def flow(self, params):
         return params
-
-    # @errroller(method='uniform')
-    # def splUniform(self, data):
-    #     return data
