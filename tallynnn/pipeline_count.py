@@ -62,26 +62,11 @@ SEQUENCESUFFIXES = ("*.fastq.gz")
 FASTQTARGET = tuple([os.path.join("data.dir/", suffix_name)
                        for suffix_name in SEQUENCESUFFIXES])
 
-@collate(FASTQTARGET,
+@transform(FASTQTARGET,
          regex("data.dir/(\S+).fastq.gz"),
-         r"\1_filtered.fastq.gz")
-def filter_fastq(infile, outfile):
-    '''filter each fastq so that the length of each read is less than 300 bp'''
-
-    with pysam.FastxFile(str(infile[0])) as fh:
-        outfile = iotools.open_file(outfile, "w")
-
-        for record in fh:
-            if len(record.sequence) < 300:
-                pass
-            else:
-                outfile.write("@%s\n%s\n+\n%s\n" % (record.name, record.sequence, record.quality))
-
-
-@transform(filter_fastq,
-         regex("(\S+)_filtered.fastq.gz"),
          r"\1_polyA.fastq.gz")
 def polya_correct(infile, outfile):
+    '''filter less than 300 bp reads and then make sure polyA is in correct orientation'''
 
     PYTHON_ROOT = os.path.join(os.path.dirname(__file__), "python/")
 
@@ -89,7 +74,33 @@ def polya_correct(infile, outfile):
 
     P.run(statement)
 
-@follows(filter_fastq)
+@transform(polya_correct,
+         regex("(\S+)_polyA.fastq.gz"),
+         r"\1_tso_UMI.fastq.gz")
+def tso_umi(infile, outfile):
+    '''Identify the tso umi for each read'''
+
+    PYTHON_ROOT = os.path.join(os.path.dirname(__file__), "python/")
+
+    statement = '''python %(PYTHON_ROOT)s/tso_umi.py --infile=%(infile)s --outname=%(outfile)s'''
+
+    P.run(statement)
+
+
+@transform(tso_umi,
+         regex("(\S+)_tso_UMI.fastq.gz"),
+         r"\1_tso_polya_UMI.fastq.gz")
+def polya_umi(infile, outfile):
+    '''Identify the polya umi for each read'''
+
+    PYTHON_ROOT = os.path.join(os.path.dirname(__file__), "python/")
+
+    statement = '''python %(PYTHON_ROOT)s/polya_umi.py --infile=%(infile)s --outname=%(outfile)s'''
+
+    P.run(statement)
+
+
+@follows(polya_correct)
 def full():
     pass
 

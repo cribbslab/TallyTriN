@@ -12,7 +12,7 @@ import argparse
 # ########################################################################### #
 
 logging.basicConfig(stream=sys.stdout, level=logging.DEBUG)
-L = logging.getLogger("complement_ployA.py")
+L = logging.getLogger("polya_umi.py")
 
 # ########################################################################### #
 # ######################## Parse the arguments ############################## #
@@ -35,41 +35,38 @@ print(args)
 # ######################## Code                ############################## #
 # ########################################################################### #
 
-
-tab = str.maketrans("ACTG", "TGAC")
-
-def reverse_complement_table(seq):
-    return seq.translate(tab)[::-1]
-
-
 outfile = iotools.open_file(args.outname, "w")
-log =  iotools.open_file(args.outname + ".log","w")
+
 n = 0
 y = 0
 with pysam.FastxFile(args.infile) as fh:
     
     for record in fh:
-        y +=1
-        if len(record.sequence) < 300:
-            pass
-        else:
-            seq = record.sequence[50:300]
-            m=regex.findall("(TTTTTTTTTTTTTTTTTTTT){e<=3}", str(seq))
-            if m:
-                n +=1
-                sequence = reverse_complement_table(str(record.sequence))
-                outfile.write("@%s\n%s\n+\n%s\n" % (record.name, sequence, record.quality))
-            else:
-                seq = record.sequence[-30:-200:]
-                m=regex.findall("(AAAAAAAAAAAAAAAAAAAA){e<=3}", str(seq))
-                if m:
-                    n +=1
-                    outfile.write("@%s\n%s\n+\n%s\n" % (record.name, record.sequence, record.quality))
+        n += 1
+        seq_nano = record.sequence
         
+        m=regex.finditer("(GTACTCTGCGTTGATACCACTGCTT){e<=3}", str(record.sequence))
+        
+        for i in m:
+            after_polya = seq_nano[i.start()-18:]
+            umi_polya = seq_nano[i.start()-18:i.start()]
+            after_umi = seq_nano[:i.start()-18]
+            # if want the polya umi uncomment
+            #record_new = record.name + "_" + str(umi_polya)
+            record_new = record.name
+            
+            quality_afterumipolya = record.quality[:i.start()-36]
+            seq_afterumipolya = seq_nano[:i.start()-36]
+            
+            if len(umi_polya) == 18:
+                y += 1
+                outfile.write("@%s\n%s\n+\n%s\n" % (record_new, seq_afterumipolya, quality_afterumipolya))
+            else:
+                pass
 
-log.write("The number of total reads with polyA: %s\n" %(n))
-log.write("The number of total reads is: %s\n" %(y))
-log.write("The number of total recovered percent is: %s\n" %((n/y)*100))
+log.write("The number of total reads: %s\n" %(n))
+log.write("The number of total reads with a polyA UMI: %s\n" %(y))
+log.write("The number of total recovered percent is: %s\n" %((y/n)*100))
 
 log.close()
 outfile.close()
