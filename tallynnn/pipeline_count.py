@@ -125,7 +125,31 @@ def samtools(infile, outfile):
     P.run(statement)
 
 
-@follows(polya_correct)
+@transform(samtools,
+           regex("(\S+)_final_sorted.bam"),
+           "\1_XT.bam")
+def xt_tag(infile, outfile):
+    '''add XT tag to the samfile'''
+
+    PYTHON_ROOT = os.path.join(os.path.dirname(__file__), "python/")
+
+    statement = '''python %(PYTHON_ROOT)s/add_XT.py --infile=%(infile)s --outname=%(outfile)s && samtools index %(outfile)s'''
+
+    P.run(statement)
+
+    
+@transform(xt_tag,
+           regex("(\S+)_XT.bam"),
+           "\1.counts.tsv.gz")
+def count_trans(infile, outfile):
+    '''Use umi-tools to collapse UMIs and generate counts table'''
+
+    statement = '''umi_tools count --per-gene --gene-tag=XT -I %(infile)s -S %(outfile)s'''
+
+    P.run(statement)
+
+
+@follows(count_trans)
 def full():
     pass
 
