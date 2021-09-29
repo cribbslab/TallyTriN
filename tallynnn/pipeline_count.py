@@ -100,6 +100,31 @@ def polya_umi(infile, outfile):
     P.run(statement)
 
 
+@transform(polya_umi,
+           regex("(\S+)_tso_polya_UMI.fastq.gz"),
+           "\1.sam")
+def mapping_trans(infile, outfile):
+    '''map using minimap2 for the transcripts'''
+
+    statement = '''minimap2 -ax map-ont -p 0.9 --end-bonus 10 -N 3 %(cdna_fasta)s %(infile)s'''
+
+    P.run(statement)
+
+@transform(mapping_trans,
+           regex("(\S+).sam"),
+           "\1_final_sorted.bam")
+def samtools(infile, outfile):
+    '''run samtools on the output and index'''
+
+    name = outfile.replace("_sorted.bam", "")
+
+    statement = '''samtools view -bS %(infile)s > %(name)_final.bam && 
+                   samtools sort %(name)_final.bam -o %(name)_final_sorted.bam && 
+                   samtools index %(name)_final_sorted.bam '''
+
+    P.run(statement)
+
+
 @follows(polya_correct)
 def full():
     pass

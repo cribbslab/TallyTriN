@@ -36,6 +36,7 @@ print(args)
 # ########################################################################### #
 
 outfile = iotools.open_file(args.outname, "w")
+log =  iotools.open_file(args.outname + ".log","w")
 
 n = 0
 y = 0
