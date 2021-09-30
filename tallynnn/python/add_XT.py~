@@ -35,19 +35,19 @@ print(args)
 # ######################## Code                ############################## #
 # ########################################################################### #
 
-samfile = pysam.AlignmentFile(args.infile, "rb")
-outfile = pysam.AlignmentFile(args.outname, "wb", template=samfile)
+log =  iotools.open_file(args.outname + ".log","w")
 
-for read in samfile:
+bamfile = pysam.AlignmentFile(args.infile, "rb")
+split = pysam.AlignmentFile(args.outname, "wb", template=bamfile)
 
-    if read.reference_name is not None:
-        read.tags += [('XT',read.reference_name)]
-    
+for line in bamfile:
+    if line.has_tag("SA"):
+        split.write(line)
     else:
         pass
 
-    outfile.write(read)
+bamfile.close()
+split.close()
 
-samfile.close()
-outfile.close()
 
+log.close()

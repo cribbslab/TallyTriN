@@ -44,6 +44,7 @@ Code
 import sys
 import os
 import pysam
+import pandas as pd
 from ruffus import *
 import cgatcore.iotools as iotools
 import cgatcore.pipeline as P
@@ -61,6 +62,19 @@ SEQUENCESUFFIXES = ("*.fastq.gz")
 
 FASTQTARGET = tuple([os.path.join("data.dir/", suffix_name)
                        for suffix_name in SEQUENCESUFFIXES])
+
+
+def merge_feature_data(infiles):
+    '''will merge all of the input files'''
+
+    final_df = pd.DataFrame()
+    for infile in infiles:
+        name = infile.replace(".counts.tsv.gz", "")
+        tmp_df = pd.read_table(infile, sep="\t", header=0, names=["transcript_name", name], index_col=0)
+        final_df = final_df.merge(tmp_df, how="outer", left_index=True, right_index=True)
+
+    return final_df
+
 
 @transform(FASTQTARGET,
          regex("data.dir/(\S+).fastq.gz"),
@@ -95,39 +109,42 @@ def polya_umi(infile, outfile):
 
     PYTHON_ROOT = os.path.join(os.path.dirname(__file__), "python/")
 
-    statement = '''python %(PYTHON_ROOT)s/polya_umi.py --infile=%(infile)s --outname=%(outfile)s'''
+    # at the moment im not capturing both ends of the UMI only TSO
+    statement = '''cp %(infile)s %(outfile)s'''
+
+    #statement = '''python %(PYTHON_ROOT)s/polya_umi.py --infile=%(infile)s --outname=%(outfile)s'''
 
     P.run(statement)
 
 
 @transform(polya_umi,
            regex("(\S+)_tso_polya_UMI.fastq.gz"),
-           "\1.sam")
+           r"\1_tso_polya_UMI.sam")
 def mapping_trans(infile, outfile):
     '''map using minimap2 for the transcripts'''
 
-    statement = '''minimap2 -ax map-ont -p 0.9 --end-bonus 10 -N 3 %(cdna_fasta)s %(infile)s'''
+    statement = '''minimap2 -ax map-ont -p 0.9 --end-bonus 10 -N 3 %(cdna_fasta)s %(infile)s  > %(outfile)s 2> %(outfile)s.log'''
 
     P.run(statement)
 
 @transform(mapping_trans,
-           regex("(\S+).sam"),
-           "\1_final_sorted.bam")
+           regex("(\S+)_tso_polya_UMI.sam"),
+           r"\1_final_sorted.bam")
 def samtools(infile, outfile):
     '''run samtools on the output and index'''
 
-    name = outfile.replace("_sorted.bam", "")
+    name = outfile.replace("_final_sorted.bam", "")
 
-    statement = '''samtools view -bS %(infile)s > %(name)_final.bam && 
-                   samtools sort %(name)_final.bam -o %(name)_final_sorted.bam && 
-                   samtools index %(name)_final_sorted.bam '''
+    statement = '''samtools view -bS %(infile)s > %(name)s_final.bam && 
+                   samtools sort %(name)s_final.bam -o %(name)s_final_sorted.bam && 
+                   samtools index %(name)s_final_sorted.bam '''
 
     P.run(statement)
 
 
 @transform(samtools,
            regex("(\S+)_final_sorted.bam"),
-           "\1_XT.bam")
+           r"\1_XT.bam")
 def xt_tag(infile, outfile):
     '''add XT tag to the samfile'''
 
@@ -140,7 +157,7 @@ def xt_tag(infile, outfile):
     
 @transform(xt_tag,
            regex("(\S+)_XT.bam"),
-           "\1.counts.tsv.gz")
+           r"\1.counts.tsv.gz")
 def count_trans(infile, outfile):
     '''Use umi-tools to collapse UMIs and generate counts table'''
 
@@ -149,9 +166,36 @@ def count_trans(infile, outfile):
     P.run(statement)
 
 
-@follows(count_trans)
+@merge(count_trans, "counts.tsv.gz")
+def merge_count(infiles, outfile):
+    '''merge counts from ech sample into one'''
+
+    df = merge_feature_data(infiles)
+    df = df.fillna(0)
+    df.to_csv(outfile, sep="\t", compression="gzip")
+
+
+#############################
+## Gene level analysis ######
+#############################
+
+@transform(polya_umi,
+           regex("(\S+)_tso_polya_UMI.fastq.gz"),
+           r"\1_gene.sam")
+def mapping_gene(infile, outfile):
+    '''map using minimap2 for the geness'''
+
+    statement = '''minimap2 -ax splice --split-prefix=tmp -k 14 -uf --sam-hit-only --secondary=no --junc-bed hg38-mm10.bed hg38-mm10.fa %(infile)s > %(outfile)s '''
+
+    P.run(statement)
+
+
+
+
+@follows(merge_count)
 def full():
     pass
+
 
 def main(argv=None):
     if argv is None:
