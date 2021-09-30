@@ -185,14 +185,40 @@ def merge_count(infiles, outfile):
 def mapping_gene(infile, outfile):
     '''map using minimap2 for the geness'''
 
-    statement = '''minimap2 -ax splice --split-prefix=tmp -k 14 -uf --sam-hit-only --secondary=no --junc-bed hg38-mm10.bed hg38-mm10.fa %(infile)s > %(outfile)s '''
+    statement = '''minimap2 -ax splice --split-prefix=tmp -k 14 -uf --sam-hit-only --secondary=no --junc-bed %(junc_bed)s %(genome_fasta)s %(infile)s > %(outfile)s '''
+
+    P.run(statement, job_memory="50G")
+
+
+@transform(mapping_gene,
+           regex("(\S+)_gene.sam"),
+           r"\1_gene_sorted.bam")
+def samtools_sort(infile, outfile):
+    '''strip sequence and then sort the bam file'''
+
+    name = infile.replace("_gene.sam", "")
+
+    statement = '''cgat bam2bam --method=strip-sequence -L strip.log < %(infile)s > %(name)s_gene_strip.sam &&
+                   samtools view -bh %(name)s_gene_strip.sam > %(name)s_gene.bam &&
+                   samtools sort %(name)s_gene.bam -o %(name)s_gene_sorted.bam &&
+                   samtools index %(name)s_gene_sorted.bam'''
 
     P.run(statement)
 
 
+@transform(samtools_sort,
+           regex("(\S+)_gene_sorted.sam"),
+           r"\1_gene_sorted.bam.featureCounts.bam")
+def featurecounts(infile, outfile):
+    '''run featurecounts over the bam file'''
+
+    name = infile.replace("_gene_sorted.sam", "")
+    statement = '''featureCounts -a %(gtf)s -o gene_assigned -R BAM %(infile)s %(name)s_gene_sorted.bam.featureCounts.bam  '''
+
+    P.run(statement)
 
 
-@follows(merge_count)
+@follows(featurecounts)
 def full():
     pass
 
