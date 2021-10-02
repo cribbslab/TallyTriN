@@ -44,6 +44,7 @@ Code
 import sys
 import os
 import pysam
+import glob
 import pandas as pd
 from ruffus import *
 import cgatcore.iotools as iotools
@@ -73,6 +74,21 @@ def merge_feature_data(infiles):
         tmp_df = pd.read_table(infile, sep="\t", header=0, names=["transcript_name", name], index_col=0)
         final_df = final_df.merge(tmp_df, how="outer", left_index=True, right_index=True)
 
+    return final_df
+
+def merge_featurecounts_data(infiles):
+    '''will merge all of the input files from featurecounts count output'''
+
+    final_df = pd.DataFrame()
+    for infile in infiles:
+    
+        tmp_df = pd.read_table(infile, sep="\t", header=0, index_col=0, skiprows = 1)
+        tmp_df = tmp_df.iloc[:,-1:]
+        tmp_df.columns = ["count"]
+        final_df = final_df.merge(tmp_df, how="outer", left_index=True, right_index=True, suffixes=("","_drop"))
+
+    names = [x.replace("_gene_assigned.txt", "") for x in infiles]
+    final_df.columns = names
     return final_df
 
 
@@ -233,7 +249,7 @@ def featurecounts(infile, outfile):
     '''run featurecounts over the bam file'''
 
     name = infile.replace("_gene_sorted.bam", "")
-    statement = '''featureCounts -a %(gtf)s -o gene_assigned -R BAM %(infile)s &&
+    statement = '''featureCounts -a %(gtf)s -o %(name)s_gene_assigned.txt -R BAM %(infile)s &&
                    samtools sort %(infile)s.featureCounts.bam -o %(name)s_featurecounts_gene_sorted.bam &&
                    samtools index %(name)s_featurecounts_gene_sorted.bam'''
 
@@ -290,6 +306,23 @@ def merge_count_gene_unique(infiles, outfile):
 
     df = merge_feature_data(infiles)
     df = df.fillna(0)
+    df.to_csv(outfile, sep="\t", compression="gzip")
+
+
+########
+### analyse without UMI sequences
+#########
+
+@follows(featurecounts)
+@originate("counts_noumis.tsv.gz")
+def merge_featurecounts(outfile):
+    ''' '''
+
+    infiles = glob.glob("*_gene_assigned.txt")
+    final_df = merge_featurecounts_data(infiles)
+    names = [x.replace("_gene_assigned.txt", "") for x in infiles]
+    final_df.columns = names
+    df = final_df.fillna(0)
     df.to_csv(outfile, sep="\t", compression="gzip")
 
 
