@@ -314,7 +314,7 @@ def merge_count_gene_unique(infiles, outfile):
 #########
 
 @follows(featurecounts)
-@originate("counts_noumis.tsv.gz")
+@originate("counts_gene_noumis.tsv.gz")
 def merge_featurecounts(outfile):
     ''' '''
 
@@ -326,7 +326,7 @@ def merge_featurecounts(outfile):
     df.to_csv(outfile, sep="\t", compression="gzip")
 
 
-@follows(merge_count, merge_count_unique, merge_count_gene, merge_count_gene_unique)
+@follows(merge_count, merge_count_unique, merge_count_gene, merge_count_gene_unique, merge_featurecounts)
 def full():
     pass
 
