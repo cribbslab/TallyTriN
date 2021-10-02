@@ -166,8 +166,28 @@ def count_trans(infile, outfile):
     P.run(statement)
 
 
+@transform(xt_tag,
+           regex("(\S+)_XT.bam"),
+           r"\1.counts_unique.tsv.gz")
+def count_trans_unique(infile, outfile):
+    '''Use umi-tools to count over the umis'''
+
+    statement = '''umi_tools count --per-gene --method=unique --gene-tag=XT -I %(infile)s -S %(outfile)s'''
+
+    P.run(statement)
+
+
 @merge(count_trans, "counts.tsv.gz")
 def merge_count(infiles, outfile):
+    '''merge counts from ech sample into one'''
+
+    df = merge_feature_data(infiles)
+    df = df.fillna(0)
+    df.to_csv(outfile, sep="\t", compression="gzip")
+
+
+@merge(count_trans_unique, "counts_unique.tsv.gz")
+def merge_count_unique(infiles, outfile):
     '''merge counts from ech sample into one'''
 
     df = merge_feature_data(infiles)
@@ -185,9 +205,9 @@ def merge_count(infiles, outfile):
 def mapping_gene(infile, outfile):
     '''map using minimap2 for the geness'''
 
-    statement = '''minimap2 -ax splice --split-prefix=tmp -k 14 -uf --sam-hit-only --secondary=no --junc-bed %(junc_bed)s %(genome_fasta)s %(infile)s > %(outfile)s '''
+    statement = '''minimap2 -ax splice  -k 14 --sam-hit-only --secondary=no --junc-bed %(junc_bed)s %(genome_fasta)s %(infile)s > %(outfile)s  2> %(outfile)s.log'''
 
-    P.run(statement, job_memory="50G")
+    P.run(statement, job_memory="40G")
 
 
 @transform(mapping_gene,
@@ -207,18 +227,73 @@ def samtools_sort(infile, outfile):
 
 
 @transform(samtools_sort,
-           regex("(\S+)_gene_sorted.sam"),
-           r"\1_gene_sorted.bam.featureCounts.bam")
+           regex("(\S+)_gene_sorted.bam"),
+           r"\1_featurecounts_gene_sorted.bam")
 def featurecounts(infile, outfile):
     '''run featurecounts over the bam file'''
 
-    name = infile.replace("_gene_sorted.sam", "")
-    statement = '''featureCounts -a %(gtf)s -o gene_assigned -R BAM %(infile)s %(name)s_gene_sorted.bam.featureCounts.bam  '''
+    name = infile.replace("_gene_sorted.bam", "")
+    statement = '''featureCounts -a %(gtf)s -o gene_assigned -R BAM %(infile)s &&
+                   samtools sort %(infile)s.featureCounts.bam -o %(name)s_featurecounts_gene_sorted.bam &&
+                   samtools index %(name)s_featurecounts_gene_sorted.bam'''
 
     P.run(statement)
 
 
-@follows(featurecounts)
+@transform(featurecounts,
+           regex("(\S+)_featurecounts_gene_sorted.bam"),
+           r"\1_XT_gene.bam")
+def add_xt_gene(infile, outfile):
+    '''run featurecounts over the bam file'''
+
+    PYTHON_ROOT = os.path.join(os.path.dirname(__file__), "python/")
+
+    statement = '''python %(PYTHON_ROOT)s/add_XT.py --infile=%(infile)s --outname=%(outfile)s && samtools index %(outfile)s'''
+
+    P.run(statement)
+
+
+@transform(add_xt_gene,
+           regex("(\S+)_XT_gene.bam"),
+           r"\1.counts_gene.tsv.gz")
+def count_gene(infile, outfile):
+    '''Use umi-tools to collapse UMIs and generate counts table'''
+
+    statement = '''umi_tools count --per-gene --gene-tag=XT -I %(infile)s -S %(outfile)s'''
+
+    P.run(statement)
+
+
+@merge(count_gene, "counts_gene.tsv.gz")
+def merge_count_gene(infiles, outfile):
+    '''merge counts from ech sample into one'''
+
+    df = merge_feature_data(infiles)
+    df = df.fillna(0)
+    df.to_csv(outfile, sep="\t", compression="gzip")
+
+
+@transform(featurecounts,
+           regex("(\S+)_featurecounts_gene_sorted.bam"),
+           r"\1.count_gene_unique.tsv.gz")
+def count_gene_unique(infile, outfile):
+    '''Use umi-tools to collapse UMIs and generate counts table'''
+
+    statement = '''umi_tools count --per-gene --gene-tag=XT --method=unique -I %(infile)s -S %(outfile)s'''
+
+    P.run(statement)
+
+
+@merge(count_gene_unique, "gene_counts_unique.tsv.gz")
+def merge_count_gene_unique(infiles, outfile):
+    '''merge counts from ech sample into one'''
+
+    df = merge_feature_data(infiles)
+    df = df.fillna(0)
+    df.to_csv(outfile, sep="\t", compression="gzip")
+
+
+@follows(merge_count, merge_count_unique, merge_count_gene, merge_count_gene_unique)
 def full():
     pass
 
