@@ -28,9 +28,9 @@ class general(generalstarter):
                     'len': self.umi_unit_len_fixed * self.umi_unit_pattern,
                 },
                 'fastq': {
-                    'path': to('data/simu/umi/seq_errs/trimer/'),
+                    'path': to('data/simu/umi/seq_errs/monomer/'),
                     'name': 'seq_err_' + str(id),
-                    'trimmed_path': to('data/simu/umi/seq_errs/trimer/trimmed/'),
+                    'trimmed_path': to('data/simu/umi/seq_errs/monomer/trimmed/'),
                     'trimmed_name': 'seq_err_' + str(id),
                 },
             }

@@ -12,7 +12,7 @@ class umi(object):
 
     def __init__(self, ):
         self.umi_unit_len_fixed = 12
-        self.umi_unit_pattern = 3
+        self.umi_unit_pattern = 1
         self.pcr_errs, self.seq_errs = self.errors()
         print(self.pcr_errs)
         print(self.seq_errs)

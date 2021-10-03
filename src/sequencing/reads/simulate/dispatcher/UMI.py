@@ -90,12 +90,12 @@ if __name__ == "__main__":
     simu_params = {
         'init_seq_setting': {
             'seq_num': 1000,
-            'umi_unit_pattern': 2,
+            'umi_unit_pattern': 1,
             'umi_unit_len': umi_unit_len,
             'is_seed': True,
             'is_sv_umi_lib': True,
-            'working_dir': to('data/simu/umi/seq_errs/dimer/'),
-            'umi_lib_fpn': to('data/simu/umi/seq_errs/dimer/umi.txt'),
+            'working_dir': to('data/simu/umi/seq_errs/monomer/'),
+            'umi_lib_fpn': to('data/simu/umi/seq_errs/monomer/umi.txt'),
             'condis': ['umi'],
             'sim_thres': 3,
             'permutation': 1,
@@ -110,7 +110,7 @@ if __name__ == "__main__":
         'use_seed': False,
         'seed': None,
         'write': {
-            'fastq_fp': to('data/simu/umi/seq_errs/dimer/'),
+            'fastq_fp': to('data/simu/umi/seq_errs/monomer/'),
             'fastq_fn': '',
         }
     }
