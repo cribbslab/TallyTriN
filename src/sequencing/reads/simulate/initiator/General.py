@@ -1,6 +1,6 @@
 __version__ = "v1.0"
 __copyright__ = "Copyright 2021"
-__license__ = "GPL v3.0"
+__license__ = "MIT"
 __lab__ = "Adam Cribbs lab"
 
 import os, sys
@@ -18,7 +18,7 @@ from src.sequencing.reads.umi.Design import design as umi
 from src.sequencing.reads.seq.Design import design as seq
 
 
-class poolingGeneral(object):
+class general(object):
 
     def __init__(self, seq_num, is_seed=False, umi_unit_pattern=3, umi_unit_len=12, seq_len=20, is_sv_umi_lib=True, is_sv_seq_lib=True, umi_lib_fpn='./umi.txt', seq_lib_fpn='./seq.txt', working_dir='./simu/', permutation=0):
         self.pfreader = pfreader()
@@ -46,7 +46,7 @@ class poolingGeneral(object):
     def umi_len(self, ):
         return self.umi_unit_pattern * self.umi_unit_len
 
-    def generate(self, ):
+    def pooling(self, ):
         stime = time.time()
         seqs = [[self.paste(
             umi=self.umi(
@@ -84,7 +84,7 @@ if __name__ == "__main__":
         '': '',
     }
     # print(DEFINE['cand_pool_fpn'])
-    p = poolingGeneral(
+    p = general(
         seq_num=10,
         seq_len=20,
         umi_unit_pattern=1,
@@ -93,5 +93,5 @@ if __name__ == "__main__":
     )
 
     # print(p.umi_len)
-    res = p.generate()
+    res = p.pooling()
     print(res)

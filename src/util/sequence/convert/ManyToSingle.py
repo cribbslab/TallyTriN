@@ -1,6 +1,6 @@
 __version__ = "v1.0"
 __copyright__ = "Copyright 2021"
-__license__ = "GPL v3.0"
+__license__ = "MIT"
 __author__ = "Adam Cribbs lab"
 
 import re

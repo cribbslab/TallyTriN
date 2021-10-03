@@ -1,9 +1,10 @@
 __version__ = "v1.0"
 __copyright__ = "Copyright 2021"
-__license__ = "GPL v3.0"
+__license__ = "MIT"
 __author__ = "Adam Cribbs lab"
 
 import time
+import numpy as np
 import pandas as pd
 from src.util.random.Number import number as rannum
 from src.util.sequence.symbol.Single import single as dnasgl
@@ -16,8 +17,8 @@ class error(object):
 
     def __call__(self, deal):
         from functools import wraps
-        if self.method == 'tomap':
-            func = self.tomap
+        if self.method == 'default':
+            func = self.postable
         @wraps(deal)
         def indexing(ph, *args, **kwargs):
             print('--->sequencing...')
@@ -26,31 +27,32 @@ class error(object):
             return func(res2p)
         return indexing
 
-    def tomap(self, res2p):
-        """
-
-        :param res2p:
-        :return:
-        """
+    def postable(self, res2p, kind='index_by_same_len'):
         # print(res2p.keys())
         seq_stime = time.time()
-        data_seq = pd.DataFrame(res2p['data'], columns=['read', 'sam_id', 'source'])
+        data_seq = pd.DataFrame(res2p['data_spl'], columns=['read', 'sam_id', 'source'])
+        del res2p['data']
+        del res2p['data_spl']
         print('------>{} reads to be sequenced'.format(data_seq.shape[0]))
         print('------>constructing the position table starts...')
         pcr_postable_stime = time.time()
-        seq_ids = []
-        seq_pos_ids = []
-        data_seq.apply(lambda x: self.postable(x, seq_ids, seq_pos_ids), axis=1)
+        if kind == 'index_by_same_len':
+            seq_pos_ids, seq_ids = self.postableIndexBySameLen(seq_len=len(data_seq['read'][0]), num_seq=data_seq.shape[0])
+        elif kind == 'index_by_lambda':
+            seq_ids = []
+            seq_pos_ids = []
+            data_seq.apply(lambda x: self.postableLambda(x, seq_ids, seq_pos_ids), axis=1)
+        else:
+            seq_pos_ids, seq_ids = self.postableIndexBySameLen(seq_len=len(data_seq['read'][0]), num_seq=data_seq.shape[0])
         pos_table = {'seq_ids': seq_ids, 'seq_pos_ids': seq_pos_ids}
         pcr_postable_etime = time.time()
         print('------>time for constructing the position table  {time:.3f}s'.format(time=pcr_postable_etime - pcr_postable_stime))
         seq_nt_num = len(seq_ids)
-        data_seq['read'] = data_seq.apply(lambda x: list(x['read']), axis=1)
         print('------>determining PCR error numbers starts...')
         seq_err_num_simu_stime = time.time()
-        if res2p['err_num_met'] == 'bionom':
+        if res2p['err_num_met'] == 'binomial':
             seq_err_num = rannum().binomial(n=seq_nt_num, p=res2p['seq_error'], use_seed=True, seed=1)
-        elif res2p['err_num_met'] == 'nbionom':
+        elif res2p['err_num_met'] == 'nbinomial':
             seq_err_num = rannum().nbinomial(
                 n=seq_nt_num * (1 - res2p['seq_error']),
                 p=1 - res2p['seq_error'],
@@ -71,6 +73,7 @@ class error(object):
         print('------>time for determining sequencing error numbers  {time:.3f}s'.format(time=seq_err_num_simu_etime - seq_err_num_simu_stime))
         print('------>assigning sequencing errors starts...')
         seq_err_assign_stime = time.time()
+        data_seq['read'] = data_seq.apply(lambda x: list(x['read']), axis=1)
         for pos_err, pseudo_num in zip(arr_err_pos, pseudo_nums):
             pcr_err_base = data_seq.loc[pos_err[0], 'read'][pos_err[1]]
             dna_map = dnasgl().todict(
@@ -83,15 +86,24 @@ class error(object):
             # print('before', data_seq.loc[pos_err[0], 'read'][pos_err[1]])
             data_seq.loc[pos_err[0], 'read'][pos_err[1]] = dna_map[pseudo_num]
             # print('after', data_seq.loc[pos_err[0], 'read'][pos_err[1]])
+        del arr_err_pos
+        del pseudo_nums
         seq_err_assign_etime = time.time()
         print('------>time for assigning sequencing errors {time:.2f}s'.format(time=seq_err_assign_etime - seq_err_assign_stime))
         data_seq['read'] = data_seq.apply(lambda x: ''.join(x['read']), axis=1)
         res2p['data'] = data_seq.values
+        del data_seq
         seq_etime = time.time()
         print('------>sequencing time: {}'.format(seq_etime - seq_stime))
         return res2p
 
-    def postable(self, x, ids, pos_ids):
+    def postableIndexBySameLen(self, seq_len, num_seq):
+        nt_ids = [i for i in range(seq_len)]
+        seq_pos_ids = nt_ids * num_seq
+        seq_ids = np.array([[i] * seq_len for i in range(num_seq)]).ravel().tolist()
+        return seq_pos_ids, seq_ids
+
+    def postableLambda(self, x, ids, pos_ids):
         l = len(x['read'])
         for i in range(l):
             pos_ids.append(i)

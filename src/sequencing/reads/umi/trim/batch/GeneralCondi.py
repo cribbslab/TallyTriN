@@ -1,12 +1,12 @@
 __version__ = "v1.0"
 __copyright__ = "Copyright 2021"
-__license__ = "GPL v3.0"
+__license__ = "MIT"
 __lab__ = "Adam Cribbs lab"
 
 import numpy as np
 from Path import to
 from src.sequencing.reads.umi.trim.Template import template as umitrim
-from src.sequencing.reads.simulate.starter.batch.General import general as generalstarter
+from src.sequencing.reads.simulate.dispatcher.batch.General import general as generalstarter
 
 
 class general(generalstarter):

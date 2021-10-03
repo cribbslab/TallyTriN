@@ -1,6 +1,6 @@
 __version__ = "v1.0"
 __copyright__ = "Copyright 2021"
-__license__ = "GPL v3.0"
+__license__ = "MIT"
 __lab__ = "Adam Cribbs lab"
 
 import os, sys
@@ -16,7 +16,7 @@ class read(object):
     def __init__(self):
         pass
 
-    @liblogginger()
+    @liblogginger(method='default')
     def seqIO(self, fasta_path, fasta_name, lib_fpn='./seq.txt', is_sv=True):
         sequence = []
         for seq in SeqIO.parse(fasta_path + fasta_name + '.fasta', "fasta"):

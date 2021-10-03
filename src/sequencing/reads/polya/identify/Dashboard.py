@@ -1,3 +1,8 @@
+__version__ = "v1.0"
+__copyright__ = "Copyright 2021"
+__license__ = "MIT"
+__lab__ = "Adam Cribbs lab"
+
 import numpy as np
 import pandas as pd
 import matplotlib.pyplot as plt

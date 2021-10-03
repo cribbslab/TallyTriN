@@ -1,16 +1,16 @@
 __version__ = "v1.0"
 __copyright__ = "Copyright 2021"
-__license__ = "GPL v3.0"
+__license__ = "MIT"
 __lab__ = "Adam Cribbs lab"
 
-from src.sequencing.reads.simulate.Initiate.PoolingGeneralCondi import poolingGeneralCondi as simuip
+from src.sequencing.reads.simulate.initiator.General import general as simuip
 from src.sequencing.reads.simulate.pcr.Amplify import amplify as pcr
 from src.sequencing.reads.simulate.sequencing.Calling import calling as seq
 from src.util.sequence.fastq.Write import write as wfastq
 from Path import to
 
 
-class generalCondi(object):
+class general(object):
 
     def __init__(self, *args, **kwargs):
         self.args = args[0]
@@ -25,19 +25,14 @@ class generalCondi(object):
         init_seqs = simuip(
             seq_num=self.args['init_seq_setting']['seq_num'],
             seq_len=self.args['init_seq_setting']['seq_len'],
-            spacer_len=self.args['init_seq_setting']['spacer_len'],
             umi_unit_pattern=self.args['init_seq_setting']['umi_unit_pattern'],
             umi_unit_len=self.args['init_seq_setting']['umi_unit_len'],
             is_seed=self.args['init_seq_setting']['is_seed'],
             is_sv_umi_lib=self.args['init_seq_setting']['is_sv_umi_lib'],
-            is_sv_spacer_lib=self.args['init_seq_setting']['is_sv_spacer_lib'],
             is_sv_seq_lib=self.args['init_seq_setting']['is_sv_seq_lib'],
             umi_lib_fpn=self.args['init_seq_setting']['umi_lib_fpn'],
-            spacer_lib_fpn=self.args['init_seq_setting']['spacer_lib_fpn'],
             seq_lib_fpn=self.args['init_seq_setting']['seq_lib_fpn'],
             working_dir=self.args['init_seq_setting']['working_dir'],
-            condis=self.args['init_seq_setting']['condis'],
-            permutation=self.args['init_seq_setting']['permutation'],
         ).generate()
         self.args['init_seqs'] = init_seqs
         print('->Init pool of sequences has completed.')

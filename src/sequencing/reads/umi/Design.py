@@ -1,6 +1,6 @@
 __version__ = "v1.0"
 __copyright__ = "Copyright 2021"
-__license__ = "GPL v3.0"
+__license__ = "MIT"
 __lab__ = "Adam Cribbs lab"
 
 from src.sequencing.reads.umi.Library import library as liblogginger
@@ -14,16 +14,20 @@ class design(seqpseudo):
         self.args = args
         self.kwargs = kwargs
 
-    @liblogginger()
+    @liblogginger(method='default')
     def general(self, **kwargs):
         return ''.join([
             self.kwargs['dna_map'][i] for i in
             self.kwargs['pseudorandom_num']
         ])
 
-    @liblogginger()
+    @liblogginger(method='default')
     def reoccur(self, **kwargs):
         return ''.join([
             self.kwargs['dna_map'][i] * self.kwargs['umi_unit_pattern'] for i in
             self.kwargs['pseudorandom_num']
         ])
+
+    @liblogginger(method='separate')
+    def write(self, **kwargs):
+        return 'written'

@@ -1,6 +1,6 @@
 __version__ = "v1.0"
 __copyright__ = "Copyright 2021"
-__license__ = "GPL v3.0"
+__license__ = "MIT"
 __lab__ = "Adam Cribbs lab"
 
 import time
@@ -19,7 +19,7 @@ from src.sequencing.reads.umi.deduplicate.monomer.Directional import directional
 from src.sequencing.reads.umi.deduplicate.monomer.MarkovClustering import markovClustering as umimonomcl
 from src.sequencing.reads.umi.deduplicate.monomer.DBSCAN import dbscan as dbsc
 from src.sequencing.reads.umi.deduplicate.monomer.plot.Valid import valid as plotv
-from src.sequencing.reads.simulate.starter.batch.General import general as simugeneralstarter
+from src.sequencing.reads.simulate.dispatcher.batch.General import general as simugeneralstarter
 from src.sequencing.reads.similarity.distance.Hamming import hamming
 from src.util.sequence.fastq.Read import read as rfastq
 from src.util.sequence.fastq.Write import write as wfastq

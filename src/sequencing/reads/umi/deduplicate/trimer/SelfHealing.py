@@ -1,6 +1,6 @@
 __version__ = "v1.0"
 __copyright__ = "Copyright 2021"
-__license__ = "GPL v3.0"
+__license__ = "MIT"
 __author__ = "Adam Cribbs lab"
 
 from src.sequencing.reads.umi.trim.Template import template as umitrim
@@ -9,12 +9,30 @@ from src.util.file.read.Reader import reader as gfreader
 from collections import Counter
 
 
-class reoccurence(object):
+class selfHealing(object):
 
     def __init__(self, *args):
         self.args = args[0]
         self.umitrim = umitrim
         self.gfreader = gfreader()
+
+    def cus(self):
+        print('reading...')
+        seqs = self.rfastq().fromgz(
+            fastq_path=self.args['fastq']['path'],
+            fastq_name=self.args['fastq']['name'],
+        )
+        df_seq = pd.DataFrame(seqs)
+        dd = self.args['seq_struct'].split('*')
+        umi_pos = [i for i, d in enumerate(dd) if d == 'umi']
+        rule = []
+        if len(umi_pos) != 1:
+            rule.append(dd[:umi_pos[0]])
+            rule.append(dd[umi_pos[1] + 1:])
+        else:
+            rule.append(dd[:umi_pos[0]])
+        umis = df_seq.apply(lambda x: self.filter(x[0], rule), axis=1)
+        return umis
 
     def pinrun(self, ):
         umis = self.umitrim(self.args).cus()
@@ -69,5 +87,5 @@ if __name__ == "__main__":
             'name': 'simu',
         },
     }
-    p = reoccurence(DEFINE)
+    p = selfHealing(DEFINE)
     print(p.pinrun())
