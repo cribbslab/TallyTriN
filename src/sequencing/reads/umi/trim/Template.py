@@ -1,6 +1,6 @@
 __version__ = "v1.0"
 __copyright__ = "Copyright 2021"
-__license__ = "GPL v3.0"
+__license__ = "MIT"
 __lab__ = "Adam Cribbs lab"
 
 from src.util.sequence.fastq.Read import read as rfastq
@@ -61,6 +61,8 @@ class template(object):
         return df
 
     def togz(self, df):
+        if 'seq_1' not in df.columns.tolist():
+            df['seq_1'] = 'B'
         df_col_names = df.columns.tolist()
         df_col_names.remove('seq_raw')
         df_col_names.remove('seq_1')

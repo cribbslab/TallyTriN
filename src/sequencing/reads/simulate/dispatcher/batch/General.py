@@ -1,18 +1,17 @@
 __version__ = "v1.0"
 __copyright__ = "Copyright 2021"
-__license__ = "GPL v3.0"
+__license__ = "MIT"
 __lab__ = "Adam Cribbs lab"
 
 import numpy as np
-from src.sequencing.reads.simulate.starter.CDNA import cdna as simucdna
+from src.sequencing.reads.simulate.dispatcher.General import general as simugeneral
 from Path import to
 
 
 class general(object):
 
     def __init__(self, ):
-        self.umi_unit_len_fixed = 12
-        self.umi_unit_pattern_fixed = 3
+        self.umi_unit_len_fixed = 10
         self.umi_num_fixed = 50
         self.pcr_num_fixed = 10
         self.pcr_err_fixed = 1e-3
@@ -40,8 +39,6 @@ class general(object):
             'ampl_rates': 'ampl_rate_',
             'umi_lens': 'umi_len_',
         }
-
-        self.offset = '../' * 9
 
     def errors(self, ):
         pcr_errs = []
@@ -71,20 +68,16 @@ class general(object):
         for id, i_pcr_num in enumerate(self.pcr_nums):
             simu_params = {
                 'init_seq_setting': {
-                    'cdna_num': self.umi_num_fixed,
-                    'umi_unit_pattern': self.umi_unit_pattern_fixed,
+                    'seq_num': self.umi_num_fixed,
+                    'umi_unit_pattern': 1,
                     'umi_unit_len': self.umi_unit_len_fixed,
                     'is_seed': True,
-                    'primer_len': 5,
+                    'seq_len': 100 - self.umi_unit_len_fixed,
                     'is_sv_umi_lib': True if id == 0 else False,
                     'is_sv_seq_lib': True if id == 0 else False,
-                    'is_sv_primer_lib': True if id == 0 else False,
-                    'working_dir': to('data/cdna/trimer/simu/pcr_nums/'),
-                    'umi_lib_fpn': to('data/cdna/trimer/simu/pcr_nums/umi.txt'),
-                    'seq_lib_fpn': to('data/cdna/trimer/simu/pcr_nums/seq.txt'),
-                    'primer_lib_fpn': to('data/cdna/trimer/simu/pcr_nums/primer.txt'),
-                    'cand_pool_fpn': self.offset + 'data/omics/genomics/fasta/cdna/GRCh38/cdna_n_l150.txt',
-                    'cdna_fp': self.offset + 'data/omics/genomics/fasta/cdna/GRCh38/',
+                    'working_dir': to('data/simu/pcr_nums/'),
+                    'umi_lib_fpn': to('data/simu/pcr_nums/umi.txt'),
+                    'seq_lib_fpn': to('data/simu/pcr_nums/seq.txt'),
                 },
                 'ampl_rate': self.ampl_rate_fixed,
                 'pcr_num': i_pcr_num,
@@ -92,13 +85,12 @@ class general(object):
                 'seq_error': self.seq_err_fixed,
                 'use_seed': False,
                 'seed': None,
-                'err_num_met': 'nbionom',
                 'write': {
-                    'fastq_fp': to('data/cdna/trimer/simu/pcr_nums/'),
+                    'fastq_fp': to('data/simu/pcr_nums/'),
                     'fastq_fn': 'pcr_' + str(i_pcr_num),
                 }
             }
-            p = simucdna(simu_params)
+            p = simugeneral(simu_params)
             print(p.ondemand())
         return
 
@@ -106,20 +98,16 @@ class general(object):
         for id, i_pcr_err in enumerate(self.pcr_errs):
             simu_params = {
                 'init_seq_setting': {
-                    'cdna_num': self.umi_num_fixed,
-                    'umi_unit_pattern': self.umi_unit_pattern_fixed,
+                    'seq_num': self.umi_num_fixed,
+                    'umi_unit_pattern': 1,
                     'umi_unit_len': self.umi_unit_len_fixed,
                     'is_seed': True,
-                    'primer_len': 5,
+                    'seq_len': 100 - self.umi_unit_len_fixed,
                     'is_sv_umi_lib': True if id == 0 else False,
                     'is_sv_seq_lib': True if id == 0 else False,
-                    'is_sv_primer_lib': True if id == 0 else False,
-                    'working_dir': to('data/cdna/trimer/simu/pcr_errs/'),
-                    'umi_lib_fpn': to('data/cdna/trimer/simu/pcr_errs/umi.txt'),
-                    'seq_lib_fpn': to('data/cdna/trimer/simu/pcr_errs/seq.txt'),
-                    'primer_lib_fpn': to('data/cdna/trimer/simu/pcr_errs/primer.txt'),
-                    'cand_pool_fpn': self.offset + 'data/omics/genomics/fasta/cdna/GRCh38/cdna_n_l150.txt',
-                    'cdna_fp': self.offset + 'data/omics/genomics/fasta/cdna/GRCh38/',
+                    'working_dir': to('data/simu/pcr_errs/'),
+                    'umi_lib_fpn': to('data/simu/pcr_errs/umi.txt'),
+                    'seq_lib_fpn': to('data/simu/pcr_errs/seq.txt'),
                 },
                 'ampl_rate': self.ampl_rate_fixed,
                 'pcr_num': self.pcr_num_fixed,
@@ -127,13 +115,12 @@ class general(object):
                 'seq_error': self.seq_err_fixed,
                 'use_seed': False,
                 'seed': None,
-                'err_num_met': 'nbionom',
                 'write': {
-                    'fastq_fp': to('data/cdna/trimer/simu/pcr_errs/'),
+                    'fastq_fp': to('data/simu/pcr_errs/'),
                     'fastq_fn': 'pcr_err_' + str(id),
                 }
             }
-            p = simucdna(simu_params)
+            p = simugeneral(simu_params)
             print(p.ondemand())
         return
 
@@ -141,20 +128,16 @@ class general(object):
         for id, i_seq_err in enumerate(self.seq_errs):
             simu_params = {
                 'init_seq_setting': {
-                    'cdna_num': self.umi_num_fixed,
-                    'umi_unit_pattern': self.umi_unit_pattern_fixed,
+                    'seq_num': self.umi_num_fixed,
+                    'umi_unit_pattern': 1,
                     'umi_unit_len': self.umi_unit_len_fixed,
                     'is_seed': True,
-                    'primer_len': 5,
+                    'seq_len': 100 - self.umi_unit_len_fixed,
                     'is_sv_umi_lib': True if id == 0 else False,
                     'is_sv_seq_lib': True if id == 0 else False,
-                    'is_sv_primer_lib': True if id == 0 else False,
-                    'working_dir': to('data/cdna/trimer/simu/seq_errs/'),
-                    'umi_lib_fpn': to('data/cdna/trimer/simu/seq_errs/umi.txt'),
-                    'seq_lib_fpn': to('data/cdna/trimer/simu/seq_errs/seq.txt'),
-                    'primer_lib_fpn': to('data/cdna/trimer/simu/seq_errs/primer.txt'),
-                    'cand_pool_fpn': self.offset + 'data/omics/genomics/fasta/cdna/GRCh38/cdna_n_l150.txt',
-                    'cdna_fp': self.offset + 'data/omics/genomics/fasta/cdna/GRCh38/',
+                    'working_dir': to('data/simu/seq_errs/'),
+                    'umi_lib_fpn': to('data/simu/seq_errs/umi.txt'),
+                    'seq_lib_fpn': to('data/simu/seq_errs/seq.txt'),
                 },
                 'ampl_rate': self.ampl_rate_fixed,
                 'pcr_num': self.pcr_num_fixed,
@@ -162,13 +145,12 @@ class general(object):
                 'seq_error': i_seq_err,
                 'use_seed': False,
                 'seed': None,
-                'err_num_met': 'nbionom',
                 'write': {
-                    'fastq_fp': to('data/cdna/trimer/simu/seq_errs/'),
+                    'fastq_fp': to('data/simu/seq_errs/'),
                     'fastq_fn': 'seq_err_' + str(id),
                 }
             }
-            p = simucdna(simu_params)
+            p = simugeneral(simu_params)
             print(p.ondemand())
         return
 
@@ -176,20 +158,16 @@ class general(object):
         for id, umi_len in enumerate(self.umi_unit_lens):
             simu_params = {
                 'init_seq_setting': {
-                    'cdna_num': self.umi_num_fixed,
-                    'umi_unit_pattern': self.umi_unit_pattern_fixed,
+                    'seq_num': self.umi_num_fixed,
+                    'umi_unit_pattern': 1,
                     'umi_unit_len': umi_len,
                     'is_seed': True,
-                    'primer_len': 5,
+                    'seq_len': 100 - umi_len,
                     'is_sv_umi_lib': True,
                     'is_sv_seq_lib': True,
-                    'is_sv_primer_lib': True,
-                    'working_dir': to('data/cdna/trimer/simu/umi_lens/'),
-                    'umi_lib_fpn': to('data/cdna/trimer/simu/umi_lens/umi_') + str(umi_len) + '.txt',
-                    'seq_lib_fpn': to('data/cdna/trimer/simu/umi_lens/seq_') + str(umi_len) + '.txt',
-                    'primer_lib_fpn': to('data/cdna/trimer/simu/umi_lens/primer_') + str(umi_len) + '.txt',
-                    'cand_pool_fpn': self.offset + 'data/omics/genomics/fasta/cdna/GRCh38/cdna_n_l150.txt',
-                    'cdna_fp': self.offset + 'data/omics/genomics/fasta/cdna/GRCh38/',
+                    'working_dir': to('data/simu/umi_lens/'),
+                    'umi_lib_fpn': to('data/simu/umi_lens/umi_') + str(umi_len) + '.txt',
+                    'seq_lib_fpn': to('data/simu/umi_lens/seq_') + str(umi_len) + '.txt',
                 },
                 'ampl_rate': self.ampl_rate_fixed,
                 'pcr_num': self.pcr_num_fixed,
@@ -197,13 +175,12 @@ class general(object):
                 'seq_error': self.seq_err_fixed,
                 'use_seed': False,
                 'seed': None,
-                'err_num_met': 'nbionom',
                 'write': {
-                    'fastq_fp': to('data/cdna/trimer/simu/umi_lens/'),
+                    'fastq_fp': to('data/simu/umi_lens/'),
                     'fastq_fn': 'umi_len_' + str(umi_len),
                 }
             }
-            p = simucdna(simu_params)
+            p = simugeneral(simu_params)
             print(p.ondemand())
         return
 
@@ -211,20 +188,16 @@ class general(object):
         for id, ampl_rate in enumerate(self.ampl_rates):
             simu_params = {
                 'init_seq_setting': {
-                    'cdna_num': self.umi_num_fixed,
-                    'umi_unit_pattern': self.umi_unit_pattern_fixed,
+                    'seq_num': self.umi_num_fixed,
+                    'umi_unit_pattern': 1,
                     'umi_unit_len': self.umi_unit_len_fixed,
                     'is_seed': True,
-                    'primer_len': 5,
+                    'seq_len': 100 - self.umi_unit_len_fixed,
                     'is_sv_umi_lib': True if id == 0 else False,
                     'is_sv_seq_lib': True if id == 0 else False,
-                    'is_sv_primer_lib': True if id == 0 else False,
-                    'working_dir': to('data/cdna/trimer/simu/ampl_rates/'),
-                    'umi_lib_fpn': to('data/cdna/trimer/simu/ampl_rates/umi.txt'),
-                    'seq_lib_fpn': to('data/cdna/trimer/simu/ampl_rates/seq.txt'),
-                    'primer_lib_fpn': to('data/cdna/trimer/simu/ampl_rates/primer.txt'),
-                    'cand_pool_fpn': self.offset + 'data/omics/genomics/fasta/cdna/GRCh38/cdna_n_l150.txt',
-                    'cdna_fp': self.offset + 'data/omics/genomics/fasta/cdna/GRCh38/',
+                    'working_dir': to('data/simu/ampl_rates/'),
+                    'umi_lib_fpn': to('data/simu/ampl_rates/umi.txt'),
+                    'seq_lib_fpn': to('data/simu/ampl_rates/seq.txt'),
                 },
                 'ampl_rate': ampl_rate,
                 'pcr_num': self.pcr_num_fixed,
@@ -232,13 +205,12 @@ class general(object):
                 'seq_error': self.seq_err_fixed,
                 'use_seed': False,
                 'seed': None,
-                'err_num_met': 'nbionom',
                 'write': {
-                    'fastq_fp': to('data/cdna/trimer/simu/ampl_rates/'),
+                    'fastq_fp': to('data/simu/ampl_rates/'),
                     'fastq_fn': 'ampl_rate_' + str(id),
                 }
             }
-            p = simucdna(simu_params)
+            p = simugeneral(simu_params)
             print(p.ondemand())
         return
 
@@ -246,7 +218,7 @@ class general(object):
 if __name__ == "__main__":
     p = general()
 
-    print(p.pcrNums())
+    # print(p.pcrNums())
 
     # print(p.pcrErrs())
 

@@ -1,13 +1,13 @@
 __version__ = "v1.0"
 __copyright__ = "Copyright 2021"
-__license__ = "GPL v3.0"
+__license__ = "MIT"
 __lab__ = "Adam Cribbs lab"
 
+import time
 import os, sys
 import numpy as np
 dis = '../../../'
 sys.path.append(os.path.abspath(dis))
-import time
 from src.util.sequence.fasta.Read import read as sfasta
 from src.util.random.Sampling import sampling as ranspl
 from src.util.random.Number import number as rannum
@@ -20,7 +20,7 @@ from src.sequencing.reads.spacer.Design import design as spacer
 from src.sequencing.reads.primer.Design import design as primer
 
 
-class poolingGeneralCondi(object):
+class generalCondi(object):
 
     def __init__(self, seq_num, is_seed=False, umi_unit_pattern=3, umi_unit_len=12, seq_len=20, spacer_len=4, primer_len=20, is_sv_umi_lib=True, is_sv_seq_lib=True, is_sv_spacer_lib=True, is_sv_primer_lib=True, umi_lib_fpn='./umi.txt', seq_lib_fpn='./seq.txt', spacer_lib_fpn='./spacer.txt', primer_lib_fpn='./primer.txt', working_dir='./simu/', condis=['umi', 'spacer', 'seq'], permutation=0):
         self.pfreader = pfreader()
@@ -126,7 +126,7 @@ if __name__ == "__main__":
         '': '',
     }
     # print(DEFINE['cand_pool_fpn'])
-    p = poolingGeneralCondi(
+    p = generalCondi(
         seq_num=10,
         umi_unit_pattern=1,
         umi_unit_len=6,
@@ -146,7 +146,7 @@ if __name__ == "__main__":
         working_dir='./simu/',
 
         condis=['umi', 'spacer', 'seq'],
-        permutation=1
+        permutation=1,
     )
 
     # print(p.umi_len)

@@ -1,10 +1,10 @@
 __version__ = "v1.0"
 __copyright__ = "Copyright 2021"
-__license__ = "GPL v3.0"
+__license__ = "MIT"
 __lab__ = "Adam Cribbs lab"
 
 import numpy as np
-from src.sequencing.reads.simulate.starter.GeneralCondi import generalCondi as simugcondi
+from src.sequencing.reads.simulate.dispatcher.GeneralCondi import generalCondi as simugcondi
 from Path import to
 
 
@@ -89,7 +89,7 @@ class generalCondi(object):
                 'pcr_num': self.pcr_num_fixed,
                 'pcr_error': self.pcr_err_fixed,
                 'seq_error': self.seq_err_fixed,
-                'err_num_met': 'bionom',
+                'err_num_met': 'nbinomial',
                 'use_seed': False,
                 'seed': None,
                 'write': {

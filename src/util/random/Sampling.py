@@ -1,6 +1,6 @@
 __version__ = "v1.0"
 __copyright__ = "Copyright 2021"
-__license__ = "GPL v3.0"
+__license__ = "MIT"
 __lab__ = "Adam Cribbs lab"
 
 import numpy as np
@@ -31,7 +31,7 @@ class sampling(object):
             # print(res2p)
             res2p['data_spl'] = compiler(
                 data=res2p['data'],
-                num=res2p['ipcr_num'],
+                num=res2p['spl_num'],
                 # use_seed=res2p['use_seed'],
                 # seed=res2p['seed'],
                 # replace=res2p['replace'],

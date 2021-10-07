@@ -1,6 +1,6 @@
 __version__ = "v1.0"
 __copyright__ = "Copyright 2021"
-__license__ = "GPL v3.0"
+__license__ = "MIT"
 __lab__ = "Adam Cribbs lab"
 
 import numpy as np
@@ -25,7 +25,7 @@ class number(object):
             print('------>numbering...')
             # print(kwargs)
             res = deal(ph, **kwargs)
-            res['ipcr_num'] = distrib(
+            res['spl_num'] = distrib(
                 n=len(res['data']),
                 p=res['ampl_rate'],
             )

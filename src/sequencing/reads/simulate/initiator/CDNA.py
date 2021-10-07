@@ -1,6 +1,6 @@
 __version__ = "v1.0"
 __copyright__ = "Copyright 2021"
-__license__ = "GPL v3.0"
+__license__ = "MIT"
 __lab__ = "Adam Cribbs lab"
 
 import os, sys
@@ -18,7 +18,7 @@ from src.sequencing.reads.umi.Design import design as umi
 from src.sequencing.reads.primer.Design import design as primer
 
 
-class poolingCDNA(object):
+class cdna(object):
 
     def __init__(self, cand_pool_fpn, cdna_fp, cdna_num, is_seed=False,is_sv_umi_lib=True, is_sv_primer_lib=True, is_sv_seq_lib=True, umi_unit_pattern=3, umi_unit_len=12, primer_len=20, seq_lib_fpn='./seq.txt', umi_lib_fpn='./umi.txt', primer_lib_fpn='./primer.txt', working_dir='./simu/'):
         self.pfreader = pfreader()
@@ -105,7 +105,7 @@ if __name__ == "__main__":
         'cdna_fp': offset + 'data/omics/genomics/fasta/cdna/GRCh38/',
     }
     # print(DEFINE['cand_pool_fpn'])
-    p = poolingCDNA(
+    p = cdna(
         cand_pool_fpn=DEFINE['cand_pool_fpn'],
         cdna_fp=DEFINE['cdna_fp'],
         cdna_num=10,

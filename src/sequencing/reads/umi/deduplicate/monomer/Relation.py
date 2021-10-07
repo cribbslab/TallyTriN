@@ -1,10 +1,10 @@
 __version__ = "v1.0"
 __copyright__ = "Copyright 2021"
-__license__ = "GPL v3.0"
+__license__ = "MIT"
 __lab__ = "Adam Cribbs lab"
 
-import numpy as np
 import time
+import numpy as np
 import pandas as pd
 from src.util.sequence.fastq.Read import read as rfastq
 from src.util.sequence.fastq.Write import write as wfastq
