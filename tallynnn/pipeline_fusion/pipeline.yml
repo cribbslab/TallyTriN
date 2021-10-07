@@ -5,10 +5,4 @@
 # Copyright statement
 copyright: cribbslab (2021)
 
-cdna_fasta: Homo_sapiens.GRCh38.cdna.all.fa
-
-genome_fasta: hg38.fa
- 
-junc_bed: hg38_geneset_all.bed
-
-gtf: hg38_geneset_all.gtf
+bed: coding_gene_region.bad

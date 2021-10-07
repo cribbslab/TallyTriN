@@ -139,7 +139,7 @@ def polya_umi(infile, outfile):
 def mapping_trans(infile, outfile):
     '''map using minimap2 for the transcripts'''
 
-    statement = '''minimap2 -ax map-ont -p 0.9 --end-bonus 10 -N 3 %(cdna_fasta)s %(infile)s  > %(outfile)s 2> %(outfile)s.log'''
+    statement = '''minimap2 -cx map-ont -p 0.9 --end-bonus 10 -N 3 %(cdna_fasta)s %(infile)s  > %(outfile)s 2> %(outfile)s.log'''
 
     P.run(statement)
 
