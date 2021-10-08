@@ -258,19 +258,6 @@ def featurecounts(infile, outfile):
 
 @transform(featurecounts,
            regex("(\S+)_featurecounts_gene_sorted.bam"),
-           r"\1_XT_gene.bam")
-def add_xt_gene(infile, outfile):
-    '''run featurecounts over the bam file'''
-
-    PYTHON_ROOT = os.path.join(os.path.dirname(__file__), "python/")
-
-    statement = '''python %(PYTHON_ROOT)s/add_XT.py --infile=%(infile)s --outname=%(outfile)s && samtools index %(outfile)s'''
-
-    P.run(statement)
-
-
-@transform(add_xt_gene,
-           regex("(\S+)_XT_gene.bam"),
            r"\1.counts_gene.tsv.gz")
 def count_gene(infile, outfile):
     '''Use umi-tools to collapse UMIs and generate counts table'''
