@@ -83,7 +83,7 @@ class umi(object):
         # print(umi_pool)
 
         etime = time.time()
-        print("--->time for generating initial pool of sequences: {:.3f}s".format(etime-stime))
+        print("===>time for generating initial pool of sequences: {:.3f}s".format(etime-stime))
         return seqs
 
     def paste(self, read_struct=[]):

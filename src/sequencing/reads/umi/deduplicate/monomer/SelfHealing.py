@@ -41,11 +41,11 @@ class selfHealing(generalstarter):
                 fastq_path=to('data/simu/umi/seq_errs/monomer/trimmed/'),
                 fastq_name='seq_err_' + str(id),
             )
-            print('--->file read time: {:.3f}s'.format(time.time() - read_stime))
+            print('===>file read time: {:.3f}s'.format(time.time() - read_stime))
             df_fastq = self.trimreader.todf(names=names, seqs=seqs)
             hm_stime = time.time()
             df_stat['umi_hm' + str(id)] = df_fastq.apply(lambda x: hamming().general(x['umi'], self.umi_raw_monomer[x['umi#']]), axis=1)
-            print('--->hamming time: {:.3f}s'.format(time.time() - hm_stime))
+            print('===>hamming time: {:.3f}s'.format(time.time() - hm_stime))
             print(df_stat['umi_hm' + str(id)])
         self.fwriter.generic(df=df_stat, sv_fpn=to('data/simu/umi/seq_errs/monomer/trimmed/dasd.txt'), df_sep='\t')
         return

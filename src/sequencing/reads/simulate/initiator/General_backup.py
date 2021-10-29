@@ -72,7 +72,7 @@ class general(object):
             ).general(lib_fpn=self.seq_lib_fpn, is_sv=self.is_sv_seq_lib),
         ), id, 'init'] for id in np.arange(self.seq_num)]
         etime = time.time()
-        print("--->time for generating initial pool of sequences: {:.3f}s".format(etime-stime))
+        print("===>time for generating initial pool of sequences: {:.3f}s".format(etime-stime))
         return seqs
 
     def paste(self, umi, seq):

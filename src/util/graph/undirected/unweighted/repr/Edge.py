@@ -54,12 +54,12 @@ class edge():
 
     def map(self, graph):
         print('->the graph is being mapped')
-        print('--->key map: {}'.format(self.key_mapped))
+        print('===>key map: {}'.format(self.key_mapped))
         g_mapped = []
         print(graph)
         for i, edge in enumerate(graph):
             g_mapped.append((self.key_mapped[edge[0]], self.key_mapped[edge[1]]))
-        print('--->the mapped graph: {}'.format(g_mapped))
+        print('===>the mapped graph: {}'.format(g_mapped))
         return g_mapped
 
     def toAdjacencyDict(self, ):

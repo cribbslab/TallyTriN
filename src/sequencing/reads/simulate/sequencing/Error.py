@@ -21,7 +21,7 @@ class error(object):
             func = self.postable
         @wraps(deal)
         def indexing(ph, *args, **kwargs):
-            print('--->sequencing...')
+            print('===>sequencing...')
             res2p = deal(ph, **kwargs)
             # print(func(res2p))
             return func(res2p)
@@ -33,8 +33,8 @@ class error(object):
         data_seq = pd.DataFrame(res2p['data_spl'], columns=['read', 'sam_id', 'source'])
         del res2p['data']
         del res2p['data_spl']
-        print('------>{} reads to be sequenced'.format(data_seq.shape[0]))
-        print('------>constructing the position table starts...')
+        print('======>{} reads to be sequenced'.format(data_seq.shape[0]))
+        print('======>constructing the position table starts...')
         pcr_postable_stime = time.time()
         if kind == 'index_by_same_len':
             seq_pos_ids, seq_ids = self.postableIndexBySameLen(seq_len=len(data_seq['read'][0]), num_seq=data_seq.shape[0])
@@ -46,9 +46,10 @@ class error(object):
             seq_pos_ids, seq_ids = self.postableIndexBySameLen(seq_len=len(data_seq['read'][0]), num_seq=data_seq.shape[0])
         pos_table = {'seq_ids': seq_ids, 'seq_pos_ids': seq_pos_ids}
         pcr_postable_etime = time.time()
-        print('------>time for constructing the position table  {time:.3f}s'.format(time=pcr_postable_etime - pcr_postable_stime))
+        print('======>time for constructing the position table  {time:.3f}s'.format(time=pcr_postable_etime - pcr_postable_stime))
         seq_nt_num = len(seq_ids)
-        print('------>determining PCR error numbers starts...')
+        print('======>{} nucleotides to be sequenced'.format(seq_nt_num))
+        print('======>determining PCR error numbers starts...')
         seq_err_num_simu_stime = time.time()
         if res2p['err_num_met'] == 'binomial':
             seq_err_num = rannum().binomial(n=seq_nt_num, p=res2p['seq_error'], use_seed=True, seed=1)
@@ -61,7 +62,7 @@ class error(object):
             )
         else:
             seq_err_num = rannum().binomial(n=seq_nt_num, p=res2p['seq_error'], use_seed=True, seed=1)
-        print('------>{} nucleotides to be erroneous in sequencing'.format(seq_err_num))
+        print('======>{} nucleotides to be erroneous in sequencing'.format(seq_err_num))
         err_lin_ids = rannum().uniform(low=0, high=seq_nt_num, num=seq_err_num, use_seed=True, seed=1)
         # print(err_lin_ids)
         arr_err_pos = []# [[row1, col1], [row2, col2], ...]
@@ -70,8 +71,8 @@ class error(object):
         pseudo_nums = rannum().uniform(low=0, high=3, num=seq_err_num, use_seed=False)
         # print(pseudo_nums)
         seq_err_num_simu_etime = time.time()
-        print('------>time for determining sequencing error numbers  {time:.3f}s'.format(time=seq_err_num_simu_etime - seq_err_num_simu_stime))
-        print('------>assigning sequencing errors starts...')
+        print('======>time for determining sequencing error numbers  {time:.3f}s'.format(time=seq_err_num_simu_etime - seq_err_num_simu_stime))
+        print('======>assigning sequencing errors starts...')
         seq_err_assign_stime = time.time()
         data_seq['read'] = data_seq.apply(lambda x: list(x['read']), axis=1)
         for pos_err, pseudo_num in zip(arr_err_pos, pseudo_nums):
@@ -89,12 +90,12 @@ class error(object):
         del arr_err_pos
         del pseudo_nums
         seq_err_assign_etime = time.time()
-        print('------>time for assigning sequencing errors {time:.2f}s'.format(time=seq_err_assign_etime - seq_err_assign_stime))
+        print('======>time for assigning sequencing errors {time:.2f}s'.format(time=seq_err_assign_etime - seq_err_assign_stime))
         data_seq['read'] = data_seq.apply(lambda x: ''.join(x['read']), axis=1)
         res2p['data'] = data_seq.values
         del data_seq
         seq_etime = time.time()
-        print('------>sequencing time: {}'.format(seq_etime - seq_stime))
+        print('======>sequencing time: {time:.2f}s'.format(time=seq_etime - seq_stime))
         return res2p
 
     def postableIndexBySameLen(self, seq_len, num_seq):

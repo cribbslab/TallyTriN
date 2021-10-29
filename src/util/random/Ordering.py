@@ -24,7 +24,7 @@ class ordering(object):
         def switch(dself, *args, **kwargs):
             # print(args)
             # print(kwargs)
-            print('------>ordering...')
+            print('======>ordering...')
             res2p = deal(dself, **kwargs)
             # print(res2p['data'].shape[0])
             res2p['data'] = order(

@@ -82,24 +82,24 @@ class general(object):
                     else:
                         # print(id)
                         umi_cnt += 1
-            if 'seq' in self.condis:
-                seq_i = self.dseq(
-                    dna_map=self.dna_map,
-                    pseudorandom_num=self.rannum.uniform(
-                        low=0,
-                        high=4,
-                        num=self.seq_len,
-                        use_seed=self.is_seed,
-                        seed=id + self.permutation * self.seq_num + 5000000,
-                    ),
-                ).general(lib_fpn=self.seq_lib_fpn, is_sv=self.is_sv_seq_lib)
-                read_struct_ref['seq'] = seq_i
+            # if 'seq' in self.condis:
+            #     seq_i = self.dseq(
+            #         dna_map=self.dna_map,
+            #         pseudorandom_num=self.rannum.uniform(
+            #             low=0,
+            #             high=4,
+            #             num=self.seq_len,
+            #             use_seed=self.is_seed,
+            #             seed=id + self.permutation * self.seq_num + 5000000,
+            #         ),
+            #     ).general(lib_fpn=self.seq_lib_fpn, is_sv=self.is_sv_seq_lib)
+            #     read_struct_ref['seq'] = seq_i
             read_struct_pfd_order = {condi: read_struct_ref[condi] for condi in self.condis}
             seqs.append([self.paste([*read_struct_pfd_order.values()]), id, 'init'])
-        print(umi_cnt)
+        # print(umi_cnt)
         # print(umi_pool)
         etime = time.time()
-        print("--->time for generating initial pool of sequences: {:.3f}s".format(etime-stime))
+        print("===>time for generating initial pool of sequences: {:.3f}s".format(etime-stime))
         return seqs
 
     def paste(self, read_struct=[]):
@@ -115,17 +115,17 @@ if __name__ == "__main__":
     p = general(
         seq_num=50,
         umi_unit_pattern=1,
-        umi_unit_len=12,
-        seq_len=100 - 12,
+        umi_unit_len=10,
+        seq_len=100 - 10,
         is_seed=True,
 
         is_sv_umi_lib=True,
-        umi_lib_fpn=to('data/simu/umi_seq/permute_1/umi.txt'),
+        umi_lib_fpn=to('data/simu/umi_seq/permute_1/umi3.txt'),
         is_sv_seq_lib=True,
         seq_lib_fpn=to('data/simu/umi_seq/permute_1/seq.txt'),
         working_dir=to('data/simu/umi_seq/permute_1/'),
 
-        condis=['umi', 'seq'],
+        condis=['umi'],
         sim_thres=3,
         permutation=0,
     )

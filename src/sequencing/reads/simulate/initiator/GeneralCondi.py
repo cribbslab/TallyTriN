@@ -114,7 +114,7 @@ class generalCondi(object):
             read_struct_pfd_order = {condi: read_struct_ref[condi] for condi in self.condis}
             seqs.append([self.paste([*read_struct_pfd_order.values()]), id, 'init'])
         etime = time.time()
-        print("--->time for generating initial pool of sequences: {:.3f}s".format(etime-stime))
+        print("===>time for generating initial pool of sequences: {:.3f}s".format(etime-stime))
         return seqs
 
     def paste(self, read_struct=[]):

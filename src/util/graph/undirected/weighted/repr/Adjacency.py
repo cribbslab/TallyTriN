@@ -46,15 +46,15 @@ class adjacency(object):
 
     def map(self, graph):
         print('->the graph is being mapped')
-        print('--->key map: {}'.format(self.key_mapped))
+        print('===>key map: {}'.format(self.key_mapped))
         if isinstance(graph, dict):
-            print('--->the graph is a dict')
+            print('===>the graph is a dict')
             g_mapped = {}
             for k, vals in self._graph.items():
                 g_mapped[self.key_mapped[k]] = []
                 for val in vals:
                     g_mapped[self.key_mapped[k]].append(self.key_mapped[val])
-            print('--->the mapped graph: {}'.format(g_mapped))
+            print('===>the mapped graph: {}'.format(g_mapped))
             return g_mapped
 
     def dict(self, ):

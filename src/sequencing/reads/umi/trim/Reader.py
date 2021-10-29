@@ -26,7 +26,7 @@ class reader(object):
         # print(df_fastq['umi'])
         # print(df_fastq['umi#'])
         # print(df_fastq['umi_src'])
-        print('--->Trimmed UMIs to df time: {:.3f}s'.format(time.time() - umi_df_stime))
+        print('===>Trimmed UMIs to df time: {:.3f}s'.format(time.time() - umi_df_stime))
         return df_fastq
 
     def pcrnum(self, x):

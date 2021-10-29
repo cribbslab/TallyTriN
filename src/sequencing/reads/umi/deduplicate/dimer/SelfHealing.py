@@ -44,14 +44,14 @@ class selfHealing(generalstarter):
                 fastq_path=to('data/simu/umi/seq_errs/dimer/trimmed/'),
                 fastq_name='seq_err_' + str(id),
             )
-            print('--->file read time: {:.3f}s'.format(time.time() - read_stime))
+            print('===>file read time: {:.3f}s'.format(time.time() - read_stime))
             df_fastq = self.trimreader.todf(names=names, seqs=seqs)
             mono_corr_stime = time.time()
             df_fastq['umi_mono_corr'] = df_fastq['umi'].apply(lambda x: self.correct(x))
-            print('--->mono_corr time: {:.3f}s'.format(time.time() - mono_corr_stime))
+            print('===>mono_corr time: {:.3f}s'.format(time.time() - mono_corr_stime))
             hm_stime = time.time()
             df_stat['umi_hm' + str(id)] = df_fastq.apply(lambda x: hamming().general(x['umi_mono_corr'], self.umi_mono_raw[x['umi#']]), axis=1)
-            print('--->hamming time: {:.3f}s'.format(time.time() - hm_stime))
+            print('===>hamming time: {:.3f}s'.format(time.time() - hm_stime))
             tui = df_stat['umi_hm' + str(id)].values
             print(len(tui[tui != 0]))
         self.fwriter.generic(df=df_stat, sv_fpn=to('data/simu/umi/seq_errs/dimer/trimmed/dasd.txt'), df_sep='\t')

@@ -21,7 +21,7 @@ class error(object):
             func = self.postable
         @wraps(deal)
         def indexing(ph, *args, **kwargs):
-            print('------>error making...')
+            print('======>error making...')
             res2p = deal(ph, **kwargs)
             # print(func(res2p))
             return func(res2p)
@@ -67,12 +67,12 @@ class error(object):
         pcr_stime = time.time()
         data_pcr = pd.DataFrame(res2p['data_spl'], columns=['read', 'sam_id', 'source'])
         del res2p['data_spl']
-        print(len(data_pcr['read'][0]))
-        print(data_pcr.shape[0])
+        # print(len(data_pcr['read'][0]))
+        # print(data_pcr.shape[0])
         res2p['recorder_pcr_read_num'].append(data_pcr.shape[0])
-        print('------>{} reads to be amplified'.format(data_pcr.shape[0]))
-        print('------>constructing the position table starts...')
-        print(data_pcr)
+        print('======>{} reads to be amplified'.format(data_pcr.shape[0]))
+        print('======>constructing the position table starts...')
+        # print(data_pcr)
         pcr_postable_stime = time.time()
         if kind == 'index_by_same_len':
             seq_pos_ids, seq_ids = self.postableIndexBySameLen(seq_len=len(data_pcr['read'][0]), num_seq=data_pcr.shape[0])
@@ -84,11 +84,11 @@ class error(object):
             seq_pos_ids, seq_ids = self.postableIndexBySameLen(seq_len=len(data_pcr['read'][0]), num_seq=data_pcr.shape[0])
         # print(seq_ids)
         pos_table = {'seq_ids': seq_ids, 'seq_pos_ids': seq_pos_ids}
-        print('------>time for constructing the position table  {time:.3f}s'.format(time=time.time() - pcr_postable_stime))
+        print('======>time for constructing the position table  {time:.3f}s'.format(time=time.time() - pcr_postable_stime))
         ampl_nt_num = len(seq_ids)
-        print('------>{} nucleotides to be amplified'.format(ampl_nt_num))
+        print('======>{} nucleotides to be amplified'.format(ampl_nt_num))
         res2p['recorder_nucleotide_num'].append(ampl_nt_num)
-        print('------>determining PCR error numbers starts...')
+        print('======>determining PCR error numbers starts...')
         pcr_err_num_simu_stime = time.time()
         if res2p['err_num_met'] == 'binomial':
             pcr_err_num = rannum().binomial(n=ampl_nt_num, p=res2p['pcr_error'], use_seed=True, seed=res2p['ipcr'] + 1)
@@ -99,10 +99,10 @@ class error(object):
                 use_seed=True,
                 seed=res2p['ipcr'] + 1
             )
-            print(pcr_err_num)
+            # print(pcr_err_num)
         else:
             pcr_err_num = rannum().binomial(n=ampl_nt_num, p=res2p['pcr_error'], use_seed=True, seed=res2p['ipcr'] + 1)
-        print('------>{} nucleotides to be erroneous at this PCR'.format(pcr_err_num))
+        print('======>{} nucleotides to be erroneous at this PCR'.format(pcr_err_num))
         res2p['recorder_pcr_err_num'].append(pcr_err_num)
         spl_nt_ids = rannum().uniform(low=0, high=ampl_nt_num, num=pcr_err_num, use_seed=True, seed=res2p['ipcr'] + 1)
         arr_err_pos = []
@@ -110,8 +110,8 @@ class error(object):
             arr_err_pos.append([pos_table['seq_ids'][i], pos_table['seq_pos_ids'][i]])
         pseudo_nums = rannum().uniform(low=0, high=3, num=pcr_err_num, use_seed=False)
         # print(pseudo_nums)
-        print('------>time for determining PCR error numbers  {time:.3f}s'.format(time=time.time() - pcr_err_num_simu_stime))
-        print('------>assigning PCR errors starts...')
+        print('======>time for determining PCR error numbers  {time:.3f}s'.format(time=time.time() - pcr_err_num_simu_stime))
+        print('======>assigning PCR errors starts...')
         pcr_err_assign_stime = time.time()
         data_pcr['read'] = data_pcr.apply(lambda x: list(x['read']), axis=1)
         # caser = self.todict5(arr_err_pos)
@@ -128,8 +128,8 @@ class error(object):
             # print('before', data_pcr.loc[pos_err[0], 'read'][pos_err[1]])
             data_pcr.loc[pos_err[0], 'read'][pos_err[1]] = dna_map[pseudo_num]
             # print('after', data_pcr.loc[pos_err[0], 'read'][pos_err[1]])
-        print('------>time for assigning PCR errors {time:.2f}s'.format(time=time.time() - pcr_err_assign_stime))
-        print('------>merging the PCR duplicates and all previous sequences starts...')
+        print('======>time for assigning PCR errors {time:.2f}s'.format(time=time.time() - pcr_err_assign_stime))
+        print('======>merging the PCR duplicates and all previous sequences starts...')
         del arr_err_pos
         del spl_nt_ids
         pcr_merge_stime = time.time()
@@ -139,13 +139,13 @@ class error(object):
         data_pcr = np.array(data_pcr)
         res2p['data'] = np.concatenate((res2p['data'], data_pcr), axis=0)
         del data_pcr
-        print('------>time for merging sequences {time:.2f}s'.format(time=time.time() - pcr_merge_stime))
-        print('------>Summary report:')
-        print('--------->PCR time: {}'.format(time.time() - pcr_stime))
-        print('--------->the dimensions of the data: number of reads: {}'.format(res2p['data'].shape))
-        print('--------->the number of reads at this PCR: {}, '.format(res2p['recorder_pcr_read_num']))
-        print('--------->the number of nucleotides at this PCR: {}, '.format(res2p['recorder_nucleotide_num']))
-        print('--------->the number of errors at this PCR: {}, '.format(res2p['recorder_pcr_err_num']))
+        print('======>time for merging sequences {time:.2f}s'.format(time=time.time() - pcr_merge_stime))
+        print('======>Summary report:')
+        print('=========>PCR time: {time:.2f}s'.format(time=time.time() - pcr_stime))
+        print('=========>the dimensions of the data: number of reads: {}'.format(res2p['data'].shape))
+        print('=========>the number of reads at this PCR: {}, '.format(res2p['recorder_pcr_read_num']))
+        print('=========>the number of nucleotides at this PCR: {}, '.format(res2p['recorder_nucleotide_num']))
+        print('=========>the number of errors at this PCR: {}, '.format(res2p['recorder_pcr_err_num']))
         return res2p
 
     def postableIndexBySameLen(self, seq_len, num_seq):

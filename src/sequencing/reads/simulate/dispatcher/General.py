@@ -27,12 +27,9 @@ class general(object):
             seq_num=self.args['init_seq_setting']['seq_num'],
             umi_unit_pattern=self.args['init_seq_setting']['umi_unit_pattern'],
             umi_unit_len=self.args['init_seq_setting']['umi_unit_len'],
-            seq_len=self.args['init_seq_setting']['seq_len'],
             is_seed=self.args['init_seq_setting']['is_seed'],
             is_sv_umi_lib=self.args['init_seq_setting']['is_sv_umi_lib'],
-            is_sv_seq_lib=self.args['init_seq_setting']['is_sv_seq_lib'],
             umi_lib_fpn=self.args['init_seq_setting']['umi_lib_fpn'],
-            seq_lib_fpn=self.args['init_seq_setting']['seq_lib_fpn'],
             working_dir=self.args['init_seq_setting']['working_dir'],
             condis=self.args['init_seq_setting']['condis'],
             permutation=self.args['init_seq_setting']['permutation'],
@@ -88,12 +85,9 @@ class general(object):
             seq_num=self.args['init_seq_setting']['seq_num'],
             umi_unit_pattern=self.args['init_seq_setting']['umi_unit_pattern'],
             umi_unit_len=self.args['init_seq_setting']['umi_unit_len'],
-            seq_len=self.args['init_seq_setting']['seq_len'],
             is_seed=self.args['init_seq_setting']['is_seed'],
             is_sv_umi_lib=self.args['init_seq_setting']['is_sv_umi_lib'],
-            is_sv_seq_lib=self.args['init_seq_setting']['is_sv_seq_lib'],
             umi_lib_fpn=self.args['init_seq_setting']['umi_lib_fpn'],
-            seq_lib_fpn=self.args['init_seq_setting']['seq_lib_fpn'],
             working_dir=self.args['init_seq_setting']['working_dir'],
             condis=self.args['init_seq_setting']['condis'],
             permutation=self.args['init_seq_setting']['permutation'],
@@ -150,12 +144,9 @@ class general(object):
                 seq_num=self.args['init_seq_setting']['seq_num'],
                 umi_unit_pattern=self.args['init_seq_setting']['umi_unit_pattern'],
                 umi_unit_len=iumi_len,
-                seq_len=self.args['init_seq_setting']['seq_len'] - iumi_len,
                 is_seed=self.args['init_seq_setting']['is_seed'],
                 is_sv_umi_lib=self.args['init_seq_setting']['is_sv_umi_lib'],
-                is_sv_seq_lib=self.args['init_seq_setting']['is_sv_seq_lib'],
-                umi_lib_fpn=self.args['init_seq_setting']['umi_lib_fpn'] + '/umi_' + str(iumi_len) + '.txt',
-                seq_lib_fpn=self.args['init_seq_setting']['seq_lib_fpn'] + '/seq_' + str(iumi_len) + '.txt',
+                umi_lib_fpn=self.args['init_seq_setting']['umi_lib_fp'] + '/umi_' + str(iumi_len) + '.txt',
                 working_dir=self.args['init_seq_setting']['working_dir'],
                 condis=self.args['init_seq_setting']['condis'],
                 permutation=self.args['init_seq_setting']['permutation'],
@@ -210,12 +201,9 @@ class general(object):
             seq_num=self.args['init_seq_setting']['seq_num'],
             umi_unit_pattern=self.args['init_seq_setting']['umi_unit_pattern'],
             umi_unit_len=self.args['init_seq_setting']['umi_unit_len'],
-            seq_len=self.args['init_seq_setting']['seq_len'],
             is_seed=self.args['init_seq_setting']['is_seed'],
             is_sv_umi_lib=self.args['init_seq_setting']['is_sv_umi_lib'],
-            is_sv_seq_lib=self.args['init_seq_setting']['is_sv_seq_lib'],
             umi_lib_fpn=self.args['init_seq_setting']['umi_lib_fpn'],
-            seq_lib_fpn=self.args['init_seq_setting']['seq_lib_fpn'],
             working_dir=self.args['init_seq_setting']['working_dir'],
             condis=self.args['init_seq_setting']['condis'],
             permutation=self.args['init_seq_setting']['permutation'],
@@ -271,19 +259,15 @@ class general(object):
             seq_num=self.args['init_seq_setting']['seq_num'],
             umi_unit_pattern=self.args['init_seq_setting']['umi_unit_pattern'],
             umi_unit_len=self.args['init_seq_setting']['umi_unit_len'],
-            seq_len=self.args['init_seq_setting']['seq_len'],
             is_seed=self.args['init_seq_setting']['is_seed'],
             is_sv_umi_lib=self.args['init_seq_setting']['is_sv_umi_lib'],
-            is_sv_seq_lib=self.args['init_seq_setting']['is_sv_seq_lib'],
             umi_lib_fpn=self.args['init_seq_setting']['umi_lib_fpn'],
-            seq_lib_fpn=self.args['init_seq_setting']['seq_lib_fpn'],
             working_dir=self.args['init_seq_setting']['working_dir'],
             condis=self.args['init_seq_setting']['condis'],
             permutation=self.args['init_seq_setting']['permutation'],
         ).pooling()
         print('->Init pool of sequences has completed.')
         # print(init_seqs)
-
         # /*** block. PCR amplification ***/
         print('->PCR amplification has started...')
         for id, ipcr_num in enumerate(self.args['pcr_nums']):
@@ -332,16 +316,17 @@ if __name__ == "__main__":
     DEFINE = {
         '': '',
     }
-    umi_unit_len = 12
+    umi_unit_len = 6
     simu_params = {
         'init_seq_setting': {
-            'seq_num': 1000,
+            'seq_num': 50,
             'umi_unit_pattern': 1,
             'umi_unit_len': umi_unit_len,
             'is_seed': True,
             'is_sv_umi_lib': True,
-            'working_dir': to('data/simu/umi/seq_errs/monomer/'),
-            'umi_lib_fpn': to('data/simu/umi/seq_errs/monomer/umi.txt'),
+            'working_dir': to('data/simu/monomer/umi_lens/'),
+            'umi_lib_fp': to('data/simu/monomer/umi_lens/'),
+            'umi_lib_fpn': to('data/simu/monomer/umi_lens/umi.txt'),
             'condis': ['umi'],
             'sim_thres': 3,
             'permutation': 1,
@@ -349,17 +334,25 @@ if __name__ == "__main__":
         'ampl_rate': 0.85,
         'pcr_num': 16, # 60,000,000
         'err_num_met': 'nbinomial',
-        'pcr_error': 1e-4,
+        'pcr_error': 1e-1,
         'seq_error': 1e-1,
+        "ampl_rates": np.linspace(0.1, 1, 10),
+        "umi_unit_lens": np.arange(6, 36 + 1, 1),
+        "umi_nums": np.arange(20, 140 + 20, 20),
+        "pcr_nums": np.arange(1, 20 + 1, 1),
         'pcr_errors': [1e-05, 2.5e-05, 5e-05, 7.5e-05, 0.0001, 0.00025, 0.0005, 0.00075, 0.001, 0.0025, 0.005, 0.0075, 0.01, 0.025, 0.05, 0.075, 0.1, 0.2, 0.3],
         'seq_errors': [1e-05, 2.5e-05, 5e-05, 7.5e-05, 0.0001, 0.00025, 0.0005, 0.00075, 0.001, 0.0025, 0.005, 0.0075, 0.01, 0.025, 0.05, 0.075, 0.1, 0.2, 0.3],
         'seq_sub_spl_rate': 0.3333,
         'use_seed': False,
         'seed': None,
         'write': {
-            'fastq_fp': to('data/simu/umi/seq_errs/monomer/'),
+            'fastq_fp': to('data/simu/monomer/umi_lens/'),
             'fastq_fn': '',
         }
     }
     p = general(simu_params)
     print(p.ondemandSeqErrs())
+    # print(p.ondemandUMILens())
+    # print(p.ondemandPCRErrs())
+    # print(p.ondemandPCRNums())
+    # print(p.ondemandAmplRates())

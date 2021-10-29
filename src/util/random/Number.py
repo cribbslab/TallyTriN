@@ -22,7 +22,7 @@ class number(object):
             pass
         @wraps(deal)
         def switch(ph, *args, **kwargs):
-            print('------>numbering...')
+            print('======>numbering...')
             # print(kwargs)
             res = deal(ph, **kwargs)
             res['spl_num'] = distrib(

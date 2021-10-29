@@ -16,7 +16,7 @@ class amplify(object):
 
     def np(self, ):
         for ipcr in range(self.pcr_params['pcr_num']):
-            print('--->at PCR {}'.format(ipcr + 1))
+            print('===>at PCR {}'.format(ipcr + 1))
             self.pcr_params['ipcr'] = ipcr
             self.pcr_params = self.flow(params=self.pcr_params)
             # print(std_flow_params.keys())

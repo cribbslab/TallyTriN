@@ -19,17 +19,17 @@ class connectedComponent(object):
                 component = []
                 queue = deque([root])
                 # print('-> root {} has not been visited'.format(root))
-                # print('---> a queue built by root {} is {}'.format(root, queue))
+                # print('===> a queue built by root {} is {}'.format(root, queue))
                 while queue:
-                    # print('------> a queue built by each root node {}'.format(queue))
+                    # print('======> a queue built by each root node {}'.format(queue))
                     node = queue.popleft()
-                    # print('------> node: {}'.format(node))
+                    # print('======> node: {}'.format(node))
                     component.append(node)
                     for nbr in graph[node]:
                         if nbr not in visited:
                             visited.add(nbr)
                             queue.append(nbr)
-                # print('------> visited nodes {}'.format(visited))
+                # print('======> visited nodes {}'.format(visited))
                 yield component
             else:
                 continue
@@ -61,17 +61,17 @@ class connectedComponent(object):
                 component = []
                 queue = [root]
                 print('-> root {} has not been visited'.format(root))
-                print('---> a queue built by root {} is {}'.format(root, queue))
+                print('===> a queue built by root {} is {}'.format(root, queue))
                 while queue:
-                    print('------> a queue built by each root node {}'.format(queue))
+                    print('======> a queue built by each root node {}'.format(queue))
                     node = queue.pop(0)
-                    print('------> node: {}'.format(node))
+                    print('======> node: {}'.format(node))
                     component.append(node)
                     for nbr in graph[node]:
                         if nbr not in visited:
                             visited.add(nbr)
                             queue.append(nbr)
-                print('------> visited nodes {}'.format(visited))
+                print('======> visited nodes {}'.format(visited))
                 components.append(component)
             else:
                 print('-> root {} has been visited'.format(root))

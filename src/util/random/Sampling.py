@@ -26,7 +26,7 @@ class sampling(object):
         def switch(dself, *args, **kwargs):
             # print(args)
             # print(kwargs)
-            print('------>sampling...')
+            print('======>sampling...')
             res2p = deal(dself, **kwargs)
             # print(res2p)
             res2p['data_spl'] = compiler(

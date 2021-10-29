@@ -12,7 +12,7 @@ class trace(object):
 
     def edgecls(self, df_list_2d, sort='cnt'):
         stime = time.time()
-        print('------>edges to be traced is {}'.format(df_list_2d.shape[0]))
+        print('======>edges to be traced is {}'.format(df_list_2d.shape[0]))
         res = df_list_2d.apply(
             lambda list_2d: self.by01(list_2d),
         )
@@ -24,7 +24,7 @@ class trace(object):
             total_lens = total.sum()
             total_0_lens = total_0.sum()
             total_1_lens = total_1.sum()
-            print('------>trace edge cls time {time:.2f}s'.format(time=time.time()-stime))
+            print('======>trace edge cls time {time:.2f}s'.format(time=time.time()-stime))
             return total_0_lens, total_1_lens, total_lens
         elif sort == 'pct':
             total_0_pcts = res.apply(lambda x: sum(1 for ele in x if ele == 0) / len(x) if len(x) != 0 else None)
@@ -55,7 +55,7 @@ class trace(object):
         return trace_marks
 
     def matchRepresentative(self, df):
-        print('------>representative to be traced is {}'.format(df.shape[0]))
+        print('======>representative to be traced is {}'.format(df.shape[0]))
         stime = time.time()
         res = df.apply(
             lambda list_2d: self.maxval(list_2d),
@@ -70,7 +70,7 @@ class trace(object):
         # print(total)
         total_len = total.sum()
         # print(total_len)
-        print('------>trace representative time {time:.2f}s'.format(time=time.time() - stime))
+        print('======>trace representative time {time:.2f}s'.format(time=time.time() - stime))
         return len(ttt)/50
 
     def maxval(self, list_2d):
