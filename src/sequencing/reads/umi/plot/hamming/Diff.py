@@ -22,13 +22,13 @@ class diff(object):
         rcParams['font.family'] = 'sans-serif'
         rcParams['font.sans-serif'] = ['Tahoma']
         self.df_monomer = self.gfreader.generic(
-            df_fpn=to('data/simu/umi/seq_errs/monomer/trimmed/hamming.txt')
+            df_fpn=to('data/simu/umi/seq_errs/monomer/trimmed/seq.txt')
         )
         self.df_dimer = self.gfreader.generic(
-            df_fpn=to('data/simu/umi/seq_errs/dimer/trimmed/hamming.txt')
+            df_fpn=to('data/simu/umi/seq_errs/dimer/trimmed/seq.txt')
         )
         self.df_trimer = self.gfreader.generic(
-            df_fpn=to('data/simu/umi/seq_errs/trimer/trimmed/hamming.txt')
+            df_fpn=to('data/simu/umi/seq_errs/trimer/trimmed/seq.txt')
         )
         print(self.df_monomer.loc[:, 14:].values.T)
         print(self.df_dimer.loc[:, 14:].values.T)
@@ -192,10 +192,54 @@ class diff(object):
         max_ = max(arr)
         return [i/max_ for i in arr]
 
+    def stackedbar(self, ):
+        tt = [1e-05, 2.5e-05, 5e-05, 7.5e-05, 0.0001, 0.00025, 0.0005, 0.00075, 0.001, 0.0025, 0.005, 0.0075,
+              0.01, 0.025, 0.05, 0.075, 0.1, 0.2, 0.3]
+        x_tick_labels = ["{:.1e}".format(i) for i in tt]
+        index = pd.Index(x_tick_labels, name='test')
+
+        stf1 = self.minmax(self.df_monomer.sum(axis=0))
+        stf2 = self.minmax(self.df_dimer.sum(axis=0))
+        stf3 = self.minmax(self.df_trimer.sum(axis=0))
+
+        data = {'monomer': stf1.values.tolist(),
+                'dimer': stf2.values.tolist(),
+                'trimer': stf3.values.tolist(),
+                }
+
+        df = pd.DataFrame(data, index=index)
+        ax = df.plot(
+            kind='bar', stacked=True, figsize=(10, 6),
+            color={
+            "monomer": "magenta", "dimer": "skyblue", "trimer": "gray",
+            },
+            # color='None',
+            # colormap='Paired',
+            alpha=0.4,
+        )
+        ax.set_xlabel('Sequencing error rate', fontsize=15)
+        ax.set_ylabel('Number of incorrect UMIs', fontsize=15)
+        # ax.set_ylabel('Number of nucleotide errors', fontsize=15)
+        ax.spines['right'].set_visible(False)
+        ax.spines['top'].set_visible(False)
+        plt.subplots_adjust(
+            top=0.92,
+            bottom=0.18,
+            left=0.11,
+            right=0.85,
+            hspace=0.20,
+            wspace=0.15
+        )
+        plt.legend(title='labels', bbox_to_anchor=(1.0, 1), loc='upper left')
+        # plt.savefig('stacked.png')  # if needed
+        plt.show()
+        return
+
 
 if __name__ == "__main__":
 
     p = diff()
     # print(p.boxplot())
-    print(p.linebase())
+    # print(p.linebase())
     # print(p.lineseq())
+    print(p.stackedbar())

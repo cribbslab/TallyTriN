@@ -11,17 +11,12 @@ from Path import to
 class general(object):
 
     def __init__(self, ):
-        self.permutation_num = 10
-
         self.umi_unit_len_fixed = 10
-        self.seq_len_fixed = 100
         self.umi_num_fixed = 50
-        self.pcr_num_fixed = 17
+        self.pcr_num_fixed = 10
         self.pcr_err_fixed = 1e-3
         self.seq_err_fixed = 1e-3
         self.ampl_rate_fixed = 0.85
-        self.sim_thres_fixed = 3
-        self.seq_sub_spl_rate = 0.3333
 
         self.ampl_rates = np.linspace(0.1, 1, 10)
         self.umi_unit_lens = np.arange(6, 36 + 1, 1)
@@ -70,178 +65,153 @@ class general(object):
         return pcr_errs, seq_errs
 
     def pcrNums(self, ):
-        for pn in range(self.permutation_num):
+        for id, i_pcr_num in enumerate(self.pcr_nums):
             simu_params = {
                 'init_seq_setting': {
                     'seq_num': self.umi_num_fixed,
                     'umi_unit_pattern': 1,
                     'umi_unit_len': self.umi_unit_len_fixed,
-                    'seq_len': self.seq_len_fixed - self.umi_unit_len_fixed,
                     'is_seed': True,
-                    'working_dir': to('data/simu/umi_seq/pcr_num/permute_') + str(pn) + '/',
-                    'is_sv_umi_lib': True,
-                    'umi_lib_fpn': to('data/simu/umi_seq/pcr_num/permute_') + str(pn) + '/umi.txt',
-                    'is_sv_seq_lib': True,
-                    'seq_lib_fpn': to('data/simu/umi_seq/pcr_num/permute_') + str(pn) + '/seq.txt',
-                    'condis': ['umi', 'seq'],
-                    'sim_thres': self.sim_thres_fixed,
-                    'permutation': pn,
+                    'seq_len': 100 - self.umi_unit_len_fixed,
+                    'is_sv_umi_lib': True if id == 0 else False,
+                    'is_sv_seq_lib': True if id == 0 else False,
+                    'working_dir': to('data/simu/pcr_nums/'),
+                    'umi_lib_fpn': to('data/simu/pcr_nums/umi.txt'),
+                    'seq_lib_fpn': to('data/simu/pcr_nums/seq.txt'),
                 },
                 'ampl_rate': self.ampl_rate_fixed,
-                'pcr_nums': self.pcr_nums,
-                'err_num_met': 'nbinomial',
+                'pcr_num': i_pcr_num,
                 'pcr_error': self.pcr_err_fixed,
                 'seq_error': self.seq_err_fixed,
-                'seq_sub_spl_rate': self.seq_sub_spl_rate,
                 'use_seed': False,
                 'seed': None,
                 'write': {
-                    'fastq_fp': to('data/simu/umi_seq/pcr_num/permute_') + str(pn) + '/',
-                    'fastq_fn': '',
+                    'fastq_fp': to('data/simu/pcr_nums/'),
+                    'fastq_fn': 'pcr_' + str(i_pcr_num),
                 }
             }
             p = simugeneral(simu_params)
-            print(p.ondemandPCRErrs())
+            print(p.ondemand())
         return
 
     def pcrErrs(self, ):
-        for pn in range(self.permutation_num):
+        for id, i_pcr_err in enumerate(self.pcr_errs):
             simu_params = {
                 'init_seq_setting': {
                     'seq_num': self.umi_num_fixed,
                     'umi_unit_pattern': 1,
                     'umi_unit_len': self.umi_unit_len_fixed,
-                    'seq_len': self.seq_len_fixed - self.umi_unit_len_fixed,
                     'is_seed': True,
-                    'working_dir': to('data/simu/umi_seq/pcr_err/permute_') + str(pn) + '/',
-                    'is_sv_umi_lib': True,
-                    'umi_lib_fpn': to('data/simu/umi_seq/pcr_err/permute_') + str(pn) + '/umi.txt',
-                    'is_sv_seq_lib': True,
-                    'seq_lib_fpn': to('data/simu/umi_seq/pcr_err/permute_') + str(pn) + '/seq.txt',
-                    'condis': ['umi', 'seq'],
-                    'sim_thres': self.sim_thres_fixed,
-                    'permutation': pn,
+                    'seq_len': 100 - self.umi_unit_len_fixed,
+                    'is_sv_umi_lib': True if id == 0 else False,
+                    'is_sv_seq_lib': True if id == 0 else False,
+                    'working_dir': to('data/simu/pcr_errs/'),
+                    'umi_lib_fpn': to('data/simu/pcr_errs/umi.txt'),
+                    'seq_lib_fpn': to('data/simu/pcr_errs/seq.txt'),
                 },
                 'ampl_rate': self.ampl_rate_fixed,
                 'pcr_num': self.pcr_num_fixed,
-                'err_num_met': 'nbinomial',
-                'pcr_errors': self.pcr_errs,
+                'pcr_error': i_pcr_err,
                 'seq_error': self.seq_err_fixed,
-                'seq_sub_spl_rate': self.seq_sub_spl_rate,
                 'use_seed': False,
                 'seed': None,
                 'write': {
-                    'fastq_fp': to('data/simu/umi_seq/pcr_err/permute_') + str(pn) + '/',
-                    'fastq_fn': '',
+                    'fastq_fp': to('data/simu/pcr_errs/'),
+                    'fastq_fn': 'pcr_err_' + str(id),
                 }
             }
             p = simugeneral(simu_params)
-            print(p.ondemandPCRErrs())
+            print(p.ondemand())
         return
 
     def seqErrs(self, ):
-        for pn in range(self.permutation_num):
+        for id, i_seq_err in enumerate(self.seq_errs):
             simu_params = {
                 'init_seq_setting': {
                     'seq_num': self.umi_num_fixed,
                     'umi_unit_pattern': 1,
                     'umi_unit_len': self.umi_unit_len_fixed,
-                    'seq_len': self.seq_len_fixed - self.umi_unit_len_fixed,
                     'is_seed': True,
-                    'working_dir': to('data/simu/umi_seq/seq_err/permute_') + str(pn) + '/',
-                    'is_sv_umi_lib':True,
-                    'umi_lib_fpn':to('data/simu/umi_seq/seq_err/permute_') + str(pn) + '/umi.txt',
-                    'is_sv_seq_lib':True,
-                    'seq_lib_fpn':to('data/simu/umi_seq/seq_err/permute_') + str(pn) + '/seq.txt',
-                    'condis': ['umi', 'seq'],
-                    'sim_thres': self.sim_thres_fixed,
-                    'permutation': pn,
+                    'seq_len': 100 - self.umi_unit_len_fixed,
+                    'is_sv_umi_lib': True if id == 0 else False,
+                    'is_sv_seq_lib': True if id == 0 else False,
+                    'working_dir': to('data/simu/seq_errs/'),
+                    'umi_lib_fpn': to('data/simu/seq_errs/umi.txt'),
+                    'seq_lib_fpn': to('data/simu/seq_errs/seq.txt'),
                 },
                 'ampl_rate': self.ampl_rate_fixed,
                 'pcr_num': self.pcr_num_fixed,
-                'err_num_met': 'nbinomial',
                 'pcr_error': self.pcr_err_fixed,
-                'seq_errors': self.seq_errs,
-                'seq_sub_spl_rate': self.seq_sub_spl_rate,
+                'seq_error': i_seq_err,
                 'use_seed': False,
                 'seed': None,
                 'write': {
-                    'fastq_fp': to('data/simu/umi_seq/seq_err/permute_') + str(pn) + '/',
-                    'fastq_fn': '',
+                    'fastq_fp': to('data/simu/seq_errs/'),
+                    'fastq_fn': 'seq_err_' + str(id),
                 }
             }
             p = simugeneral(simu_params)
-            print(p.ondemandSeqErrs())
+            print(p.ondemand())
         return
 
     def umiLens(self, ):
-        for pn in range(self.permutation_num):
+        for id, umi_len in enumerate(self.umi_unit_lens):
             simu_params = {
                 'init_seq_setting': {
                     'seq_num': self.umi_num_fixed,
                     'umi_unit_pattern': 1,
-                    'umi_unit_lens': self.umi_unit_lens,
-                    'seq_len': self.seq_len_fixed,
+                    'umi_unit_len': umi_len,
                     'is_seed': True,
-                    'working_dir': to('data/simu/umi_seq/umi_len/permute_') + str(pn) + '/',
+                    'seq_len': 100 - umi_len,
                     'is_sv_umi_lib': True,
-                    'umi_lib_fpn': to('data/simu/umi_seq/umi_len/permute_') + str(pn) + '/',
                     'is_sv_seq_lib': True,
-                    'seq_lib_fpn': to('data/simu/umi_seq/umi_len/permute_') + str(pn) + '/',
-                    'condis': ['umi', 'seq'],
-                    'sim_thres': self.sim_thres_fixed,
-                    'permutation': pn,
+                    'working_dir': to('data/simu/umi_lens/'),
+                    'umi_lib_fpn': to('data/simu/umi_lens/umi_') + str(umi_len) + '.txt',
+                    'seq_lib_fpn': to('data/simu/umi_lens/seq_') + str(umi_len) + '.txt',
                 },
                 'ampl_rate': self.ampl_rate_fixed,
                 'pcr_num': self.pcr_num_fixed,
-                'err_num_met': 'nbinomial',
                 'pcr_error': self.pcr_err_fixed,
                 'seq_error': self.seq_err_fixed,
-                'seq_sub_spl_rate': self.seq_sub_spl_rate,
                 'use_seed': False,
                 'seed': None,
                 'write': {
-                    'fastq_fp': to('data/simu/umi_seq/umi_len/permute_') + str(pn) + '/',
-                    'fastq_fn': '',
+                    'fastq_fp': to('data/simu/umi_lens/'),
+                    'fastq_fn': 'umi_len_' + str(umi_len),
                 }
             }
             p = simugeneral(simu_params)
-            print(p.ondemandPCRErrs())
+            print(p.ondemand())
         return
 
     def amplRates(self, ):
-        for pn in range(self.permutation_num):
+        for id, ampl_rate in enumerate(self.ampl_rates):
             simu_params = {
                 'init_seq_setting': {
                     'seq_num': self.umi_num_fixed,
                     'umi_unit_pattern': 1,
                     'umi_unit_len': self.umi_unit_len_fixed,
-                    'seq_len': self.seq_len_fixed - self.umi_unit_len_fixed,
                     'is_seed': True,
-                    'working_dir': to('data/simu/umi_seq/ampl_rate/permute_') + str(pn) + '/',
-                    'is_sv_umi_lib': True,
-                    'umi_lib_fpn': to('data/simu/umi_seq/ampl_rate/permute_') + str(pn) + '/umi.txt',
-                    'is_sv_seq_lib': True,
-                    'seq_lib_fpn': to('data/simu/umi_seq/ampl_rate/permute_') + str(pn) + '/seq.txt',
-                    'condis': ['umi', 'seq'],
-                    'sim_thres': self.sim_thres_fixed,
-                    'permutation': pn,
+                    'seq_len': 100 - self.umi_unit_len_fixed,
+                    'is_sv_umi_lib': True if id == 0 else False,
+                    'is_sv_seq_lib': True if id == 0 else False,
+                    'working_dir': to('data/simu/ampl_rates/'),
+                    'umi_lib_fpn': to('data/simu/ampl_rates/umi.txt'),
+                    'seq_lib_fpn': to('data/simu/ampl_rates/seq.txt'),
                 },
-                'ampl_rates': self.ampl_rates,
+                'ampl_rate': ampl_rate,
                 'pcr_num': self.pcr_num_fixed,
-                'err_num_met': 'nbinomial',
                 'pcr_error': self.pcr_err_fixed,
                 'seq_error': self.seq_err_fixed,
-                'seq_sub_spl_rate': self.seq_sub_spl_rate,
                 'use_seed': False,
                 'seed': None,
                 'write': {
-                    'fastq_fp': to('data/simu/umi_seq/ampl_rate/permute_') + str(pn) + '/',
-                    'fastq_fn': '',
+                    'fastq_fp': to('data/simu/ampl_rates/'),
+                    'fastq_fn': 'ampl_rate_' + str(id),
                 }
             }
             p = simugeneral(simu_params)
-            print(p.ondemandPCRErrs())
+            print(p.ondemand())
         return
 
 
@@ -250,7 +220,7 @@ if __name__ == "__main__":
 
     # print(p.pcrNums())
 
-    print(p.pcrErrs())
+    # print(p.pcrErrs())
 
     # print(p.seqErrs())
 

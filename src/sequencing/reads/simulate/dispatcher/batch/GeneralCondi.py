@@ -11,6 +11,8 @@ from Path import to
 class generalCondi(object):
 
     def __init__(self, ):
+        self.permutation_num = 10
+
         self.umi_unit_len_fixed = 10
         self.spacer_len_fixed = 10
         self.umi_num_fixed = 50
