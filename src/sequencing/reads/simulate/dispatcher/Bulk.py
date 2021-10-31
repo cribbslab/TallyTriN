@@ -4,14 +4,14 @@ __license__ = "MIT"
 __lab__ = "Adam Cribbs lab"
 
 import numpy as np
-from src.sequencing.reads.simulate.initiator.General import general as simuip
+from src.sequencing.reads.simulate.initiator.Bulk import bulk as simuip
 from src.sequencing.reads.simulate.pcr.Amplify import amplify as pcr
 from src.sequencing.reads.simulate.sequencing.Calling import calling as seq
 from src.util.sequence.fastq.Write import write as wfastq
 from Path import to
 
 
-class general(object):
+class bulk(object):
 
     def __init__(self, *args, **kwargs):
         self.args = args[0]
@@ -24,7 +24,7 @@ class general(object):
         # /*** block. Init a pool of sequences ***/
         print('->Init pool of sequences has started.')
         init_seqs = simuip(
-            seq_num=self.args['init_seq_setting']['seq_num'],
+            gspl=self.args['init_seq_setting']['gspl'],
             umi_unit_pattern=self.args['init_seq_setting']['umi_unit_pattern'],
             umi_unit_len=self.args['init_seq_setting']['umi_unit_len'],
             is_seed=self.args['init_seq_setting']['is_seed'],
@@ -82,7 +82,7 @@ class general(object):
         # /*** block. Init a pool of sequences ***/
         print('->Init pool of sequences has started.')
         init_seqs = simuip(
-            seq_num=self.args['init_seq_setting']['seq_num'],
+            gspl=self.args['init_seq_setting']['gspl'],
             umi_unit_pattern=self.args['init_seq_setting']['umi_unit_pattern'],
             umi_unit_len=self.args['init_seq_setting']['umi_unit_len'],
             is_seed=self.args['init_seq_setting']['is_seed'],
@@ -143,12 +143,12 @@ class general(object):
         for id, iumi_len in enumerate(self.args['init_seq_setting']['umi_unit_lens']):
             print('->Init pool of sequences has started.')
             init_seqs = simuip(
-                seq_num=self.args['init_seq_setting']['seq_num'],
+                gspl=self.args['init_seq_setting']['gspl'],
                 umi_unit_pattern=self.args['init_seq_setting']['umi_unit_pattern'],
                 umi_unit_len=iumi_len,
                 is_seed=self.args['init_seq_setting']['is_seed'],
                 is_sv_umi_lib=self.args['init_seq_setting']['is_sv_umi_lib'],
-                umi_lib_fpn=self.args['init_seq_setting']['umi_lib_fp'] + '/umi_' + str(iumi_len) + '.txt',
+                umi_lib_fpn=self.args['init_seq_setting']['umi_lib_fp'] + '/umi_' + str(iumi_len) + '_',
                 working_dir=self.args['init_seq_setting']['working_dir'],
                 condis=self.args['init_seq_setting']['condis'],
                 permutation=self.args['init_seq_setting']['permutation'],
@@ -200,7 +200,7 @@ class general(object):
         # /*** block. Init a pool of sequences ***/
         print('->Init pool of sequences has started.')
         init_seqs = simuip(
-            seq_num=self.args['init_seq_setting']['seq_num'],
+            gspl=self.args['init_seq_setting']['gspl'],
             umi_unit_pattern=self.args['init_seq_setting']['umi_unit_pattern'],
             umi_unit_len=self.args['init_seq_setting']['umi_unit_len'],
             is_seed=self.args['init_seq_setting']['is_seed'],
@@ -258,7 +258,7 @@ class general(object):
         # /*** block. Init a pool of sequences ***/
         print('->Init pool of sequences has started.')
         init_seqs = simuip(
-            seq_num=self.args['init_seq_setting']['seq_num'],
+            gspl=self.args['init_seq_setting']['gspl'],
             umi_unit_pattern=self.args['init_seq_setting']['umi_unit_pattern'],
             umi_unit_len=self.args['init_seq_setting']['umi_unit_len'],
             is_seed=self.args['init_seq_setting']['is_seed'],
@@ -352,7 +352,7 @@ if __name__ == "__main__":
             'fastq_fn': '',
         }
     }
-    p = general(simu_params)
+    p = bulk(simu_params)
     print(p.ondemandSeqErrs())
     # print(p.ondemandUMILens())
     # print(p.ondemandPCRErrs())
