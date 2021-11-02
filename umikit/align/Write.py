@@ -3,7 +3,7 @@ __copyright__ = "Copyright 2021"
 __license__ = "MIT"
 __lab__ = "Adam Cribbs lab"
 
-import pysam
+# import pysam
 from umikit.util.Console import console
 
 

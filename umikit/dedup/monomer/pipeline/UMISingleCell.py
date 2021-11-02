@@ -76,12 +76,13 @@ class umi(Config.config):
                     ).tobamsc()
                 if is_dedup:
                     if self.metric == 'seq_errs':
-                        dedup_ob = dedupPos(
+                        dedup_ob = dedupSC(
                             mode='internal',
                             method=self.method,
-                            # bam_fpn=to('example/data/example.bam'),
+
                             bam_fpn=fastq_fp + self.metric + '/permute_' + str(i_pn) + '/bam/' + fn + '.bam',
-                            pos_tag='PO',
+                            gene_assigned_tag='XT',
+                            gene_is_assigned_tag='XS',
                             mcl_fold_thres=1.6,
                             inflat_val=self.mcl_inflat,
                             exp_val=self.mcl_exp,
@@ -91,9 +92,9 @@ class umi(Config.config):
                             is_sv=False,
                             sv_fpn=fastq_fp + self.metric + '/permute_' + str(i_pn) + '/summary/' + fn,
                         )
-                        dedup_arr.append(dedup_ob.dedup_num)
-            df_dedup['pn' + str(i_pn)] = dedup_arr
-            print(df_dedup)
+                        df_dedup.index = dedup_ob.dedup_index
+                        df_dedup['metric' + str(id)] = dedup_ob.dedup_num
+                        print(df_dedup)
         self.gwriter.generic(
             df=df_dedup,
             sv_fpn=fastq_fp + self.metric + '/' + str(self.method) + '.txt',
@@ -128,10 +129,10 @@ if __name__ == "__main__":
         # method='unique',
         # method='cluster',
         # method='adjacency',
-        # method='directional',
+        method='directional',
         # method='mcl',
         # method='mcl_val',
-        method='mcl_ed',
+        # method='mcl_ed',
 
         # is_trim=True,
         # is_tobam=True,

@@ -43,12 +43,13 @@ class singleCell(object):
         self.crtfolder.osmkdir(working_dir)
 
         self.gmat = gmat
-        print(self.gmat)
+        # print(self.gmat)
         self.cell_map = {k: v for k, v in enumerate(self.gmat.columns)}
         self.gene_map = {k: v for k, v in enumerate(self.gmat.index)}
         # print(self.cell_map)
         # print(self.gene_map)
         csr_ = coo_matrix(self.gmat)
+        print(csr_)
         self.gbyc_arr = np.transpose([
             csr_.row.tolist(),
             csr_.col.tolist(),

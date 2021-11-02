@@ -64,3 +64,11 @@ class fromSimulator(object):
 
     def run(self, ):
         return self.tool()[self.simulator]
+
+
+if __name__ == "__main__":
+
+    p = gmat, _, _ = fromSimulator(simulator='SPsimSeqFixSM').run()
+    from scipy.sparse import coo_matrix
+    csr_ = coo_matrix(gmat)
+    print(csr_)
