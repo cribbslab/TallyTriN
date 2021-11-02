@@ -38,7 +38,6 @@ class convert():
                 a.next_reference_start = 0
                 a.template_length = 0
                 a.query_qualities = None
-                # a.tags = (("PO", 1), ("RG", "L1"))
                 a.tags = (("PO", 1), )
                 outf.write(a)
         return
@@ -64,7 +63,6 @@ class convert():
                 a.next_reference_start = 0
                 a.template_length = 0
                 a.query_qualities = None
-                # a.tags = (("PO", 1), ("RG", "L1"))
                 a.tags = (
                     ("BC", int(asterisk_split[2])),
                     ("XT", int(asterisk_split[4])),
@@ -94,9 +92,8 @@ class convert():
                 a.next_reference_start = 0
                 a.template_length = 0
                 a.query_qualities = None
-                # a.tags = (("PO", 1), ("RG", "L1"))
                 a.tags = (
-                    ("BC", int(asterisk_split[2])),
+                    ("SP", int(asterisk_split[2])),
                     ("XT", int(asterisk_split[4])),
                     ("XS", "Assigned"),
                 )

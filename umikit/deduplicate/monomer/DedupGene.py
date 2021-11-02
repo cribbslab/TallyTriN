@@ -70,119 +70,6 @@ class dedupGene():
             self.sv_fpn = sv_fpn
             self.verbose = verbose
             print('run Mclumi internally.')
-        else:
-            self.parser = argparse.ArgumentParser(
-                description='The dedupBasic module'
-            )
-            self.parser.add_argument(
-                "--method", "-m",
-                metavar='method',
-                dest='m',
-                required=True,
-                type=str,
-                help='str - a dedup method: unique | cluster | adjacency | directional | mcl | mcl_ed | mcl_val',
-            )
-            self.parser.add_argument(
-                "--input_bam", "-ibam",
-                metavar='input_bam',
-                dest='ibam',
-                required=True,
-                type=str,
-                help='str - input a bam file curated by requirements of THE dedup_basic modules',
-            )
-            self.parser.add_argument(
-                "--edit_dist", "-ed",
-                metavar='edit dist',
-                dest='ed',
-                default=1,
-                type=int,
-                help='int - an edit distance used for building graphs (int >1)',
-            )
-            self.parser.add_argument(
-                "--inflation_value", "-infv",
-                metavar='inflation_value',
-                dest='infv',
-                default=2.0,
-                type=float,
-                help='an inflation value for MCL',
-            )
-            self.parser.add_argument(
-                "--expansion_value", "-expv",
-                metavar='expansion_value',
-                dest='expv',
-                default=2,
-                type=int,
-                help='an expansion value for MCL at a range of (1, 5)',
-            )
-            self.parser.add_argument(
-                "--iteration_number", "-itern",
-                metavar='iteration_number',
-                dest='itern',
-                default=100,
-                type=int,
-                help='int - iteration number for MCL at a range of (1, +inf) (100 by defualt)',
-            )
-            self.parser.add_argument(
-                "--mcl_fold_thres", "-fthres",
-                metavar='mcl_fold_thres',
-                dest='fthres',
-                default=1.1,
-                type=float,
-                help='float - a fold threshold for MCL  at a range of (1, l) where l is the length of a UMI (1.5 by defualt)',
-            )
-            self.parser.add_argument(
-                "--is_sv", "-issv",
-                metavar='is_sv',
-                dest='issv',
-                default=True,
-                type=bool,
-                help='bool - to make sure if the deduplicated bam info writes to a bam file.',
-            )
-            self.parser.add_argument(
-                "--output_bam", "-obam",
-                metavar='output_bam',
-                dest='obam',
-                required=True,
-                type=str,
-                help='str - output UMI-de-duplicated summary statistics to a bam file.',
-            )
-            self.parser.add_argument(
-                "--verbose", "-vb",
-                metavar='verbose',
-                dest='vb',
-                default=True,
-                type=bool,
-                help='bool - to enable if output logs are on console, print log on the console, (True by default or False)',
-            )
-            self.parser.add_argument(
-                "--gene_assigned_tag", "-gt",
-                metavar='gene_assigned_tag',
-                dest='gt',
-                required=True,
-                type=str,
-                help='str - to enable deduplication on the gene tag (XT recommended)',
-            )
-            self.parser.add_argument(
-                "--gene_is_assigned_tag", "-gist",
-                metavar='gene_is_assigned_tag',
-                dest='gist',
-                required=True,
-                type=str,
-                help='str - to check if reads are assigned the gene tag (XS recommended).',
-            )
-            args = self.parser.parse_args()
-            self.method = args.m
-            self.bam_fpn = args.ibam
-            self.ed_thres = args.ed
-            self.gene_assigned_tag = args.gt
-            self.gene_is_assigned_tag = args.gist
-            self.mcl_fold_thres = args.fthres
-            self.inflat_val = args.infv
-            self.exp_val = args.expv
-            self.iter_num = args.itern
-            self.is_sv = args.issv
-            self.sv_fpn = args.obam
-            self.verbose = args.vb
 
         self.console = console()
         self.console.verbose = self.verbose
@@ -203,7 +90,7 @@ class dedupGene():
         self.console.print('======># of reads with assigned genes: {}'.format(self.df_bam.shape[0]))
 
         self.df_bam['umi'] = self.df_bam['query_name'].apply(lambda x: x.split('_')[1])
-        self.df_bam['umi'] = self.df_bam['query_name'].apply(lambda x: self.correct(x))
+        # self.df_bam['umi'] = self.df_bam['query_name'].apply(lambda x: self.correct(x))
         self.console.print('======># of unique umis: {}'.format(self.df_bam['umi'].unique().shape[0]))
         self.console.print('======># of redundant umis: {}'.format(self.df_bam['umi'].shape[0]))
 
@@ -269,67 +156,43 @@ class dedupGene():
             self.df['dedup_read_diff_pos'] = self.df.apply(lambda x: self.diffDedupReadCountPos(x, by_col='uniq_repr_nodes'), axis=1)
             self.console.print('======># of deduplicated unique umis {} on the basis of the unique method'.format(self.df['dedup_uniq_diff_pos'].sum()))
             self.console.print('======># of deduplicated reads {} on the basis of the unique method'.format(self.df['dedup_read_diff_pos'].sum()))
-            self.gwriter.generic(df=ave_ed_bins, sv_fpn=self.dirname + 'uniq_ave_ed_pos_bin.txt', index=True)
             self.df_dedup_sum = self.df[[
                 'ave_eds',
                 'uniq_umi_len',
                 'dedup_uniq_diff_pos',
                 'dedup_read_diff_pos',
             ]]
-            self.gwriter.generic(
-                df=self.df_dedup_sum,
-                sv_fpn=self.dirname + 'uniq_dedup_sum.txt',
-                index=True,
-                header=True,
-            )
             self.console.print('======>start writing deduplicated reads to BAM...')
             dedup_reads_write_stime = time.time()
             self.df['uniq_bam_ids'] = self.df.apply(lambda x: self.bamids(x, by_col='uniq_repr_nodes'), axis=1)
-            self.aliwriter.tobam(
-                tobam_fpn=self.dirname + self.method + '_dedup.bam',
-                tmpl_bam_fpn=self.bam_fpn,
-                whitelist=self.decompose(list_nd=self.df['uniq_bam_ids'].values),
-            )
             self.console.print('======>finish writing in {:.2f}s'.format(time.time() - dedup_reads_write_stime))
 
         elif self.method == 'cluster':
             dedup_umi_stime = time.time()
             self.df['cc_repr_nodes'] = self.df.apply(lambda x: self.umimax(x, by_col='cc'), axis=1)
             self.df['cc_umi_len'] = self.df['cc_repr_nodes'].apply(lambda x: self.length(x))
-            self.console.print('======>finish finding deduplicated umis in {:.2f}s'.format(time.time() - dedup_umi_stime))
-            self.console.print('======>calculate average edit distances between umis...')
-            dedup_umi_edave_stime = time.time()
-            self.df['ave_eds'] = self.df.apply(lambda x: self.edave(x, by_col='cc_repr_nodes'), axis=1)
-            self.console.print('======>finish calculating ave eds in {:.2f}s'.format(time.time() - dedup_umi_edave_stime))
-            self.df['dedup_uniq_diff_pos'] = self.df.apply(lambda x: self.diffDedupUniqCountPos(x, by_col='cc_repr_nodes'), axis=1)
-            self.df['dedup_read_diff_pos'] = self.df.apply(lambda x: self.diffDedupReadCountPos(x, by_col='cc_repr_nodes'), axis=1)
-            self.console.print('======># of deduplicated unique umis {} on the basis of the unique method'.format(self.df['dedup_uniq_diff_pos'].sum()))
-            self.console.print('======># of deduplicated reads {} on the basis of the unique method'.format(self.df['dedup_read_diff_pos'].sum()))
-            ave_ed_bins = self.df['ave_eds'].value_counts().sort_index()
-            self.console.check(ave_ed_bins)
-            self.gwriter.generic(df=ave_ed_bins, sv_fpn=self.dirname + 'cc_ave_ed_pos_bin.txt', index=True)
-            self.df_dedup_sum = self.df[[
-                'cc_umi_len',
-                'ave_eds',
-                'uniq_umi_len',
-                'dedup_uniq_diff_pos',
-                'dedup_read_diff_pos',
-            ]]
-            self.gwriter.generic(
-                df=self.df_dedup_sum,
-                sv_fpn=self.dirname + 'cc_dedup_sum.txt',
-                index=True,
-                header=True,
-            )
-            self.console.print('======>start writing deduplicated reads to BAM...')
-            dedup_reads_write_stime = time.time()
-            self.df['cc_bam_ids'] = self.df.apply(lambda x: self.bamids(x, by_col='cc_repr_nodes'), axis=1)
-            self.aliwriter.tobam(
-                tobam_fpn=self.dirname + self.method + '_dedup.bam',
-                tmpl_bam_fpn=self.bam_fpn,
-                whitelist=self.decompose(list_nd=self.df['cc_bam_ids'].values),
-            )
-            self.console.print('======>finish writing in {:.2f}s'.format(time.time() - dedup_reads_write_stime))
+            # self.console.print('======>finish finding deduplicated umis in {:.2f}s'.format(time.time() - dedup_umi_stime))
+            # self.console.print('======>calculate average edit distances between umis...')
+            # dedup_umi_edave_stime = time.time()
+            # self.df['ave_eds'] = self.df.apply(lambda x: self.edave(x, by_col='cc_repr_nodes'), axis=1)
+            # self.console.print('======>finish calculating ave eds in {:.2f}s'.format(time.time() - dedup_umi_edave_stime))
+            # self.df['dedup_uniq_diff_pos'] = self.df.apply(lambda x: self.diffDedupUniqCountPos(x, by_col='cc_repr_nodes'), axis=1)
+            # self.df['dedup_read_diff_pos'] = self.df.apply(lambda x: self.diffDedupReadCountPos(x, by_col='cc_repr_nodes'), axis=1)
+            # self.console.print('======># of deduplicated unique umis {} on the basis of the unique method'.format(self.df['dedup_uniq_diff_pos'].sum()))
+            # self.console.print('======># of deduplicated reads {} on the basis of the unique method'.format(self.df['dedup_read_diff_pos'].sum()))
+            # ave_ed_bins = self.df['ave_eds'].value_counts().sort_index()
+            # self.console.check(ave_ed_bins)
+            # self.df_dedup_sum = self.df[[
+            #     'cc_umi_len',
+            #     'ave_eds',
+            #     'uniq_umi_len',
+            #     'dedup_uniq_diff_pos',
+            #     'dedup_read_diff_pos',
+            # ]]
+            # self.console.print('======>start writing deduplicated reads to BAM...')
+            # dedup_reads_write_stime = time.time()
+            # self.df['cc_bam_ids'] = self.df.apply(lambda x: self.bamids(x, by_col='cc_repr_nodes'), axis=1)
+            # self.console.print('======>finish writing in {:.2f}s'.format(time.time() - dedup_reads_write_stime))
 
         elif self.method == 'adjacency':
             dedup_umi_stime = time.time()
@@ -345,40 +208,28 @@ class dedupGene():
             )
             self.df['adj_repr_nodes'] = self.df.apply(lambda x: self.umimax(x, by_col='adj'), axis=1)
             self.df['adj_umi_len'] = self.df['adj_repr_nodes'].apply(lambda x: self.length(x))
-            self.console.print('======>finish finding deduplicated umis in {:.2f}s'.format(time.time() - dedup_umi_stime))
-            self.console.print('======>calculate average edit distances between umis...')
-            dedup_umi_edave_stime = time.time()
-            self.df['ave_eds'] = self.df.apply(lambda x: self.edave(x, by_col='adj_repr_nodes'), axis=1)
-            self.console.print('======>finish calculating ave eds in {:.2f}s'.format(time.time() - dedup_umi_edave_stime))
-            self.df['dedup_uniq_diff_pos'] = self.df.apply(lambda x: self.diffDedupUniqCountPos(x, by_col='adj_repr_nodes'), axis=1)
-            self.df['dedup_read_diff_pos'] = self.df.apply(lambda x: self.diffDedupReadCountPos(x, by_col='adj_repr_nodes'), axis=1)
-            self.console.print('======># of deduplicated unique umis {} on the basis of the unique method'.format(self.df['dedup_uniq_diff_pos'].sum()))
-            self.console.print('======># of deduplicated reads {} on the basis of the unique method'.format(self.df['dedup_read_diff_pos'].sum()))
-            ave_ed_bins = self.df['ave_eds'].value_counts().sort_index()
-            self.console.check(ave_ed_bins)
-            self.gwriter.generic(df=ave_ed_bins, sv_fpn=self.dirname + 'adj_ave_ed_pos_bin.txt', index=True)
-            self.df_dedup_sum = self.df[[
-                'adj_umi_len',
-                'ave_eds',
-                'uniq_umi_len',
-                'dedup_uniq_diff_pos',
-                'dedup_read_diff_pos',
-            ]]
-            self.gwriter.generic(
-                df=self.df_dedup_sum,
-                sv_fpn=self.dirname + 'adj_dedup_sum.txt',
-                index=True,
-                header=True,
-            )
-            self.console.print('======>start writing deduplicated reads to BAM...')
-            dedup_reads_write_stime = time.time()
-            self.df['adj_bam_ids'] = self.df.apply(lambda x: self.bamids(x, by_col='adj_repr_nodes'), axis=1)
-            self.aliwriter.tobam(
-                tobam_fpn=self.dirname + self.method + '_dedup.bam',
-                tmpl_bam_fpn=self.bam_fpn,
-                whitelist=self.decompose(list_nd=self.df['adj_bam_ids'].values),
-            )
-            self.console.print('======>finish writing in {:.2f}s'.format(time.time() - dedup_reads_write_stime))
+            # self.console.print('======>finish finding deduplicated umis in {:.2f}s'.format(time.time() - dedup_umi_stime))
+            # self.console.print('======>calculate average edit distances between umis...')
+            # dedup_umi_edave_stime = time.time()
+            # self.df['ave_eds'] = self.df.apply(lambda x: self.edave(x, by_col='adj_repr_nodes'), axis=1)
+            # self.console.print('======>finish calculating ave eds in {:.2f}s'.format(time.time() - dedup_umi_edave_stime))
+            # self.df['dedup_uniq_diff_pos'] = self.df.apply(lambda x: self.diffDedupUniqCountPos(x, by_col='adj_repr_nodes'), axis=1)
+            # self.df['dedup_read_diff_pos'] = self.df.apply(lambda x: self.diffDedupReadCountPos(x, by_col='adj_repr_nodes'), axis=1)
+            # self.console.print('======># of deduplicated unique umis {} on the basis of the unique method'.format(self.df['dedup_uniq_diff_pos'].sum()))
+            # self.console.print('======># of deduplicated reads {} on the basis of the unique method'.format(self.df['dedup_read_diff_pos'].sum()))
+            # ave_ed_bins = self.df['ave_eds'].value_counts().sort_index()
+            # self.console.check(ave_ed_bins)
+            # self.df_dedup_sum = self.df[[
+            #     'adj_umi_len',
+            #     'ave_eds',
+            #     'uniq_umi_len',
+            #     'dedup_uniq_diff_pos',
+            #     'dedup_read_diff_pos',
+            # ]]
+            # self.console.print('======>start writing deduplicated reads to BAM...')
+            # dedup_reads_write_stime = time.time()
+            # self.df['adj_bam_ids'] = self.df.apply(lambda x: self.bamids(x, by_col='adj_repr_nodes'), axis=1)
+            # self.console.print('======>finish writing in {:.2f}s'.format(time.time() - dedup_reads_write_stime))
 
         elif self.method == 'directional':
             dedup_umi_stime = time.time()
@@ -394,40 +245,31 @@ class dedupGene():
             )
             self.df['direc_repr_nodes'] = self.df.apply(lambda x: self.umimax(x, by_col='direc'), axis=1)
             self.df['direc_umi_len'] = self.df['direc_repr_nodes'].apply(lambda x: self.length(x))
-            self.console.print('======>finish finding deduplicated umis in {:.2f}s'.format(time.time() - dedup_umi_stime))
-            self.console.print('======>calculate average edit distances between umis...')
-            dedup_umi_edave_stime = time.time()
-            self.df['ave_eds'] = self.df.apply(lambda x: self.edave(x, by_col='direc_repr_nodes'), axis=1)
-            self.console.print('======>finish calculating ave eds in {:.2f}s'.format(time.time() - dedup_umi_edave_stime))
-            self.df['dedup_uniq_diff_pos'] = self.df.apply(lambda x: self.diffDedupUniqCountPos(x, by_col='direc_repr_nodes'), axis=1)
-            self.df['dedup_read_diff_pos'] = self.df.apply(lambda x: self.diffDedupReadCountPos(x, by_col='direc_repr_nodes'), axis=1)
-            self.console.print('======># of deduplicated unique umis {} on the basis of the unique method'.format(self.df['dedup_uniq_diff_pos'].sum()))
-            self.console.print('======># of deduplicated reads {} on the basis of the unique method'.format(self.df['dedup_read_diff_pos'].sum()))
-            ave_ed_bins = self.df['ave_eds'].value_counts().sort_index()
-            self.console.check(ave_ed_bins)
-            self.gwriter.generic(df=ave_ed_bins, sv_fpn=self.dirname + 'direc_ave_ed_pos_bin.txt', index=True)
-            self.df_dedup_sum = self.df[[
-                'direc_umi_len',
-                'ave_eds',
-                'uniq_umi_len',
-                'dedup_uniq_diff_pos',
-                'dedup_read_diff_pos',
-            ]]
-            self.gwriter.generic(
-                df=self.df_dedup_sum,
-                sv_fpn=self.dirname + 'direc_dedup_sum.txt',
-                index=True,
-                header=True,
-            )
-            self.console.print('======>start writing deduplicated reads to BAM...')
-            dedup_reads_write_stime = time.time()
-            self.df['direc_bam_ids'] = self.df.apply(lambda x: self.bamids(x, by_col='direc_repr_nodes'), axis=1)
-            self.aliwriter.tobam(
-                tobam_fpn=self.dirname + self.method + '_dedup.bam',
-                tmpl_bam_fpn=self.bam_fpn,
-                whitelist=self.decompose(list_nd=self.df['direc_bam_ids'].values),
-            )
-            self.console.print('======>finish writing in {:.2f}s'.format(time.time() - dedup_reads_write_stime))
+            self.dedup_index = self.df.index
+            self.dedup_num = self.df['direc_umi_len'].values.tolist()
+            print(self.dedup_num)
+            # self.console.print('======>finish finding deduplicated umis in {:.2f}s'.format(time.time() - dedup_umi_stime))
+            # self.console.print('======>calculate average edit distances between umis...')
+            # dedup_umi_edave_stime = time.time()
+            # self.df['ave_eds'] = self.df.apply(lambda x: self.edave(x, by_col='direc_repr_nodes'), axis=1)
+            # self.console.print('======>finish calculating ave eds in {:.2f}s'.format(time.time() - dedup_umi_edave_stime))
+            # self.df['dedup_uniq_diff_pos'] = self.df.apply(lambda x: self.diffDedupUniqCountPos(x, by_col='direc_repr_nodes'), axis=1)
+            # self.df['dedup_read_diff_pos'] = self.df.apply(lambda x: self.diffDedupReadCountPos(x, by_col='direc_repr_nodes'), axis=1)
+            # self.console.print('======># of deduplicated unique umis {} on the basis of the unique method'.format(self.df['dedup_uniq_diff_pos'].sum()))
+            # self.console.print('======># of deduplicated reads {} on the basis of the unique method'.format(self.df['dedup_read_diff_pos'].sum()))
+            # ave_ed_bins = self.df['ave_eds'].value_counts().sort_index()
+            # self.console.check(ave_ed_bins)
+            # self.df_dedup_sum = self.df[[
+            #     'direc_umi_len',
+            #     'ave_eds',
+            #     'uniq_umi_len',
+            #     'dedup_uniq_diff_pos',
+            #     'dedup_read_diff_pos',
+            # ]]
+            # self.console.print('======>start writing deduplicated reads to BAM...')
+            # dedup_reads_write_stime = time.time()
+            # self.df['direc_bam_ids'] = self.df.apply(lambda x: self.bamids(x, by_col='direc_repr_nodes'), axis=1)
+            # self.console.print('======>finish writing in {:.2f}s'.format(time.time() - dedup_reads_write_stime))
 
         elif self.method == 'mcl':
             dedup_umi_stime = time.time()
@@ -442,40 +284,28 @@ class dedupGene():
             )
             self.df['mcl_repr_nodes'] = self.df.apply(lambda x: self.umimax(x, by_col='mcl'), axis=1)
             self.df['mcl_umi_len'] = self.df['mcl_repr_nodes'].apply(lambda x: self.length(x))
-            self.console.print('======>finish finding deduplicated umis in {:.2f}s'.format(time.time() - dedup_umi_stime))
-            self.console.print('======>calculate average edit distances between umis...')
-            dedup_umi_edave_stime = time.time()
-            self.df['ave_eds'] = self.df.apply(lambda x: self.edave(x, by_col='mcl_repr_nodes'), axis=1)
-            self.console.print('======>finish calculating ave eds in {:.2f}s'.format(time.time() - dedup_umi_edave_stime))
-            self.df['dedup_uniq_diff_pos'] = self.df.apply(lambda x: self.diffDedupUniqCountPos(x, by_col='mcl_repr_nodes'), axis=1)
-            self.df['dedup_read_diff_pos'] = self.df.apply(lambda x: self.diffDedupReadCountPos(x, by_col='mcl_repr_nodes'), axis=1)
-            self.console.print('======># of deduplicated unique umis {} on the basis of the unique method'.format(self.df['dedup_uniq_diff_pos'].sum()))
-            self.console.print('======># of deduplicated reads {} on the basis of the unique method'.format(self.df['dedup_read_diff_pos'].sum()))
-            ave_ed_bins = self.df['ave_eds'].value_counts().sort_index()
-            self.console.check(ave_ed_bins)
-            self.gwriter.generic(df=ave_ed_bins, sv_fpn=self.dirname + 'mcl_ave_ed_pos_bin.txt', index=True)
-            self.df_dedup_sum = self.df[[
-                'mcl_umi_len',
-                'ave_eds',
-                'uniq_umi_len',
-                'dedup_uniq_diff_pos',
-                'dedup_read_diff_pos',
-            ]]
-            self.gwriter.generic(
-                df=self.df_dedup_sum,
-                sv_fpn=self.dirname + 'mcl_dedup_sum.txt',
-                index=True,
-                header=True,
-            )
-            self.console.print('======>start writing deduplicated reads to BAM...')
-            dedup_reads_write_stime = time.time()
-            self.df['mcl_bam_ids'] = self.df.apply(lambda x: self.bamids(x, by_col='mcl_repr_nodes'), axis=1)
-            self.aliwriter.tobam(
-                tobam_fpn=self.dirname + self.method + '_dedup.bam',
-                tmpl_bam_fpn=self.bam_fpn,
-                whitelist=self.decompose(list_nd=self.df['mcl_bam_ids'].values),
-            )
-            self.console.print('======>finish writing in {:.2f}s'.format(time.time() - dedup_reads_write_stime))
+            # self.console.print('======>finish finding deduplicated umis in {:.2f}s'.format(time.time() - dedup_umi_stime))
+            # self.console.print('======>calculate average edit distances between umis...')
+            # dedup_umi_edave_stime = time.time()
+            # self.df['ave_eds'] = self.df.apply(lambda x: self.edave(x, by_col='mcl_repr_nodes'), axis=1)
+            # self.console.print('======>finish calculating ave eds in {:.2f}s'.format(time.time() - dedup_umi_edave_stime))
+            # self.df['dedup_uniq_diff_pos'] = self.df.apply(lambda x: self.diffDedupUniqCountPos(x, by_col='mcl_repr_nodes'), axis=1)
+            # self.df['dedup_read_diff_pos'] = self.df.apply(lambda x: self.diffDedupReadCountPos(x, by_col='mcl_repr_nodes'), axis=1)
+            # self.console.print('======># of deduplicated unique umis {} on the basis of the unique method'.format(self.df['dedup_uniq_diff_pos'].sum()))
+            # self.console.print('======># of deduplicated reads {} on the basis of the unique method'.format(self.df['dedup_read_diff_pos'].sum()))
+            # ave_ed_bins = self.df['ave_eds'].value_counts().sort_index()
+            # self.console.check(ave_ed_bins)
+            # self.df_dedup_sum = self.df[[
+            #     'mcl_umi_len',
+            #     'ave_eds',
+            #     'uniq_umi_len',
+            #     'dedup_uniq_diff_pos',
+            #     'dedup_read_diff_pos',
+            # ]]
+            # self.console.print('======>start writing deduplicated reads to BAM...')
+            # dedup_reads_write_stime = time.time()
+            # self.df['mcl_bam_ids'] = self.df.apply(lambda x: self.bamids(x, by_col='mcl_repr_nodes'), axis=1)
+            # self.console.print('======>finish writing in {:.2f}s'.format(time.time() - dedup_reads_write_stime))
 
         elif self.method == 'mcl_val':
             dedup_umi_stime = time.time()
@@ -494,40 +324,31 @@ class dedupGene():
             )
             self.df['mcl_val_repr_nodes'] = self.df.apply(lambda x: self.umimax(x, by_col='mcl_val'), axis=1)
             self.df['mcl_val_umi_len'] = self.df['mcl_val_repr_nodes'].apply(lambda x: self.length(x))
-            self.console.print('======>finish finding deduplicated umis in {:.2f}s'.format(time.time() - dedup_umi_stime))
-            self.console.print('======>calculate average edit distances between umis...')
-            dedup_umi_edave_stime = time.time()
-            self.df['ave_eds'] = self.df.apply(lambda x: self.edave(x, by_col='mcl_val_repr_nodes'), axis=1)
-            self.console.print('======>finish calculating ave eds in {:.2f}s'.format(time.time() - dedup_umi_edave_stime))
-            self.df['dedup_uniq_diff_pos'] = self.df.apply(lambda x: self.diffDedupUniqCountPos(x, by_col='mcl_val_repr_nodes'), axis=1)
-            self.df['dedup_read_diff_pos'] = self.df.apply(lambda x: self.diffDedupReadCountPos(x, by_col='mcl_val_repr_nodes'), axis=1)
-            self.console.print('======># of deduplicated unique umis {} on the basis of the unique method'.format(self.df['dedup_uniq_diff_pos'].sum()))
-            self.console.print('======># of deduplicated reads {} on the basis of the unique method'.format(self.df['dedup_read_diff_pos'].sum()))
-            ave_ed_bins = self.df['ave_eds'].value_counts().sort_index()
-            self.console.check(ave_ed_bins)
-            self.gwriter.generic(df=ave_ed_bins, sv_fpn=self.dirname + 'mcl_val_ave_ed_pos_bin.txt', index=True)
-            self.df_dedup_sum = self.df[[
-                'mcl_val_umi_len',
-                'ave_eds',
-                'uniq_umi_len',
-                'dedup_uniq_diff_pos',
-                'dedup_read_diff_pos',
-            ]]
-            self.gwriter.generic(
-                df=self.df_dedup_sum,
-                sv_fpn=self.dirname + 'mcl_val_dedup_sum.txt',
-                index=True,
-                header=True,
-            )
-            self.console.print('======>start writing deduplicated reads to BAM...')
-            dedup_reads_write_stime = time.time()
-            self.df['mcl_val_bam_ids'] = self.df.apply(lambda x: self.bamids(x, by_col='mcl_val_repr_nodes'), axis=1)
-            self.aliwriter.tobam(
-                tobam_fpn=self.dirname + self.method + '_dedup.bam',
-                tmpl_bam_fpn=self.bam_fpn,
-                whitelist=self.decompose(list_nd=self.df['mcl_val_bam_ids'].values),
-            )
-            self.console.print('======>finish writing in {:.2f}s'.format(time.time() - dedup_reads_write_stime))
+            self.dedup_index = self.df.index
+            self.dedup_num = self.df['direc_umi_len'].values.tolist()
+            print(self.dedup_num)
+            # self.console.print('======>finish finding deduplicated umis in {:.2f}s'.format(time.time() - dedup_umi_stime))
+            # self.console.print('======>calculate average edit distances between umis...')
+            # dedup_umi_edave_stime = time.time()
+            # self.df['ave_eds'] = self.df.apply(lambda x: self.edave(x, by_col='mcl_val_repr_nodes'), axis=1)
+            # self.console.print('======>finish calculating ave eds in {:.2f}s'.format(time.time() - dedup_umi_edave_stime))
+            # self.df['dedup_uniq_diff_pos'] = self.df.apply(lambda x: self.diffDedupUniqCountPos(x, by_col='mcl_val_repr_nodes'), axis=1)
+            # self.df['dedup_read_diff_pos'] = self.df.apply(lambda x: self.diffDedupReadCountPos(x, by_col='mcl_val_repr_nodes'), axis=1)
+            # self.console.print('======># of deduplicated unique umis {} on the basis of the unique method'.format(self.df['dedup_uniq_diff_pos'].sum()))
+            # self.console.print('======># of deduplicated reads {} on the basis of the unique method'.format(self.df['dedup_read_diff_pos'].sum()))
+            # ave_ed_bins = self.df['ave_eds'].value_counts().sort_index()
+            # self.console.check(ave_ed_bins)
+            # self.df_dedup_sum = self.df[[
+            #     'mcl_val_umi_len',
+            #     'ave_eds',
+            #     'uniq_umi_len',
+            #     'dedup_uniq_diff_pos',
+            #     'dedup_read_diff_pos',
+            # ]]
+            # self.console.print('======>start writing deduplicated reads to BAM...')
+            # dedup_reads_write_stime = time.time()
+            # self.df['mcl_val_bam_ids'] = self.df.apply(lambda x: self.bamids(x, by_col='mcl_val_repr_nodes'), axis=1)
+            # self.console.print('======>finish writing in {:.2f}s'.format(time.time() - dedup_reads_write_stime))
 
         elif self.method == 'mcl_ed':
             dedup_umi_stime = time.time()
@@ -547,40 +368,31 @@ class dedupGene():
             )
             self.df['mcl_ed_repr_nodes'] = self.df.apply(lambda x: self.umimax(x, by_col='mcl_ed'), axis=1)
             self.df['mcl_ed_umi_len'] = self.df['mcl_ed_repr_nodes'].apply(lambda x: self.length(x))
-            self.console.print('======>finish finding deduplicated umis in {:.2f}s'.format(time.time() - dedup_umi_stime))
-            self.console.print('======>calculate average edit distances between umis...')
-            dedup_umi_edave_stime = time.time()
-            self.df['ave_eds'] = self.df.apply(lambda x: self.edave(x, by_col='mcl_ed_repr_nodes'), axis=1)
-            self.console.print('======>finish calculating ave eds in {:.2f}s'.format(time.time() - dedup_umi_edave_stime))
-            self.df['dedup_uniq_diff_pos'] = self.df.apply(lambda x: self.diffDedupUniqCountPos(x, by_col='mcl_ed_repr_nodes'), axis=1)
-            self.df['dedup_read_diff_pos'] = self.df.apply(lambda x: self.diffDedupReadCountPos(x, by_col='mcl_ed_repr_nodes'), axis=1)
-            self.console.print('======># of deduplicated unique umis {} on the basis of the unique method'.format(self.df['dedup_uniq_diff_pos'].sum()))
-            self.console.print('======># of deduplicated reads {} on the basis of the unique method'.format(self.df['dedup_read_diff_pos'].sum()))
-            ave_ed_bins = self.df['ave_eds'].value_counts().sort_index()
-            self.console.check(ave_ed_bins)
-            self.gwriter.generic(df=ave_ed_bins, sv_fpn=self.dirname + 'mcl_ed_ave_ed_pos_bin.txt', index=True)
-            self.df_dedup_sum = self.df[[
-                'mcl_ed_umi_len',
-                'ave_eds',
-                'uniq_umi_len',
-                'dedup_uniq_diff_pos',
-                'dedup_read_diff_pos',
-            ]]
-            self.gwriter.generic(
-                df=self.df_dedup_sum,
-                sv_fpn=self.dirname + 'mcl_ed_dedup_sum.txt',
-                index=True,
-                header=True,
-            )
-            self.console.print('======>start writing deduplicated reads to BAM...')
-            dedup_reads_write_stime = time.time()
-            self.df['mcl_ed_bam_ids'] = self.df.apply(lambda x: self.bamids(x, by_col='mcl_ed_repr_nodes'), axis=1)
-            self.aliwriter.tobam(
-                tobam_fpn=self.dirname + self.method + '_dedup.bam',
-                tmpl_bam_fpn=self.bam_fpn,
-                whitelist=self.decompose(list_nd=self.df['mcl_ed_bam_ids'].values),
-            )
-            self.console.print('======>finish writing in {:.2f}s'.format(time.time() - dedup_reads_write_stime))
+            self.dedup_index = self.df.index
+            self.dedup_num = self.df['direc_umi_len'].values.tolist()
+            print(self.dedup_num)
+            # self.console.print('======>finish finding deduplicated umis in {:.2f}s'.format(time.time() - dedup_umi_stime))
+            # self.console.print('======>calculate average edit distances between umis...')
+            # dedup_umi_edave_stime = time.time()
+            # self.df['ave_eds'] = self.df.apply(lambda x: self.edave(x, by_col='mcl_ed_repr_nodes'), axis=1)
+            # self.console.print('======>finish calculating ave eds in {:.2f}s'.format(time.time() - dedup_umi_edave_stime))
+            # self.df['dedup_uniq_diff_pos'] = self.df.apply(lambda x: self.diffDedupUniqCountPos(x, by_col='mcl_ed_repr_nodes'), axis=1)
+            # self.df['dedup_read_diff_pos'] = self.df.apply(lambda x: self.diffDedupReadCountPos(x, by_col='mcl_ed_repr_nodes'), axis=1)
+            # self.console.print('======># of deduplicated unique umis {} on the basis of the unique method'.format(self.df['dedup_uniq_diff_pos'].sum()))
+            # self.console.print('======># of deduplicated reads {} on the basis of the unique method'.format(self.df['dedup_read_diff_pos'].sum()))
+            # ave_ed_bins = self.df['ave_eds'].value_counts().sort_index()
+            # self.console.check(ave_ed_bins)
+            # self.df_dedup_sum = self.df[[
+            #     'mcl_ed_umi_len',
+            #     'ave_eds',
+            #     'uniq_umi_len',
+            #     'dedup_uniq_diff_pos',
+            #     'dedup_read_diff_pos',
+            # ]]
+            # self.console.print('======>start writing deduplicated reads to BAM...')
+            # dedup_reads_write_stime = time.time()
+            # self.df['mcl_ed_bam_ids'] = self.df.apply(lambda x: self.bamids(x, by_col='mcl_ed_repr_nodes'), axis=1)
+            # self.console.print('======>finish writing in {:.2f}s'.format(time.time() - dedup_reads_write_stime))
 
         # sys.stdout.close()
 
