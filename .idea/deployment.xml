@@ -1,22 +1,22 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <project version="4">
-  <component name="PublishConfigData" autoUpload="Always" serverName="Weihenstephan-us" remoteFilesAllowedToDisappearOnAutoupload="false">
+  <component name="PublishConfigData" autoUpload="Always" serverName="ws-us" remoteFilesAllowedToDisappearOnAutoupload="false">
     <serverData>
-      <paths name="Weihenstephan-mcl">
+      <paths name="ws-mcl">
         <serverdata>
           <mappings>
             <mapping local="$PROJECT_DIR$" web="/" />
           </mappings>
         </serverdata>
       </paths>
-      <paths name="Weihenstephan-us">
+      <paths name="ws-us">
         <serverdata>
           <mappings>
             <mapping deploy="/home/students/j.sun/store/software/us/code" local="$PROJECT_DIR$" />
           </mappings>
           <excludedPaths>
+            <excludedPath path="/home/students/j.sun/store/software/us/code/data" />
             <excludedPath local="true" path="$PROJECT_DIR$/data" />
-            <excludedPath path="/store/software/us/code/data" />
           </excludedPaths>
         </serverdata>
       </paths>
