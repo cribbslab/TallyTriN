@@ -14,7 +14,7 @@ from umikit.dedup.monomer.Adjacency import adjacency as umitoolmonoadj
 from umikit.dedup.monomer.Directional import directional as umitoolmonodirec
 from umikit.dedup.monomer.MarkovClustering import markovClustering as umimonomcl
 from umikit.dedup.monomer.DBSCAN import dbscan as dbsc
-from umikit.dedup.monomer.plot.Valid import valid as plotv
+from umikit.plot.Valid import valid as plotv
 from simreadflow.simulate.dispatcher.batch.General import general as simugeneralstarter
 from simreadflow.read.similarity.distance.Hamming import hamming
 from simreadflow.util.sequence.fastq.Read import read as rfastq

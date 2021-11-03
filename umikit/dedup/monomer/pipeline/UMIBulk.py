@@ -3,7 +3,6 @@ __copyright__ = "Copyright 2021"
 __license__ = "MIT"
 __lab__ = "Adam Cribbs lab"
 
-import time
 import pandas as pd
 from umikit.fastq.Convert import convert as fas2bam
 from umikit.trim.Template import template as umitrim
@@ -12,7 +11,7 @@ from umikit.graph.bfs.ConnectedComponent import connectedComponent as gbfscc
 from umikit.dedup.monomer.pipeline import Config
 from umikit.dedup.monomer.Relation import relation as umimonorel
 from umikit.deduplicate.monomer.DedupGene import dedupGene
-from umikit.dedup.monomer.plot.Valid import valid as plotv
+from umikit.plot.Valid import valid as plotv
 from Path import to
 
 

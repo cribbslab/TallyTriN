@@ -27,36 +27,6 @@ from umikit.deduplicate.monomer.MarkovClustering import markovClustering as umim
 class dedupSC():
 
     def __init__(self, bam_fpn, ed_thres, method, gene_assigned_tag, gene_is_assigned_tag, mode='internal', mcl_fold_thres=None, inflat_val=2.0, exp_val=2, iter_num=100, is_sv=True, sv_fpn='./dedup.bam', verbose=False):
-        """
-        Parameters
-        ----------
-        bam_fpn
-            str - the full path of a BAM file curated by requirements of different dedup modules
-        ed_thres
-            int - an edit distance threshold (>1, integer)
-        method
-            str - a deduplication method (mcl, mcl_val, mcl_ed, cluster, unique, ajacency, directional)
-        mode
-            str - externally or internally run the module (external by defualt, internal)
-        gene_assigned_tag
-            str - to enable deduplication on the gene tag (XT recommended)
-        gene_is_assigned_tag
-            str - to check if reads are assigned the gene tag (XS recommended)
-        mcl_fold_thres
-            float - a mcl fold threshold (1.5 by defualt)
-        inflat_val
-            float - an inflation value for generating mcl clusters (2.0 by defualt)
-        exp_val
-            int - an expansion value for generating mcl clusters (2 by defualt)
-        iter_num
-            int - number of iterations for mcl (100 by defualt)
-        is_sv
-            bool - is the deduplicated bam file to save (True by default or False)
-        sv_fpn
-            str - the deduplication file path
-        verbose
-            bool - print log on the console, (True by default or False)
-        """
         self.rannum = rannum()
         self.gwriter = gwriter()
         self.umibuild = umibuild
@@ -341,6 +311,9 @@ class dedupSC():
             )
             self.df['mcl_val_repr_nodes'] = self.df.apply(lambda x: self.umimax(x, by_col='mcl_val'), axis=1)
             self.df['mcl_val_umi_len'] = self.df['mcl_val_repr_nodes'].apply(lambda x: self.length(x))
+            self.dedup_index = self.df.index
+            self.dedup_num = self.df['mcl_val_umi_len'].values.tolist()
+            print(self.dedup_num)
             # self.console.print('======>finish finding deduplicated umis in {:.2f}s'.format(time.time() - dedup_umi_stime))
             # self.console.print('======>calculate average edit distances between umis...')
             # dedup_umi_edave_stime = time.time()
@@ -382,6 +355,9 @@ class dedupSC():
             )
             self.df['mcl_ed_repr_nodes'] = self.df.apply(lambda x: self.umimax(x, by_col='mcl_ed'), axis=1)
             self.df['mcl_ed_umi_len'] = self.df['mcl_ed_repr_nodes'].apply(lambda x: self.length(x))
+            self.dedup_index = self.df.index
+            self.dedup_num = self.df['mcl_ed_umi_len'].values.tolist()
+            print(self.dedup_num)
             # self.console.print('======>finish finding deduplicated umis in {:.2f}s'.format(time.time() - dedup_umi_stime))
             # self.console.print('======>calculate average edit distances between umis...')
             # dedup_umi_edave_stime = time.time()

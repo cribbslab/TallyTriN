@@ -3,7 +3,6 @@ __copyright__ = "Copyright 2021"
 __license__ = "MIT"
 __lab__ = "Adam Cribbs lab"
 
-import time
 import pandas as pd
 from umikit.fastq.Convert import convert as fas2bam
 from umikit.trim.Template import template as umitrim
@@ -12,7 +11,7 @@ from umikit.graph.bfs.ConnectedComponent import connectedComponent as gbfscc
 from umikit.dedup.monomer.pipeline import Config
 from umikit.dedup.monomer.Relation import relation as umimonorel
 from umikit.deduplicate.monomer.DedupSC import dedupSC
-from umikit.dedup.monomer.plot.Valid import valid as plotv
+from umikit.plot.Valid import valid as plotv
 from Path import to
 
 
@@ -28,7 +27,6 @@ class umi(Config.config):
         self.plotv = plotv()
         df_dedup = pd.DataFrame()
         for i_pn in range(self.permutation_num):
-            dedup_arr = []
             for id, i_metric in enumerate(self.metric_vals[self.metric]):
                 if self.metric == 'pcr_nums':
                     print('=>at PCR {}'.format(i_metric))
@@ -42,7 +40,7 @@ class umi(Config.config):
                     self.umi_len = self.umi_unit_len_fixed
                 elif self.metric == 'seq_errs':
                     print('=>No.{} sequencing error: {}'.format(id, i_metric))
-                    self.mcl_inflat = 1.1 if i_metric > 0.005 else 2.7
+                    self.mcl_inflat = 1.4 if i_metric > 0.005 else 2.7
                     self.mcl_exp = 3
                     fn_surf = str(id)
                     self.umi_len = self.umi_unit_len_fixed
@@ -75,7 +73,7 @@ class umi(Config.config):
                         bam_fpn=fastq_fp + self.metric + '/permute_' + str(i_pn) + '/bam/' + fn,
                     ).tobamsc()
                 if is_dedup:
-                    if self.metric == 'seq_errs':
+                    # if self.metric == 'seq_errs':
                         dedup_ob = dedupSC(
                             mode='internal',
                             method=self.method,
@@ -129,10 +127,10 @@ if __name__ == "__main__":
         # method='unique',
         # method='cluster',
         # method='adjacency',
-        method='directional',
+        # method='directional',
         # method='mcl',
         # method='mcl_val',
-        # method='mcl_ed',
+        method='mcl_ed',
 
         # is_trim=True,
         # is_tobam=True,

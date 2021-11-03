@@ -18,7 +18,7 @@ from umikit.dedup.monomer.Adjacency import adjacency as umitoolmonoadj
 from umikit.dedup.monomer.Directional import directional as umitoolmonodirec
 from umikit.dedup.monomer.MarkovClustering import markovClustering as umimonomcl
 from umikit.dedup.monomer.DBSCAN import dbscan as dbsc
-from umikit.dedup.monomer.plot.Valid import valid as plotv
+from umikit.plot.Valid import valid as plotv
 from Path import to
 
 
@@ -33,7 +33,7 @@ class umi(Config.config):
         self.gwriter = gwriter()
         self.plotv = plotv()
         df_dedup = pd.DataFrame()
-        for i_pn in range(self.permutation_num):
+        for i_pn in range(10):
             dedup_arr = []
             for id, i_metric in enumerate(self.metric_vals[self.metric]):
                 if self.metric == 'pcr_nums':
@@ -48,8 +48,11 @@ class umi(Config.config):
                     self.umi_len = self.umi_unit_len_fixed
                 elif self.metric == 'seq_errs':
                     print('=>No.{} sequencing error: {}'.format(id, i_metric))
-                    self.mcl_inflat = 1.1 if i_metric > 0.005 else 2.7
-                    self.mcl_exp = 3
+                    # self.mcl_inflat = 1.1 if i_metric > 0.005 else 2.7
+                    # self.mcl_exp = 3
+
+                    self.mcl_inflat = 1.1 if i_metric > 0.005 else 1.8
+                    self.mcl_exp = 2
                     fn_surf = str(id)
                     self.umi_len = self.umi_unit_len_fixed
                 elif self.metric == 'ampl_rates':
@@ -91,7 +94,7 @@ class umi(Config.config):
                                 # bam_fpn=to('example/data/example.bam'),
                                 bam_fpn=fastq_fp + self.metric + '/permute_' + str(i_pn) + '/bam/' + fn + '.bam',
                                 pos_tag='PO',
-                                mcl_fold_thres=2,
+                                mcl_fold_thres=1,
                                 inflat_val=self.mcl_inflat,
                                 exp_val=self.mcl_exp,
                                 iter_num=100,
@@ -339,8 +342,8 @@ if __name__ == "__main__":
         # method='adjacency',
         # method='directional',
         # method='mcl',
-        method='mcl_val',
-        # method='mcl_ed',
+        # method='mcl_val',
+        method='mcl_ed',
 
         # is_trim=True,
         # is_tobam=True,

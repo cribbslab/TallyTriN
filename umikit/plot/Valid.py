@@ -154,3 +154,4 @@ class valid(object):
     def n2dist(self, df):
         sns.displot(data=df, x='dedup_cnt', hue='method', kind="kde", rug=True)
         plt.show()
+
