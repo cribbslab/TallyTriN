@@ -22,12 +22,13 @@ class config(object):
         self.seq_sub_spl_rate = 0.3333
 
         self.ampl_rates = np.linspace(0.1, 1, 10)
-        self.umi_unit_lens = np.arange(8, 36 + 1, 1)
+        self.umi_unit_lens = np.arange(7, 36 + 1, 1)
         self.umi_nums = np.arange(20, 140 + 20, 20)
-        self.pcr_nums = np.arange(1, 20 + 1, 1)
+        self.pcr_nums = np.arange(1, 18 + 1, 1)
+        # self.pcr_nums = np.arange(1, 20 + 1, 1)
         # self.pcr_errs, self.seq_errs = self.errors()
         self.seq_fix_errs = [1e-05, 2.5e-05, 5e-05, 7.5e-05, 0.0001, 0.00025, 0.0005, 0.00075, 0.001, 0.0025, 0.005, 0.0075, 0.01, 0.025, 0.05, 0.075, 0.1, 0.2]
-        self.pcr_errs = [1e-05, 2.5e-05, 5e-05, 7.5e-05, 0.0001, 0.00025, 0.0005, 0.00075, 0.001, 0.0025, 0.005, 0.0075, 0.01, 0.025, 0.05]
+        self.pcr_errs = [1e-05, 2.5e-05, 5e-05, 7.5e-05, 0.0001, 0.00025, 0.0005, 0.00075, 0.001, 0.0025, 0.005, 0.0075, 0.01, 0.025]
         self.seq_errs = [1e-05, 2.5e-05, 5e-05, 7.5e-05, 0.0001, 0.00025, 0.0005, 0.00075, 0.001, 0.0025, 0.005, 0.0075, 0.01, 0.025, 0.05]
         # self.seq_errs = [1e-05, 2.5e-05, 5e-05, 7.5e-05, 0.0001, 0.00025, 0.0005, 0.00075, 0.001, ]
         print(self.pcr_errs, self.seq_errs)

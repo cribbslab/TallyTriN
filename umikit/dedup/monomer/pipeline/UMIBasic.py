@@ -39,19 +39,30 @@ class umi(Config.config):
                 if self.metric == 'pcr_nums':
                     print('=>at PCR {}'.format(i_metric))
                     fn_surf = str(i_metric)
-                    self.mcl_inflat = i_metric
+                    self.mcl_inflat = 2.3
+                    self.mcl_exp = 2
+                    self.mcl_fold_thres = 2
                     self.umi_len = self.umi_unit_len_fixed
                 elif self.metric == 'pcr_errs':
                     self.mcl_inflat = i_metric
                     print('=>No.{} PCR error: {}'.format(id, i_metric))
                     fn_surf = str(id)
+                    # # /*** mcl_ed params ***/
+                    # self.mcl_inflat = 1.1 if i_metric > 0.005 else 1.7
+                    # self.mcl_exp = 2
+                    # self.mcl_fold_thres = 1
+
+                    # # /*** mcl_val params ***/
+                    self.mcl_inflat = 1.1 if i_metric > 0.005 else 1.8
+                    self.mcl_exp = 2
+                    self.mcl_fold_thres = 2
                     self.umi_len = self.umi_unit_len_fixed
                 elif self.metric == 'seq_errs':
                     print('=>No.{} sequencing error: {}'.format(id, i_metric))
                     # self.mcl_inflat = 1.1 if i_metric > 0.005 else 2.7
                     # self.mcl_exp = 3
 
-                    self.mcl_inflat = 1.1 if i_metric > 0.005 else 1.8
+                    self.mcl_inflat = 1.1 if i_metric > 0.005 else 2.7
                     self.mcl_exp = 2
                     fn_surf = str(id)
                     self.umi_len = self.umi_unit_len_fixed
@@ -59,14 +70,61 @@ class umi(Config.config):
                     print('=>No.{} amplification rate: {}'.format(id, i_metric))
                     fn_surf = str(id)
                     # self.mcl_inflat = 1.3 if i_metric > 0.5 else 2
-                    self.mcl_inflat = 2.3
-                    self.mcl_exp = 2
+                    # # /*** mcl_ed params ***/
+                    # if i_metric < 8:
+                    #     self.mcl_inflat = 4
+                    # if i_metric >= 8 and i_metric <= 11:
+                    #     self.mcl_inflat = 2.3
+                    # if i_metric > 11:
+                    #     self.mcl_inflat = 1.1
+                    # self.mcl_exp = 3
+                    # self.mcl_fold_thres = 1
+
+                    # /*** mcl_val params ***/
+                    if i_metric < 8:
+                        self.mcl_inflat = 2
+                    if i_metric >= 0.9:
+                        self.mcl_inflat = 1.8
+                    self.mcl_exp = 4
+                    self.mcl_fold_thres = 11
+
                     self.umi_len = self.umi_unit_len_fixed
                 elif self.metric == 'umi_lens':
                     print('=>No.{} UMI length: {}'.format(id, i_metric))
                     fn_surf = str(i_metric)
-                    self.mcl_inflat = 1.1 if i_metric > 0.005 else 4
-                    self.mcl_exp = 2
+                    # self.mcl_inflat = 1.1 if i_metric > 11 else 2.3
+                    # # /*** mcl_ed params ***/
+                    # if i_metric < 8:
+                    #     self.mcl_inflat = 4
+                    # if i_metric >= 8 and i_metric <= 11:
+                    #     self.mcl_inflat = 2.3
+                    # if i_metric > 11:
+                    #     self.mcl_inflat = 1.1
+                    # self.mcl_exp = 3
+                    # self.mcl_fold_thres = 1
+
+                    # # # /*** mcl_val params ***/
+                    # if i_metric < 8:
+                    #     self.mcl_inflat = 6
+                    # if i_metric >= 8 and i_metric <= 11:
+                    #     self.mcl_inflat = 2.3
+                    # if i_metric > 11:
+                    #     self.mcl_inflat = 1.1
+                    # self.mcl_exp = 4
+                    # self.mcl_fold_thres = 11
+
+                    # # /*** mcl_val params ***/
+                    if i_metric < 8:
+                        self.mcl_inflat = 5.8
+                        self.mcl_exp = 6
+                    if i_metric >= 8 and i_metric <= 11:
+                        self.mcl_inflat = 2.3
+                        self.mcl_exp = 4
+                    if i_metric > 11:
+                        self.mcl_inflat = 1.1
+                        self.mcl_exp = 4
+                    self.mcl_fold_thres = 11
+
                     self.umi_len = i_metric
                 else:
                     fn_surf = str(i_metric)
@@ -84,17 +142,17 @@ class umi(Config.config):
                         bam_fpn=fastq_fp + self.metric + '/permute_' + str(i_pn) + '/bam/' + fn,
                     ).tobam()
                 if is_dedup:
-                    if self.metric == 'seq_errs':
-                        if i_metric == 0.125 or i_metric == 0.15:
-                            continue
-                        else:
+                    # if self.metric == 'seq_errs':
+                    #     if i_metric == 0.125 or i_metric == 0.15:
+                    #         continue
+                    #     else:
                             dedup_ob = dedupPos(
                                 mode='internal',
                                 method=self.method,
                                 # bam_fpn=to('example/data/example.bam'),
                                 bam_fpn=fastq_fp + self.metric + '/permute_' + str(i_pn) + '/bam/' + fn + '.bam',
                                 pos_tag='PO',
-                                mcl_fold_thres=1,
+                                mcl_fold_thres=self.mcl_fold_thres,
                                 inflat_val=self.mcl_inflat,
                                 exp_val=self.mcl_exp,
                                 iter_num=100,
@@ -331,19 +389,19 @@ class umi(Config.config):
 
 if __name__ == "__main__":
     p = umi(
-        # metric='pcr_nums',
+        metric='pcr_nums',
         # metric='pcr_errs',
-        metric='seq_errs',
+        # metric='seq_errs',
         # metric='ampl_rates',
         # metric='umi_lens',
 
         # method='unique',
         # method='cluster',
         # method='adjacency',
-        # method='directional',
+        method='directional',
         # method='mcl',
         # method='mcl_val',
-        method='mcl_ed',
+        # method='mcl_ed',
 
         # is_trim=True,
         # is_tobam=True,
