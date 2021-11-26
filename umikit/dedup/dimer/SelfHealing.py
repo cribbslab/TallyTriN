@@ -9,7 +9,7 @@ import time
 from simreadflow.util.sequence.fastq.Read import read as rfastq
 from simreadflow.util.random.Number import number as rannum
 from umikit.trim.Template import template as umitrim
-=========>eader import reader as trimreader
+from umikit.trim.Reader import reader as trimreader
 from Path import to
 from simreadflow.util.file.read.Reader import reader as gfreader
 from simreadflow.simulate.dispatcher.batch.UMI import umi as generalstarter
@@ -20,8 +20,11 @@ from simreadflow.util.file.write.Writer import writer as fwriter
 
 class selfHealing(generalstarter):
 
-    def __init__(self, ):
+    def __init__(self, umi_ref_fpn, fastq_fp, cat):
         super(selfHealing, self).__init__()
+        self.umi_ref_fpn = umi_ref_fpn
+        self.fastq_fp = fastq_fp
+        self.cat = cat
         self.umitrim = umitrim
         self.gfreader = gfreader()
         self.rfastq = rfastq
@@ -29,9 +32,8 @@ class selfHealing(generalstarter):
         self.rannum = rannum()
         self.fwriter = fwriter()
         self.umi_raw = self.gfreader.generic(
-            df_fpn=to('data/simu/umi/seq_errs/dimer/umi.txt')
+            df_fpn=self.umi_ref_fpn
         )[0].values
-        print({i: e for i, e in enumerate(self.umi_raw)})
         self.umi_raw = pd.DataFrame.from_dict({i: e for i, e in enumerate(self.umi_raw)}, orient='index')
         self.umi_mono_raw = self.umi_raw[0].apply(lambda x: ''.join([i[0] for i in textwrap.wrap(x, 2)])).to_dict()
         print(self.umi_mono_raw)
@@ -41,8 +43,9 @@ class selfHealing(generalstarter):
         for id, i_seq_err in enumerate(self.seq_errs):
             read_stime = time.time()
             names, seqs, _, _ = self.rfastq().fromgz(
-                fastq_path=to('data/simu/umi/seq_errs/dimer/trimmed/'),
-                fastq_name='seq_err_' + str(id),
+                fastq_path=self.fastq_fp,
+                fastq_name=self.cat + '_' + str(id),
+                method='pyfastx',
             )
             print('===>file read time: {:.3f}s'.format(time.time() - read_stime))
             df_fastq = self.trimreader.todf(names=names, seqs=seqs)
@@ -50,11 +53,14 @@ class selfHealing(generalstarter):
             df_fastq['umi_mono_corr'] = df_fastq['umi'].apply(lambda x: self.correct(x))
             print('===>mono_corr time: {:.3f}s'.format(time.time() - mono_corr_stime))
             hm_stime = time.time()
-            df_stat['umi_hm' + str(id)] = df_fastq.apply(lambda x: hamming().general(x['umi_mono_corr'], self.umi_mono_raw[x['umi#']]), axis=1)
+            df_stat['umi_hm' + str(id)] = df_fastq.apply(lambda x: hamming().general(
+                s1=x['umi_mono_corr'],
+                s2=self.umi_mono_raw[x['umi#']],
+            ), axis=1)
             print('===>hamming time: {:.3f}s'.format(time.time() - hm_stime))
             tui = df_stat['umi_hm' + str(id)].values
             print(len(tui[tui != 0]))
-        self.fwriter.generic(df=df_stat, sv_fpn=to('data/simu/umi/seq_errs/dimer/trimmed/dasd.txt'), df_sep='\t')
+        # self.fwriter.generic(df=df_stat, sv_fpn=to('data/simu/umi/seq_errs/dimer/trimmed/dasd.txt'), df_sep='\t')
         return
 
     def correct(self, umi):
@@ -72,5 +78,9 @@ class selfHealing(generalstarter):
 
 
 if __name__ == "__main__":
-    p = selfHealing()
+    p = selfHealing(
+        umi_ref_fpn=to('data/simu/umi/seq_errs/dimer/umi.txt'),
+        fastq_fp=to('data/simu/umi/seq_errs/dimer/trimmed/'),
+        cat='seq_err',
+    )
     print(p.rea())

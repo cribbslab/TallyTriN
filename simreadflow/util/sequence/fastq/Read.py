@@ -17,7 +17,7 @@ class read(object):
     def __init__(self):
         pass
 
-    def fromgz(self, fastq_path, fastq_name, method='biopython'):
+    def fromgz(self, fastq_path, fastq_name, method='pyfastx'):
         names = []
         seqs = []
         placeholders = []

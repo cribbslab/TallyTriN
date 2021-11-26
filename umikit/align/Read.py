@@ -251,15 +251,17 @@ if __name__ == "__main__":
         # bam_fpn=to('example/data/example.bam'),
         # bam_fpn=to('example/data/example_buddle.bam'),
         # to('example/data/assigned_sorted_dedup.bam')
-        bam_fpn=to('data/simu/monomer/sc/seq_err/permute_0/trimmed/seq_err_0.bam'),
+        # bam_fpn=to('data/simu/monomer/sc/seq_err/permute_0/trimmed/seq_err_0.bam'),
+        bam_fpn=to('data/simu/umi/seq_errs/trimer/permute_0/bam/bipartite/seq_err_0.bam'),
         # bam_fpn=to('example/data/deduplicated.bam'),
         # bam_fpn=to('example/data/RM82CLK1_S3_featurecounts_gene_sorted.bam'),
     )
 
-    # df = umikit.todf(tags=['PO'])
-    df = umikit.todf(tags=['BC', 'XS', 'XT'])
+    df = umikit.todf(tags=['PO'])
+    print(df)
+    # df = umikit.todf(tags=['BC', 'XS', 'XT'])
     # df = umikit.todf(tags=['XS', 'XT'])
-    print(df[['query_name', 'BC', 'XS', 'XT']])
+    # print(df[['query_name', 'BC', 'XS', 'XT']])
 
     # df = df.loc[df['XS'] == 'Assigned']
     # print(df)

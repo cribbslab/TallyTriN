@@ -1,0 +1,14 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<project version="4">
+  <component name="WebServers">
+    <option name="servers">
+      <webServer id="b9c404f7-c2f0-4c97-9a3e-9aa107f558a3" name="ws-btally (project level)">
+        <fileTransfer accessType="SFTP" host="athens.binfo.wzw.tum.de" port="22" sshConfigId="75c158e7-5ddf-4b10-a5e4-ecca6b92664a" sshConfig="ws-btally">
+          <advancedOptions>
+            <advancedOptions dataProtectionLevel="Private" passiveMode="true" shareSSLContext="true" />
+          </advancedOptions>
+        </fileTransfer>
+      </webServer>
+    </option>
+  </component>
+</project>

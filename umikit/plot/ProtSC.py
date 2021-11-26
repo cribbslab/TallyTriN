@@ -31,6 +31,7 @@ class protSC(Config.config):
         super(protSC, self).__init__()
         self.greader = greader()
         self.df_gt = self.greader.generic(df_fpn=fpns['ground_truth'], header=0)[:]
+        print(self.df_gt['gc_cnt'].sum())
         self.df_gt['gc_tag'] = self.df_gt.apply(lambda x: 'cell'+str(x[0] + 1) + ' ' + 'gene' + str(x[1] + 1), axis=1)
         print(self.df_gt)
         self.df = pd.DataFrame()
@@ -41,7 +42,6 @@ class protSC(Config.config):
             df_met = df_met.sub(self.df_gt['gc_cnt'], axis='rows')
             df_met = df_met.div(self.df_gt['gc_cnt'], axis='rows')
             print(df_met.div(self.df_gt['gc_cnt'], axis='rows'))
-
 
             # df_met = (df_met - 50) / 50
             df_met['gc_tag'] = self.df_gt['gc_tag']
@@ -82,7 +82,7 @@ class protSC(Config.config):
         sns.set_style("ticks")
         row_num = 5
         col_num = 8
-        fig, ax = plt.subplots(nrows=row_num, ncols=col_num, figsize=(14, 8), sharey=False, sharex='all')
+        fig, ax = plt.subplots(nrows=row_num, ncols=col_num, figsize=(12, 7), sharey=False, sharex='all')
         c = 0
         for i_row in range(row_num):
             for i_col in range(col_num):
@@ -127,19 +127,19 @@ class protSC(Config.config):
 
         fig.add_subplot(111, frameon=False)
         plt.tick_params(labelcolor='none', which='both', top=False, bottom=False, left=False, right=False)
-        plt.xlabel('Sequencing error rate', fontsize=12)
+        # plt.xlabel('Sequencing error rate', fontsize=12)
         plt.ylabel(r'$\frac{N_e-N_t}{N_t}$', fontsize=16)
 
-        # fig.supxlabel('Sequencing error rate', fontsize=12)
+        fig.supxlabel('Sequencing error rate', fontsize=12)
         # fig.supylabel(r'$\frac{N_e-N_t}{N_t}$')
         # plt.tight_layout()
         fig.subplots_adjust(
-            # top=0.98,
-            # bottom=0.15,
-            # left=0.15,
-            # right=0.98,
-            hspace=0.70,
-            wspace=0.35
+            top=0.88,
+            bottom=0.10,
+            left=0.08,
+            right=0.98,
+            hspace=0.60,
+            wspace=0.30
         )
 
         lines = []
@@ -163,8 +163,6 @@ if __name__ == "__main__":
             },
             'ground_truth': to('data/simu/monomer/sc/seq_errs/ground_truth.txt'),
         },
-
-
     }
     p = protSC(DEFINE['fpns'])
 

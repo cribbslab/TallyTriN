@@ -14,11 +14,11 @@ class protocol(Config.config):
         self.df = pd.DataFrame()
         self.df_T = pd.DataFrame()
         for method, fpn in fpns.items():
-            df_met = self.greader.generic(df_fpn=fpn, header=0)[:]
+            df_met = self.greader.generic(df_fpn=fpn, header=0)[13:]
             df_met_T = df_met.T
             df_met_T = (df_met_T - 50) / 50
-            # df_met_T.columns = ['{:.1e}'.format(x) for x in self.seq_fix_errs[:]]
-            # df_met_T.columns = [int(x*100000) for x in self.seq_fix_errs[:]]
+            df_met_T.columns = ['{:.1e}'.format(x) for x in self.seq_fix_errs[13:]]
+            # df_met_T.columns = [int(x*100000) for x in self.seq_fix_errs[13:]]
             df_met_T['method'] = method
             # print(df_met_T)
             # df_met = np.exp((df_met - 50) / 50)
@@ -30,10 +30,10 @@ class protocol(Config.config):
             df_met['mean-min'] = df_met['std']
             df_met['max-mean'] = df_met['std']
             df_met['method'] = method
-            # df_met['metric'] = ['{:.1e}'.format(x) for x in self.seq_fix_errs[:]]
-            # df_met['metric'] = ['{:.1f}'.format(x) for x in self.ampl_rates[:]]
-            # df_met['metric'] = ['{:.0f}'.format(x) for x in self.umi_unit_lens[:]]
-            df_met['metric'] = ['{:.1e}'.format(x) for x in self.pcr_errs[:]]
+            df_met['metric'] = ['{:.1e}'.format(x) for x in self.seq_fix_errs[13:]]
+            # df_met['metric'] = ['{:.1f}'.format(x) for x in self.ampl_rates[13:]]
+            # df_met['metric'] = ['{:.0f}'.format(x) for x in self.umi_unit_lens[13:]]
+            # df_met['metric'] = ['{:.1e}'.format(x) for x in self.pcr_errs[13:]]
             self.df = pd.concat([self.df, df_met], axis=0)
             self.df_T = pd.concat([self.df_T, df_met_T], axis=0)
         print(self.df)
@@ -86,7 +86,7 @@ class protocol(Config.config):
         ddd['method'] = self.df_melt['method']
         ddd['Sequencing error'] = self.df_melt['Sequencing error']
         ddd[r'$\frac{N_e-N_t}{N_t}$'] = self.df_melt['value']
-        print()
+
         g = sns.JointGrid(data=ddd[ddd['method'] == met], x="Sequencing error", y=r'$\frac{N_e-N_t}{N_t}$', marginal_ticks=True)
 
         # Create an inset legend for the histogram colorbar
@@ -99,7 +99,7 @@ class protocol(Config.config):
         )
 
         g.ax_joint.set_title(met, fontsize=14)
-        g.ax_joint.set_xticks([int(x*100000) for x in self.seq_fix_errs[:]])
+        g.ax_joint.set_xticks([int(x*100000) for x in self.seq_fix_errs[13:]])
         g.ax_joint.set_xticklabels([1e-05, '', '', '', '', '', '', '', 0.001, 0.0025, 0.005, 0.0075, 0.01])
         plt.setp(g.ax_joint.get_xticklabels(), rotation=45)
 
@@ -124,8 +124,8 @@ class protocol(Config.config):
         sns.despine(bottom=True, left=True)
         cc = [
             'tab:green',
-            'tab:blue',
             'crimson',
+            'tab:blue',
         ]
         # Show each observation with a scatterplot
         sns.stripplot(x="value", y="Sequencing error", hue='method', palette=cc,
@@ -316,8 +316,8 @@ class protocol(Config.config):
 if __name__ == "__main__":
     from Path import to
     # metric_char ='pcr_nums'
-    metric_char ='pcr_errs'
-    # metric_char ='seq_errs'
+    # metric_char ='pcr_errs'
+    metric_char ='seq_errs'
     # metric_char  = 'ampl_rates'
     # metric_char ='umi_lens'
 
@@ -331,9 +331,9 @@ if __name__ == "__main__":
     p = protocol(
         fpns=DEFINE['fpns']
     )
-    # print(p.strip())
+    print(p.strip())
     # print(p.jointplot())
     # print(p.jointgrid())
     # print(p.stackedbar())
-    print(p.errorbar())
+    # print(p.errorbar())
     # print(p.errorband())
