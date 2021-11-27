@@ -25,7 +25,7 @@ class convert():
         }
         crtfolder().osmkdir(DIRECTORY=os.path.dirname(self.bam_fpn))
         with pysam.AlignmentFile(self.bam_fpn + '.bam', "wb", header=header) as outf:
-            for name in self.seqs:
+            for name in self.names:
                 a = pysam.AlignedSegment()
                 a.query_name = name
                 a.query_sequence = 'B'

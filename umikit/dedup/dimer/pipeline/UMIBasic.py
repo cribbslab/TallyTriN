@@ -43,7 +43,7 @@ class umi(Config.config):
                     self.mcl_inflat = 2.3
                     self.mcl_exp = 2
                     self.mcl_fold_thres = 1
-                    self.umi_len = self.umi_unit_len_fixed
+                    self.umi_len = self.umi_unit_len_fixed * self.umi_unit_pattern
                 elif self.metric == 'pcr_errs':
                     self.mcl_inflat = i_metric
                     print('=>No.{} PCR error: {}'.format(id, i_metric))
@@ -57,7 +57,7 @@ class umi(Config.config):
                     self.mcl_inflat = 1.1 if i_metric > 0.005 else 1.8
                     self.mcl_exp = 2
                     self.mcl_fold_thres = 2
-                    self.umi_len = self.umi_unit_len_fixed
+                    self.umi_len = self.umi_unit_len_fixed * self.umi_unit_pattern
                 elif self.metric == 'seq_errs':
                     print('=>No.{} sequencing error: {}'.format(id, i_metric))
                     # self.mcl_inflat = 1.1 if i_metric > 0.005 else 2.7
@@ -66,7 +66,7 @@ class umi(Config.config):
                     self.mcl_inflat = 1.1 if i_metric > 0.005 else 2.7
                     self.mcl_exp = 2
                     fn_surf = str(id)
-                    self.umi_len = self.umi_unit_len_fixed
+                    self.umi_len = self.umi_unit_len_fixed * self.umi_unit_pattern
                 elif self.metric == 'ampl_rates':
                     print('=>No.{} amplification rate: {}'.format(id, i_metric))
                     fn_surf = str(id)
@@ -89,7 +89,7 @@ class umi(Config.config):
                     self.mcl_exp = 4
                     self.mcl_fold_thres = 11
 
-                    self.umi_len = self.umi_unit_len_fixed
+                    self.umi_len = self.umi_unit_len_fixed * self.umi_unit_pattern
                 elif self.metric == 'umi_lens':
                     print('=>No.{} UMI length: {}'.format(id, i_metric))
                     fn_surf = str(i_metric)
@@ -129,18 +129,18 @@ class umi(Config.config):
                     self.umi_len = i_metric
                 else:
                     fn_surf = str(i_metric)
-                    self.umi_len = self.umi_unit_len_fixed
+                    self.umi_len = self.umi_unit_len_fixed * self.umi_unit_pattern
                 fn = self.fn_pref[self.metric] + fn_surf
                 if is_trim:
                     self.trim(
-                        fastq_fpn=fastq_fp + self.metric + '/dimer/permute_' + str(i_pn) + '/' + fn,
-                        fastq_trimmed_fpn=fastq_fp + self.metric + '/dimer/permute_' + str(i_pn) + '/trimmed/' + fn,
+                        fastq_fpn=fastq_fp + self.metric + '/permute_' + str(i_pn) + '/' + fn,
+                        fastq_trimmed_fpn=fastq_fp + self.metric + '/permute_' + str(i_pn) + '/trimmed/' + fn,
                         umi_len=self.umi_len,
                     )
                 if is_tobam:
                     fas2bam(
-                        fastq_fpn=fastq_fp + self.metric + '/dimer/permute_' + str(i_pn) + '/trimmed/' + self.comp_cat + '/' + fn + '.fastq.gz',
-                        bam_fpn=fastq_fp + self.metric + '/dimer/permute_' + str(i_pn) + '/bam/' + self.comp_cat + '/' + fn,
+                        fastq_fpn=fastq_fp + self.metric + '/permute_' + str(i_pn) + '/' + self.comp_cat + '/' + fn + '.fastq.gz',
+                        bam_fpn=fastq_fp + self.metric + '/permute_' + str(i_pn) + '/' + self.comp_cat + '/bam/' + fn,
                     ).tobam()
                 if is_dedup:
                     # if self.metric == 'seq_errs':
@@ -151,8 +151,7 @@ class umi(Config.config):
                                 mode='internal',
                                 method=self.method,
                                 # bam_fpn=to('example/data/example.bam'),
-                                bam_fpn=fastq_fp + self.metric + '/dimer/permute_' + str(
-                                    i_pn) + '/bam/' + self.comp_cat + '/' + fn + '.bam',
+                                bam_fpn=fastq_fp + self.metric + '/permute_' + str(i_pn) + '/' + self.comp_cat + '/bam/' + fn + '.bam',
                                 pos_tag='PO',
                                 mcl_fold_thres=self.mcl_fold_thres,
                                 inflat_val=self.mcl_inflat,
@@ -161,15 +160,14 @@ class umi(Config.config):
                                 verbose=False,
                                 ed_thres=1,
                                 is_sv=False,
-                                sv_fpn=fastq_fp + self.metric + '/dimer/permute_' + str(
-                                    i_pn) + '/summary/' + self.comp_cat + '/' + fn,
+                                sv_fpn=fastq_fp + self.metric + '/permute_' + str(i_pn) + '/' + self.comp_cat + '/bam/' + fn + '.summary',
                             )
                             dedup_arr.append(dedup_ob.dedup_num)
             df_dedup['pn' + str(i_pn)] = dedup_arr
             print(df_dedup)
         self.gwriter.generic(
             df=df_dedup,
-            sv_fpn=fastq_fp + self.metric + '/' + str(self.method) + '.txt',
+            sv_fpn=fastq_fp + self.metric + '/' + str(self.method) + '_' + self.comp_cat + '.txt',
             header=True,
         )
 
@@ -406,6 +404,7 @@ if __name__ == "__main__":
         # method='mcl_val',
         # method='mcl_ed',
 
+        # comp_cat='',
         # comp_cat='ref',
         comp_cat='bipartite',
 
@@ -416,6 +415,6 @@ if __name__ == "__main__":
         is_trim=False,
         is_tobam=False,
         is_dedup=True,
-        fastq_fp=to('data/simu/umi/'),
+        fastq_fp=to('data/simu/dimer/pcr8/'),
     )
     # print(p.evaluate())

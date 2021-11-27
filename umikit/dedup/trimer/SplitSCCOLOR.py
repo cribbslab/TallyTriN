@@ -15,15 +15,14 @@ from umikit.trim.Template import template as umitrim
 from umikit.trim.Reader import reader as trimreader
 from simreadflow.util.file.read.Reader import reader as gfreader
 from simreadflow.util.file.write.Writer import writer as fwriter
-from simreadflow.simulate.dispatcher.batch.UMI import umi as generalstarter
+from umikit.dedup.trimer.pipeline import Config
 from simreadflow.read.similarity.distance.Hamming import hamming
 
 
-class selfHealing(generalstarter):
+class selfHealing(Config.config):
 
-    def __init__(self, umi_ref_fpn, fastq_fp, cat):
+    def __init__(self, fastq_fp, cat):
         super(selfHealing, self).__init__()
-        self.umi_ref_fpn = umi_ref_fpn
         self.fastq_fp = fastq_fp
         self.cat = cat
         self.umitrim = umitrim
@@ -33,65 +32,66 @@ class selfHealing(generalstarter):
         self.trimreader = trimreader()
         self.rannum = rannum()
         self.fwriter = fwriter()
-        self.umi_raw = self.gfreader.generic(
-            df_fpn=self.umi_ref_fpn
-        )[0].values
-        self.umi_raw = pd.DataFrame.from_dict({i: e for i, e in enumerate(self.umi_raw)}, orient='index')
-        self.umi_raw_monomer = self.umi_raw[0].apply(lambda x: ''.join([i[0] for i in textwrap.wrap(x, 3)])).to_dict()
 
     def rea(self, ):
-        for id, i_seq_err in enumerate(self.seq_errs):
-            read_stime = time.time()
-            names, seqs, _, _ = self.rfastq.fromgz(
-                fastq_path=self.fastq_fp,
-                fastq_name=self.cat + '_' + str(id),
-                method='pyfastx',
-            )
-            print('===>file read time: {:.3f}s'.format(time.time() - read_stime))
-            df_fastq = self.trimreader.todf(names=names, seqs=seqs)
-            df_fastq['origin_info'] = df_fastq['name'].apply(lambda x: x.split('_')[0])
-            mono_corr_stime = time.time()
+        for i_pn in range(self.permutation_num):
+        # for i_pn in [2]:
+            for id, i_seq_err in enumerate(self.seq_errs):
+                read_stime = time.time()
+                print(self.fastq_fp  + '/permute_' + str(i_pn) + '/trimmed/' + self.cat + '_' + str(id))
+                names, seqs, _, _ = self.rfastq.fromgz(
+                    fastq_path=self.fastq_fp  + '/permute_' + str(i_pn) + '/trimmed/',
+                    fastq_name=self.cat + '_' + str(id),
+                    method='pyfastx',
+                )
+                print('===>file read time: {:.3f}s'.format(time.time() - read_stime))
+                df_fastq = self.trimreader.todf(names=names, seqs=seqs)
+                df_fastq['origin_info'] = df_fastq['name'].apply(lambda x: x.split('_')[0])
+                mono_corr_stime = time.time()
 
-            # df_fastq['umi_monos'] = df_fastqNo3['umi'].apply(lambda x: self.split(x))
-            df_fastq['umi_monos'] = df_fastq['umi'].apply(lambda x: self.split(x))
-            print(df_fastq['umi_monos'])
-            df_fastq['umi_raw'] = df_fastq['umi_monos'].apply(lambda x: x.split(';')[0])
-            df_fastq['umi_l'] = df_fastq['umi_monos'].apply(lambda x: x.split(';')[1])
-            df_fastq['umi_m'] = df_fastq['umi_monos'].apply(lambda x: x.split(';')[2])
-            df_fastq['umi_r'] = df_fastq['umi_monos'].apply(lambda x: x.split(';')[3])
+                # df_fastq['umi_monos'] = df_fastqNo3['umi'].apply(lambda x: self.split(x))
+                df_fastq['umi_monos'] = df_fastq['umi'].apply(lambda x: self.split(x))
+                print(df_fastq['umi_monos'])
+                df_fastq['umi_raw'] = df_fastq['umi_monos'].apply(lambda x: x.split(';')[0])
+                df_fastq['umi_l'] = df_fastq['umi_monos'].apply(lambda x: x.split(';')[1])
+                df_fastq['umi_m'] = df_fastq['umi_monos'].apply(lambda x: x.split(';')[2])
+                df_fastq['umi_r'] = df_fastq['umi_monos'].apply(lambda x: x.split(';')[3])
 
-            df_fastq['to_fas'] = df_fastq.apply(lambda x: x['origin_info'] + '_' + x['umi_raw'], axis=1)
+                df_fastq['to_fas'] = df_fastq.apply(lambda x: x['origin_info'] + '_' + x['umi_raw'], axis=1)
 
-            df_fastq['umi_mark'] = df_fastq['umi'].apply(lambda x: self.marker(x))
-            df_fastqYes3 = df_fastq.loc[df_fastq['umi_mark'] == 1]
-            df_fastqYes3_cp = df_fastqYes3.copy()
-            df_fastqYes3 = df_fastqYes3.drop('umi_r', 1)
-            df_fastqYes3_cp = df_fastqYes3_cp.drop('umi_m', 1)
-            df_fastqYes3 = df_fastqYes3.rename(columns={"umi_m": "umi_bi"})
-            df_fastqYes3_cp = df_fastqYes3_cp.rename(columns={"umi_r": "umi_bi"})
-            df_Yes3 = pd.concat([df_fastqYes3, df_fastqYes3_cp], axis=0).reset_index(drop=True)
-            # print(df_fastqYes3['umi_bi'])
-            # print(df_fastqYes3_cp['umi_bi'])
-            # print(df_Yes3['umi_bi'])
-            df_Yes3['to_fas'] = df_Yes3.apply(lambda x: x['origin_info'] + '_' + x['umi_bi'], axis=1)
+                df_fastq['umi_mark'] = df_fastq['umi'].apply(lambda x: self.marker(x))
+                df_fastqYes3 = df_fastq.loc[df_fastq['umi_mark'] == 1]
+                df_fastqYes3_cp = df_fastqYes3.copy()
+                df_fastqYes3 = df_fastqYes3.drop('umi_r', 1)
+                df_fastqYes3_cp = df_fastqYes3_cp.drop('umi_m', 1)
+                df_fastqYes3 = df_fastqYes3.rename(columns={"umi_m": "umi_bi"})
+                df_fastqYes3_cp = df_fastqYes3_cp.rename(columns={"umi_r": "umi_bi"})
+                df_Yes3 = pd.concat([df_fastqYes3, df_fastqYes3_cp], axis=0).reset_index(drop=True)
+                # print(df_fastqYes3['umi_bi'])
+                # print(df_fastqYes3_cp['umi_bi'])
+                # print(df_Yes3['umi_bi'])
+                print('jianfeng')
+                df_fastqNo3 = df_fastq.loc[df_fastq['umi_mark'] != 1]
+                df_fastqNo3['to_fas'] = df_fastqNo3.apply(lambda x: x['origin_info'] + '_' + x['umi_l'], axis=1)
+                if df_Yes3.empty:
+                    df = df_fastqNo3[['seq_raw', 'to_fas']].reset_index(drop=True)
+                else:
+                    df_Yes3['to_fas'] = df_Yes3.apply(lambda x: x['origin_info'] + '_' + x['umi_bi'], axis=1)
+                    df = pd.concat([df_Yes3[['seq_raw', 'to_fas']], df_fastqNo3[['seq_raw', 'to_fas']]], axis=0).reset_index(drop=True)
+                print(df)
+                self.wfastq.togz(
+                    list_2d=df_fastq[['seq_raw', 'to_fas']].values,
+                    sv_fp=self.fastq_fp + '/permute_' + str(i_pn) + '/ref/',
+                    fn=self.cat + '_' + str(id),
+                )
+                self.wfastq.togz(
+                    list_2d=df.values,
+                    sv_fp=self.fastq_fp + '/permute_' + str(i_pn) + '/bipartite/',
+                    fn=self.cat + '_' + str(id),
+                )
 
-            df_fastqNo3 = df_fastq.loc[df_fastq['umi_mark'] != 1]
-            df_fastqNo3['to_fas'] = df_fastqNo3.apply(lambda x: x['origin_info'] + '_' + x['umi_l'], axis=1)
-            df = pd.concat([df_Yes3[['to_fas', 'seq_raw']], df_fastqNo3[['to_fas', 'seq_raw']]], axis=0).reset_index(drop=True)
-            print(df)
-            self.wfastq.togz(
-                list_2d=df_fastq[['to_fas', 'seq_raw']].values,
-                sv_fp=self.fastq_fp + 'ref/',
-                fn=self.cat + '_' + str(id),
-            )
-            self.wfastq.togz(
-                list_2d=df.values,
-                sv_fp=self.fastq_fp + 'bipartite/',
-                fn=self.cat + '_' + str(id),
-            )
-
-            # print(df_fastq['umi_monosa'])
-            print('===>mono_corr time: {:.3f}s'.format(time.time() - mono_corr_stime))
+                # print(df_fastq['umi_monosa'])
+                print('===>mono_corr time: {:.3f}s'.format(time.time() - mono_corr_stime))
         return
 
     def split(self, umi):
@@ -135,8 +135,7 @@ class selfHealing(generalstarter):
 
 if __name__ == "__main__":
     p = selfHealing(
-        umi_ref_fpn=to('data/simu/umi/seq_errs/trimer/umi.txt'),
-        fastq_fp=to('data/simu/umi/seq_errs/trimer/trimmed/'),
+        fastq_fp=to('data/simu/trimer/pcr8/seq_errs/'),
         cat='seq_err',
     )
 

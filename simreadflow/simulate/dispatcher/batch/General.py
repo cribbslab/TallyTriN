@@ -35,7 +35,7 @@ class general(object):
 
         self.umi_unit_len_fixed = 12
         self.umi_num_fixed = 50
-        self.pcr_num_fixed = 12
+        self.pcr_num_fixed = 8
         self.pcr_err_fixed = 1e-3
         self.seq_err_fixed = 1e-3
         self.ampl_rate_fixed = 0.85
@@ -46,8 +46,8 @@ class general(object):
         self.umi_unit_lens = np.arange(6, 36 + 1, 1)
         self.umi_nums = np.arange(20, 140 + 20, 20)
         self.pcr_nums = np.arange(1, 20 + 1, 1)
-        self.pcr_errs = [1e-05, 2.5e-05, 5e-05, 7.5e-05, 0.0001, 0.00025, 0.0005, 0.00075, 0.001, 0.0025, 0.005, 0.0075, 0.01]
         self.pcr_errs, self.seq_errs = self.errors()
+        self.pcr_errs = [1e-05, 2.5e-05, 5e-05, 7.5e-05, 0.0001, 0.00025, 0.0005, 0.00075, 0.001, 0.0025, 0.005, 0.0075, 0.01]
         print(self.pcr_errs, self.seq_errs)
 
         self.metrics = {
@@ -137,15 +137,25 @@ class general(object):
             simu_params = {
                 'init_seq_setting': {
                     'seq_num': self.umi_num_fixed,
-                    'umi_unit_pattern': 1,
+                    'umi_unit_pattern': 3,
                     'umi_unit_len': self.umi_unit_len_fixed,
                     # 'seq_len': self.seq_len_fixed - self.umi_unit_len_fixed,
                     'is_seed': True,
-                    'working_dir': to('data/simu/monomer/general/1/pcr_err/permute_') + str(pn) + '/',
+                    # ### /*** block. general ***/
+                    # 'working_dir': to('data/simu/monomer/general/1/pcr_err/permute_') + str(pn) + '/',
+                    # 'is_sv_umi_lib': True,
+                    # 'umi_lib_fpn': to('data/simu/monomer/general/1/pcr_err/permute_') + str(pn) + '/umi.txt',
+
+                    # # ### /*** block. dimer ***/
+                    # 'working_dir': to('data/simu/dimer/pcr_err/permute_') + str(pn) + '/',
+                    # 'is_sv_umi_lib': True,
+                    # 'umi_lib_fpn': to('data/simu/dimer/pcr_err/permute_') + str(pn) + '/umi.txt',
+
+                    # ### /*** block. trimer ***/
+                    'working_dir': to('data/simu/trimer/pcr_err/permute_') + str(pn) + '/',
                     'is_sv_umi_lib': True,
-                    'umi_lib_fpn': to('data/simu/monomer/general/1/pcr_err/permute_') + str(pn) + '/umi.txt',
-                    # 'is_sv_seq_lib': True,
-                    # 'seq_lib_fpn': to('data/simu/monomer/general/1/pcr_err/permute_') + str(pn) + '/seq.txt',
+                    'umi_lib_fpn': to('data/simu/trimer/pcr_err/permute_') + str(pn) + '/umi.txt',
+
                     'condis': ['umi'],
                     'sim_thres': self.sim_thres_fixed,
                     'permutation': pn,
@@ -159,7 +169,7 @@ class general(object):
                 'use_seed': False,
                 'seed': None,
                 'write': {
-                    'fastq_fp': to('data/simu/monomer/general/1/pcr_err/permute_') + str(pn) + '/',
+                    'fastq_fp': to('data/simu/trimer/pcr_err/permute_') + str(pn) + '/',
                     'fastq_fn': '',
                 }
             }
@@ -172,25 +182,25 @@ class general(object):
             simu_params = {
                 'init_seq_setting': {
                     'seq_num': self.umi_num_fixed,
-                    'umi_unit_pattern': 3,
+                    'umi_unit_pattern': 2,
                     'umi_unit_len': self.umi_unit_len_fixed,
                     # 'seq_len': self.seq_len_fixed - self.umi_unit_len_fixed,
                     'is_seed': True,
 
                     # ### /*** block. general ***/
-                    # 'working_dir': to('data/simu/monomer/general/1/seq_err/permute_') + str(pn) + '/',
+                    # 'working_dir': to('data/simu/monomer/general/1/seq_errs/permute_') + str(pn) + '/',
                     # 'is_sv_umi_lib': True,
-                    # 'umi_lib_fpn': to('data/simu/monomer/general/1/seq_err/permute_') + str(pn) + '/umi.txt',
+                    # 'umi_lib_fpn': to('data/simu/monomer/general/1/seq_errs/permute_') + str(pn) + '/umi.txt',
 
-                    # # ### /*** block. dimer ***/
-                    # 'working_dir': to('data/simu/dimer/seq_err/permute_') + str(pn) + '/',
-                    # 'is_sv_umi_lib': True,
-                    # 'umi_lib_fpn': to('data/simu/dimer/seq_err/permute_') + str(pn) + '/umi.txt',
+                    # ### /*** block. dimer ***/
+                    'working_dir': to('data/simu/dimer/pcr8/seq_errs/permute_') + str(pn) + '/',
+                    'is_sv_umi_lib': True,
+                    'umi_lib_fpn': to('data/simu/dimer/pcr8/seq_errs/permute_') + str(pn) + '/umi.txt',
 
                     # ### /*** block. trimer ***/
-                    'working_dir': to('data/simu/trimer/seq_err/permute_') + str(pn) + '/',
-                    'is_sv_umi_lib': True,
-                    'umi_lib_fpn': to('data/simu/trimer/seq_err/permute_') + str(pn) + '/umi.txt',
+                    # 'working_dir': to('data/simu/trimer/pcr8/seq_errs/permute_') + str(pn) + '/',
+                    # 'is_sv_umi_lib': True,
+                    # 'umi_lib_fpn': to('data/simu/trimer/pcr8/seq_errs/permute_') + str(pn) + '/umi.txt',
 
                     'condis': ['umi'],
                     'sim_thres': self.sim_thres_fixed,
@@ -205,7 +215,7 @@ class general(object):
                 'use_seed': False,
                 'seed': None,
                 'write': {
-                    'fastq_fp': to('data/simu/trimer/seq_err/permute_') + str(pn) + '/',
+                    'fastq_fp': to('data/simu/dimer/pcr8/seq_errs/permute_') + str(pn) + '/',
                     'fastq_fn': '',
                 }
             }

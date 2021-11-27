@@ -51,7 +51,7 @@ class dedupPos():
 
         self.alireader = aliread(bam_fpn=self.bam_fpn, verbose=self.verbose)
         self.df_bam = self.alireader.todf(tags=[self.pos_tag])
-        print(self.df_bam)
+        # print(self.df_bam)
         self.console.print('======># of raw reads: {}'.format(self.df_bam.shape[0]))
         self.df_bam = self.df_bam.loc[self.df_bam['reference_id'] != -1]
         self.console.print('======># of reads with qualified chrs: {}'.format(self.df_bam.shape[0]))

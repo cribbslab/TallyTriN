@@ -9,9 +9,10 @@ import numpy as np
 class config(object):
 
     def __init__(self, ):
-        self.permutation_num = 1
+        self.permutation_num = 10
 
-        self.umi_unit_len_fixed = 10
+        self.umi_unit_pattern = 2
+        self.umi_unit_len_fixed = 12
         # self.seq_len_fixed = 100
         self.umi_num_fixed = 50
         self.pcr_num_fixed = 16
@@ -27,6 +28,8 @@ class config(object):
         self.pcr_nums = np.arange(1, 18 + 1, 1)
         # self.pcr_nums = np.arange(1, 20 + 1, 1)
         self.pcr_errs, self.seq_errs = self.errors()
+        self.pcr_errs = [1e-05, 2.5e-05, 5e-05, 7.5e-05, 0.0001, 0.00025, 0.0005, 0.00075, 0.001, 0.0025, 0.005, 0.0075, 0.01]
+
         # self.seq_fix_errs = [1e-05, 2.5e-05, 5e-05, 7.5e-05, 0.0001, 0.00025, 0.0005, 0.00075, 0.001, 0.0025, 0.005, 0.0075, 0.01, 0.025, 0.05, 0.075, 0.1, 0.2]
         # self.seq_errs = [1e-05, 2.5e-05, 5e-05, 7.5e-05, 0.0001, 0.00025, 0.0005, 0.00075, 0.001, 0.0025, 0.005, 0.0075, 0.01, 0.025, 0.05]
         print(self.pcr_errs, self.seq_errs)
