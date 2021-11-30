@@ -4,10 +4,12 @@ __license__ = "MIT"
 __lab__ = "Adam Cribbs lab"
 
 import os
-# import pysam
+import pysam
+# import bamnostic as bs
 from umikit.fastq.Read import read as fastqread
 from umikit.util.Folder import folder as crtfolder
 from Path import to
+import gzip
 
 
 class convert():
@@ -40,6 +42,31 @@ class convert():
                 a.query_qualities = None
                 a.tags = (("PO", 1), )
                 outf.write(a)
+        return
+
+    def tobambs(self, ):
+        header = {
+            'HD': {'VN': '1.0'},
+            'SQ': [{'LN': 1575, 'SN': 'chr1'}, {'LN': 1584, 'SN': 'chr2'}]
+        }
+        crtfolder().osmkdir(DIRECTORY=os.path.dirname(self.bam_fpn))
+        # with bs.AlignmentFile(self.bam_fpn + '.bam', "wb", header=header) as outf:
+        for name in self.names:
+            ioop = gzip.GzipFile(self.bam_fpn + '.bam')
+            a = bs.AlignedSegment(ioop)
+            a.query_name = name
+            a.query_sequence = 'B'
+            a.flag = 0
+            a.reference_id = 0
+            a.reference_start = 0
+            a.mapping_quality = 0
+            a.cigar = None
+            a.next_reference_id = 0
+            a.next_reference_start = 0
+            a.template_length = 0
+            a.query_qualities = None
+            a.tags = (("PO", 1), )
+            # outf.write(a)
         return
 
     def tobamsc(self, ):
@@ -103,9 +130,11 @@ class convert():
 
 if __name__ == "__main__":
     p = convert(
-        fastq_fpn=to('data/simu/monomer/sc/seq_err/permute_0/trimmed/seq_err_0.fastq.gz'),
-        bam_fpn=to('data/simu/monomer/sc/seq_err/permute_0/trimmed/seq_err_0'),
+        fastq_fpn=to('data/simu/transloc/trimer/seq_err_0.fastq.gz'),
+        bam_fpn=to('data/simu/transloc/trimer/seq_err_01'),
     )
-    # print(p.tobam())
+    print(p.tobam())
     # print(p.tobamsc())
-    print(p.tobambulk())
+    # print(p.tobambulk())
+
+    # print(p.tobambs())

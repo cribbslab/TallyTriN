@@ -81,3 +81,8 @@ class number(object):
                 high=high,
                 size=num
             )
+
+    def choice(self, high, num, replace=False):
+        from numpy.random import default_rng
+        rng = default_rng()
+        return rng.choice(high, size=num, replace=replace)

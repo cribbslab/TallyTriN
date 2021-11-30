@@ -4,10 +4,10 @@ __license__ = "MIT"
 __lab__ = "Adam Cribbs lab"
 
 import time
-# import pysam
+import pysam
 import pandas as pd
 from umikit.util.Console import console
-import bamnostic as bs
+# import bamnostic as bs
 
 
 class read(object):
@@ -29,8 +29,8 @@ class read(object):
         self.console.verbose = verbose
         self.console.print('===>reading the bam file... {}'.format(bam_fpn))
         read_bam_stime = time.time()
-        # self.pysam_bam = pysam.AlignmentFile(bam_fpn, "rb")
-        self.pysam_bam = bs.AlignmentFile(bam_fpn, "rb")
+        self.pysam_bam = pysam.AlignmentFile(bam_fpn, "rb")
+        # self.pysam_bam = bs.AlignmentFile(bam_fpn, "rb")
         self.console.print('===>reading BAM time: {:.2f}s'.format(time.time() - read_bam_stime))
 
     def bycol(self, col='sname'):

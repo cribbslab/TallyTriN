@@ -1,34 +1,23 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <project version="4">
-  <component name="PublishConfigData" autoUpload="Always" serverName="ws-btally" remoteFilesAllowedToDisappearOnAutoupload="false">
+  <component name="PublishConfigData" autoUpload="Always" serverName="lh_mcl" remoteFilesAllowedToDisappearOnAutoupload="false">
     <serverData>
-      <paths name="ws-btally">
+      <paths name="lh_mcl">
         <serverdata>
           <mappings>
-            <mapping deploy="/home/students/j.sun/store/software/us/code" local="$PROJECT_DIR$" web="/" />
+            <mapping deploy="/home/jsun/software/Bulk-TallyNNN" local="$PROJECT_DIR$" />
           </mappings>
-          <excludedPaths>
-            <excludedPath path="/home/students/j.sun/store/software/us/code/data" />
-            <excludedPath local="true" path="$PROJECT_DIR$/data" />
-          </excludedPaths>
         </serverdata>
       </paths>
-      <paths name="ws-btally (project level)">
+      <paths name="lh_mcl (1)">
         <serverdata>
           <mappings>
-            <mapping deploy="/home/students/j.sun/store/software/us/code" local="$PROJECT_DIR$" web="/" />
+            <mapping deploy="/home/jsun/software/Bulk-TallyNNN" local="$PROJECT_DIR$" />
           </mappings>
           <excludedPaths>
-            <excludedPath path="/home/students/j.sun/store/software/us/code/data" />
+            <excludedPath path="/home/jsun/software/Bulk-TallyNNN/data" />
             <excludedPath local="true" path="$PROJECT_DIR$/data" />
           </excludedPaths>
-        </serverdata>
-      </paths>
-      <paths name="ws-mcl">
-        <serverdata>
-          <mappings>
-            <mapping local="$PROJECT_DIR$" web="/" />
-          </mappings>
         </serverdata>
       </paths>
     </serverData>
