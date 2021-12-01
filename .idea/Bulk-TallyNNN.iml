@@ -4,7 +4,7 @@
     <content url="file://$MODULE_DIR$">
       <excludeFolder url="file://$MODULE_DIR$/data" />
     </content>
-    <orderEntry type="jdk" jdkName="Python 3.7 (deepumi)" jdkType="Python SDK" />
+    <orderEntry type="jdk" jdkName="Remote Python 3.8.12 (sftp://jsun@192.168.0.2:22/home/jsun/anaconda3/envs/mcl/bin/python)" jdkType="Python SDK" />
     <orderEntry type="sourceFolder" forTests="false" />
   </component>
 </module>

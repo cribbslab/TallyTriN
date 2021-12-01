@@ -87,6 +87,7 @@ class umiDouble(object):
         print(pos_transloc)
         for i, r in enumerate(reads):
             if i in pos_transloc:
+                # ===> 'read', 'r1_id', 'r2_id', 'transloc_stat', 'transloc_side', 'sam_id', 'source'
                 c.append([r[0] + r[2], r[1], r[3], 'real_yes', 'none', i, 'init'])
             else:
                 c.append([r[0] + r[2], r[1], r[3], 'real_no', 'none', i, 'init'])

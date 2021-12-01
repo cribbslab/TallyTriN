@@ -6,7 +6,7 @@ __lab__ = "Adam Cribbs lab"
 import os
 import sys
 sys.path.insert(0, os.path.abspath('../../..'))
-import networkx as nx
+# import networkx as nx
 from umikit.network.CC import cc as gbfscc
 
 

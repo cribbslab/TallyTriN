@@ -176,7 +176,7 @@ class errorTransloc(object):
         del spl_nt_ids
         pcr_merge_stime = time.time()
         data_pcr['read'] = data_pcr.apply(lambda x: ''.join(x['read']), axis=1)
-        data_pcr['source'] = 'pcr-' + str(res2p['ipcr'] + 1)
+        data_pcr['source'] = 'pcr' + str(res2p['ipcr'] + 1)
         # print(data_pcr.values)
         data_pcr = np.array(data_pcr)
         res2p['data'] = np.concatenate((res2p['data'], data_pcr), axis=0)

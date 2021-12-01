@@ -189,20 +189,15 @@ class umiDouble(object):
                     'umi_unit_len': self.umi_unit_len_fixed,
                     'is_seed': True,
 
-                    # ### /*** block. general ***/
-                    # 'working_dir': to('data/simu/monomer/general/1/seq_errs/permute_') + str(pn) + '/',
+                    # # ### /*** block. trimer ***/
+                    # 'working_dir': to('data/simu/transloc/trimer/single_read/seq_errs/permute_') + str(pn) + '/',
                     # 'is_sv_umi_lib': True,
-                    # 'umi_lib_fpn': to('data/simu/monomer/general/1/seq_errs/permute_') + str(pn) + '/umi.txt',
+                    # 'umi_lib_fpn': to('data/simu/transloc/trimer/single_read/seq_errs/permute_') + str(pn) + '/umi.txt',
 
-                    # ### /*** block. dimer ***/
+                    # ### /*** block. trimer ***/
                     'working_dir': to('data/simu/transloc/trimer/single_read/seq_errs/permute_') + str(pn) + '/',
                     'is_sv_umi_lib': True,
                     'umi_lib_fpn': to('data/simu/transloc/trimer/single_read/seq_errs/permute_') + str(pn) + '/umi.txt',
-
-                    # ### /*** block. trimer ***/
-                    # 'working_dir': to('data/simu/trimer/pcr8/seq_errs/permute_') + str(pn) + '/',
-                    # 'is_sv_umi_lib': True,
-                    # 'umi_lib_fpn': to('data/simu/trimer/pcr8/seq_errs/permute_') + str(pn) + '/umi.txt',
 
                     'condis': ['umi'],
                     'sim_thres': self.sim_thres_fixed,
