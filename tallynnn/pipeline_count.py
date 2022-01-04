@@ -113,7 +113,11 @@ def tso_umi(infile, outfile):
 
     PYTHON_ROOT = os.path.join(os.path.dirname(__file__), "python/")
 
-    statement = '''python %(PYTHON_ROOT)s/tso_umi.py --infile=%(infile)s --outname=%(outfile)s'''
+    if not PARAMS['correct']:
+        statement = """python %(PYTHON_ROOT)s/tso_umi_nocorrect.py --infile=%(infile)s --outname=%(outfile)s"""
+
+    else:
+        statement = '''python %(PYTHON_ROOT)s/tso_umi.py --infile=%(infile)s --outname=%(outfile)s'''
 
     P.run(statement)
 
@@ -126,7 +130,11 @@ def polya_umi(infile, outfile):
 
     PYTHON_ROOT = os.path.join(os.path.dirname(__file__), "python/")
 
-    statement = '''python %(PYTHON_ROOT)s/polya_umi.py --infile=%(infile)s --outname=%(outfile)s'''
+    if not PARAMS['correct']:
+        statement = """python %(PYTHON_ROOT)s/polya_umi_nocorrect.py --infile=%(infile)s --outname=%(outfile)s"""
+
+    else:
+        statement = '''python %(PYTHON_ROOT)s/polya_umi.py --infile=%(infile)s --outname=%(outfile)s'''
 
     P.run(statement)
 
@@ -170,10 +178,11 @@ def xt_tag(infile, outfile):
 
     P.run(statement)
 
-    
+
+@follows(mkdir('counts_trans.dir'))
 @transform(xt_tag,
-           regex("(\S+)_XT.bam"),
-           r"\1.counts.tsv.gz")
+           regex("mapped_files.dir/(\S+)_XT.bam"),
+           r"counts_trans.dir/\1.counts.tsv.gz")
 def count_trans(infile, outfile):
     '''Use umi-tools to collapse UMIs and generate counts table'''
 
@@ -183,8 +192,8 @@ def count_trans(infile, outfile):
 
 
 @transform(xt_tag,
-           regex("(\S+)_XT.bam"),
-           r"\1.counts_unique.tsv.gz")
+           regex("mapped_files.dir/(\S+)_XT.bam"),
+           r"counts_trans.dir/\1.counts_unique.tsv.gz")
 def count_trans_unique(infile, outfile):
     '''Use umi-tools to count over the umis'''
 
@@ -193,7 +202,7 @@ def count_trans_unique(infile, outfile):
     P.run(statement)
 
 
-@merge(count_trans, "counts.tsv.gz")
+@merge(count_trans, "counts_trans.dir/counts.tsv.gz")
 def merge_count(infiles, outfile):
     '''merge counts from ech sample into one'''
 
@@ -202,7 +211,7 @@ def merge_count(infiles, outfile):
     df.to_csv(outfile, sep="\t", compression="gzip")
 
 
-@merge(count_trans_unique, "counts_unique.tsv.gz")
+@merge(count_trans_unique, "counts_trans.dir/counts_unique.tsv.gz")
 def merge_count_unique(infiles, outfile):
     '''merge counts from ech sample into one'''
 
@@ -216,8 +225,8 @@ def merge_count_unique(infiles, outfile):
 #############################
 
 @transform(polya_umi,
-           regex("(\S+)_tso_polya_UMI.fastq.gz"),
-           r"\1_gene.sam")
+           regex("processed_fastq.dir/(\S+)_tso_polya_UMI.fastq.gz"),
+           r"mapped_files.dir/\1_gene.sam")
 def mapping_gene(infile, outfile):
     '''map using minimap2 for the geness'''
 
@@ -227,8 +236,8 @@ def mapping_gene(infile, outfile):
 
 
 @transform(mapping_gene,
-           regex("(\S+)_gene.sam"),
-           r"\1_gene_sorted.bam")
+           regex("mapped_files.dir/(\S+)_gene.sam"),
+           r"mapped_files.dir/\1_gene_sorted.bam")
 def samtools_sort(infile, outfile):
     '''strip sequence and then sort the bam file'''
 
@@ -243,8 +252,8 @@ def samtools_sort(infile, outfile):
 
 
 @transform(samtools_sort,
-           regex("(\S+)_gene_sorted.bam"),
-           r"\1_featurecounts_gene_sorted.bam")
+           regex("mapped_files.dir/(\S+)_gene_sorted.bam"),
+           r"mapped_files.dir/\1_featurecounts_gene_sorted.bam")
 def featurecounts(infile, outfile):
     '''run featurecounts over the bam file'''
 
@@ -256,9 +265,10 @@ def featurecounts(infile, outfile):
     P.run(statement)
 
 
+@follows(mkdir('counts_genes.dir'))
 @transform(featurecounts,
-           regex("(\S+)_featurecounts_gene_sorted.bam"),
-           r"\1.counts_gene.tsv.gz")
+           regex("mapped_files.dir/(\S+)_featurecounts_gene_sorted.bam"),
+           r"counts_genes.dir/\1.counts_gene.tsv.gz")
 def count_gene(infile, outfile):
     '''Use umi-tools to collapse UMIs and generate counts table'''
 
@@ -267,7 +277,7 @@ def count_gene(infile, outfile):
     P.run(statement)
 
 
-@merge(count_gene, "counts_gene.tsv.gz")
+@merge(count_gene, "counts_genes.dir/counts_gene.tsv.gz")
 def merge_count_gene(infiles, outfile):
     '''merge counts from ech sample into one'''
 
@@ -277,8 +287,8 @@ def merge_count_gene(infiles, outfile):
 
 
 @transform(featurecounts,
-           regex("(\S+)_featurecounts_gene_sorted.bam"),
-           r"\1.count_gene_unique.tsv.gz")
+           regex("mapped_files.dir/(\S+)_featurecounts_gene_sorted.bam"),
+           r"counts_genes.dir/\1.count_gene_unique.tsv.gz")
 def count_gene_unique(infile, outfile):
     '''Use umi-tools to collapse UMIs and generate counts table'''
 
@@ -287,7 +297,7 @@ def count_gene_unique(infile, outfile):
     P.run(statement)
 
 
-@merge(count_gene_unique, "gene_counts_unique.tsv.gz")
+@merge(count_gene_unique, "counts_genes.dir/gene_counts_unique.tsv.gz")
 def merge_count_gene_unique(infiles, outfile):
     '''merge counts from ech sample into one'''
 

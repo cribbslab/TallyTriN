@@ -12,3 +12,6 @@ genome_fasta: hg38.fa
 junc_bed: hg38_geneset_all.bed
 
 gtf: hg38_geneset_all.gtf
+
+# Specify if the pipeline should run umi correction or not
+correct: 1
