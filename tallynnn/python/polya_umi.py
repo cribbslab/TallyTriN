@@ -4,7 +4,7 @@ import cgatcore.iotools as iotools
 import pysam
 import logging
 import argparse
-
+import collections
 
 
 # ########################################################################### #
@@ -35,7 +35,69 @@ print(args)
 # ######################## Code                ############################## #
 # ########################################################################### #
 
+
+
+def allCharactersSame(s) :
+    n = len(s)
+    for i in range(1, n) :
+        if s[i] != s[0] :
+            return False
+ 
+    return True
+
+def remove_point_mutations(umi):
+    
+    point_remove = []
+    
+    trimers = [umi[i:i+3] for i in range(0, len(umi), 3)]
+
+    n = 0
+    error_counter = 0
+    for trimer in trimers:
+
+        if allCharactersSame(trimer):
+            point_remove.append(trimer)
+        if not allCharactersSame(trimer):
+            base = collections.Counter(trimer).most_common(1)[0][0]
+            base = base+base+base
+            point_remove.append(base)
+            n += 1
+    return("".join(point_remove), n)
+
+
+def remove_indels(x, umi, first):
+    
+    substr = umi[x:x+3]
+    
+    if ("CCC" in substr or "GGG" in substr or "AAA" in substr or "TTT" in substr) and first:
+        pass
+    
+#    else:
+#        # correct for point mutations at beginning
+#        base = collections.Counter(substr).most_common(1)[0][0]
+#        substr = base+base+base
+#        first = False
+        
+    
+    if not ("CCC" in substr or "GGG" in substr or "AAA" in substr or "TTT" in substr):
+        # if there is an error then check to see if the next base is a perfect match
+        substr = umi[x+1:x+4]
+        
+        if ("CCC" in substr or "GGG" in substr or "AAA" in substr or "TTT" in substr):
+            # then check to see if perfect trimer
+            pass
+
+        elif not ("CCC" in substr or "GGG" in substr or "AAA" in substr or "TTT" in substr):
+            # if not then check to see if there is a 
+            substr = umi[x+2:x+5]
+
+            
+            
+    return(substr)
+
+
 outfile = iotools.open_file(args.outname, "w")
+log =  iotools.open_file(args.outname + ".log","w")
 
 n = 0
 y = 0
@@ -45,24 +107,45 @@ with pysam.FastxFile(args.infile) as fh:
         n += 1
         seq_nano = record.sequence
         
-        m=regex.finditer("(GTACTCTGCGTTGATACCACTGCTT){e<=3}", str(record.sequence))
+        m=regex.finditer("(GTACTCTGCGTTGATACCACTGCTT){e<=0}", str(record.sequence))
         
         for i in m:
             after_polya = seq_nano[i.start()-18:]
             umi_polya = seq_nano[i.start()-18:i.start()]
-            after_umi = seq_nano[:i.start()-18]
-            # if want the polya umi uncomment
-            #record_new = record.name + "_" + str(umi_polya)
-            record_new = record.name
+
+            new_umi = []
+
             
-            quality_afterumipolya = record.quality[:i.start()-36]
-            seq_afterumipolya = seq_nano[:i.start()-36]
-            
-            if len(umi_polya) == 18:
-                y += 1
-                outfile.write("@%s\n%s\n+\n%s\n" % (record_new, seq_afterumipolya, quality_afterumipolya))
-            else:
+            for x in range(0, len(umi_polya)):
+                if x % 3 == 0:
+
+                    if x == 0:
+                        #print(x, umi)
+                        sub_umi = remove_indels(x, umi_polya, first=True)
+                    else:
+                        sub_umi = remove_indels(x, umi_polya, first=False)
+
+                    new_umi.append(sub_umi)
+
+            umi_polya = "".join(new_umi)
+
+            umi_polya, errors = remove_point_mutations(umi_polya)
+
+            if errors > 2:
                 pass
+            else:
+                after_umi = seq_nano[:i.start()-18]
+
+                record_new = record.name + str(umi_polya)
+            
+                quality_afterumipolya = record.quality[:i.start()-36]
+                seq_afterumipolya = seq_nano[:i.start()-36]
+            
+                if len(umi_polya) == 18:
+                    y += 1
+                    outfile.write("@%s\n%s\n+\n%s\n" % (record_new, seq_afterumipolya, quality_afterumipolya))
+                else:
+                    pass
 
 log.write("The number of total reads: %s\n" %(n))
 log.write("The number of total reads with a polyA UMI: %s\n" %(y))

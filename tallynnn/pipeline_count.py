@@ -92,9 +92,10 @@ def merge_featurecounts_data(infiles):
     return final_df
 
 
+@follows(mkdir("processed_fastq.dir"))
 @transform(FASTQTARGET,
          regex("data.dir/(\S+).fastq.gz"),
-         r"\1_polyA.fastq.gz")
+         r"processed_fastq.dir/\1_polyA.fastq.gz")
 def polya_correct(infile, outfile):
     '''filter less than 300 bp reads and then make sure polyA is in correct orientation'''
 
@@ -105,8 +106,8 @@ def polya_correct(infile, outfile):
     P.run(statement)
 
 @transform(polya_correct,
-         regex("(\S+)_polyA.fastq.gz"),
-         r"\1_tso_UMI.fastq.gz")
+         regex("processed_fastq.dir/(\S+)_polyA.fastq.gz"),
+         r"processed_fastq.dir/\1_tso_UMI.fastq.gz")
 def tso_umi(infile, outfile):
     '''Identify the tso umi for each read'''
 
@@ -118,34 +119,33 @@ def tso_umi(infile, outfile):
 
 
 @transform(tso_umi,
-         regex("(\S+)_tso_UMI.fastq.gz"),
-         r"\1_tso_polya_UMI.fastq.gz")
+         regex("processed_fastq.dir/(\S+)_tso_UMI.fastq.gz"),
+         r"processed_fastq.dir/\1_tso_polya_UMI.fastq.gz")
 def polya_umi(infile, outfile):
     '''Identify the polya umi for each read'''
 
     PYTHON_ROOT = os.path.join(os.path.dirname(__file__), "python/")
 
-    # at the moment im not capturing both ends of the UMI only TSO
-    statement = '''cp %(infile)s %(outfile)s'''
-
-    #statement = '''python %(PYTHON_ROOT)s/polya_umi.py --infile=%(infile)s --outname=%(outfile)s'''
+    statement = '''python %(PYTHON_ROOT)s/polya_umi.py --infile=%(infile)s --outname=%(outfile)s'''
 
     P.run(statement)
 
 
+@follows(mkdir("mapped_files.dir"))
 @transform(polya_umi,
-           regex("(\S+)_tso_polya_UMI.fastq.gz"),
-           r"\1_tso_polya_UMI.sam")
+           regex("processed_fastq.dir/(\S+)_tso_polya_UMI.fastq.gz"),
+           r"mapped_files.dir/\1_tso_polya_UMI.sam")
 def mapping_trans(infile, outfile):
     '''map using minimap2 for the transcripts'''
 
-    statement = '''minimap2 -cx map-ont -p 0.9 --end-bonus 10 -N 3 %(cdna_fasta)s %(infile)s  > %(outfile)s 2> %(outfile)s.log'''
+    statement = '''minimap2 -ax map-ont -p 0.9 --end-bonus 10 -N 3 %(cdna_fasta)s %(infile)s  > %(outfile)s 2> %(outfile)s.log'''
 
     P.run(statement)
 
+
 @transform(mapping_trans,
-           regex("(\S+)_tso_polya_UMI.sam"),
-           r"\1_final_sorted.bam")
+           regex("mapped_files.dir/(\S+)_tso_polya_UMI.sam"),
+           r"mapped_files.dir/\1_final_sorted.bam")
 def samtools(infile, outfile):
     '''run samtools on the output and index'''
 
@@ -159,8 +159,8 @@ def samtools(infile, outfile):
 
 
 @transform(samtools,
-           regex("(\S+)_final_sorted.bam"),
-           r"\1_XT.bam")
+           regex("mapped_files.dir/(\S+)_final_sorted.bam"),
+           r"mapped_files.dir/\1_XT.bam")
 def xt_tag(infile, outfile):
     '''add XT tag to the samfile'''
 
