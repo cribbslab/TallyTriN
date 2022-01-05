@@ -136,7 +136,7 @@ with pysam.FastxFile(args.infile) as fh:
             else:
                 after_umi = seq_nano[:i.start()-18]
 
-                record_new = record.name + str(umi_polya)
+                record_new = record.name + "_" + str(umi_polya)
             
                 quality_afterumipolya = record.quality[:i.start()-36]
                 seq_afterumipolya = seq_nano[:i.start()-36]

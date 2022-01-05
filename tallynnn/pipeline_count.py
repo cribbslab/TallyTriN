@@ -108,23 +108,6 @@ def polya_correct(infile, outfile):
 @transform(polya_correct,
          regex("processed_fastq.dir/(\S+)_polyA.fastq.gz"),
          r"processed_fastq.dir/\1_tso_UMI.fastq.gz")
-def tso_umi(infile, outfile):
-    '''Identify the tso umi for each read'''
-
-    PYTHON_ROOT = os.path.join(os.path.dirname(__file__), "python/")
-
-    if not PARAMS['correct']:
-        statement = """python %(PYTHON_ROOT)s/tso_umi_nocorrect.py --infile=%(infile)s --outname=%(outfile)s"""
-
-    else:
-        statement = '''python %(PYTHON_ROOT)s/tso_umi.py --infile=%(infile)s --outname=%(outfile)s'''
-
-    P.run(statement)
-
-
-@transform(tso_umi,
-         regex("processed_fastq.dir/(\S+)_tso_UMI.fastq.gz"),
-         r"processed_fastq.dir/\1_tso_polya_UMI.fastq.gz")
 def polya_umi(infile, outfile):
     '''Identify the polya umi for each read'''
 
@@ -139,9 +122,31 @@ def polya_umi(infile, outfile):
     P.run(statement)
 
 
-@follows(mkdir("mapped_files.dir"))
 @transform(polya_umi,
-           regex("processed_fastq.dir/(\S+)_tso_polya_UMI.fastq.gz"),
+         regex("processed_fastq.dir/(\S+)_tso_UMI.fastq.gz"),
+         r"processed_fastq.dir/\1_polya_tso_UMI.fastq.gz")
+def tso_umi(infile, outfile):
+    '''Identify the tso umi for each read'''
+
+    PYTHON_ROOT = os.path.join(os.path.dirname(__file__), "python/")
+
+    if PARAMS['tso_present']:
+
+        if not PARAMS['correct']:
+            statement = """python %(PYTHON_ROOT)s/tso_umi_nocorrect.py --infile=%(infile)s --outname=%(outfile)s"""
+
+        else:
+            statement = '''python %(PYTHON_ROOT)s/tso_umi.py --infile=%(infile)s --outname=%(outfile)s'''
+
+    else:
+        statement = """cp %(infile)s %(outfile)s"""
+
+    P.run(statement)
+
+
+@follows(mkdir("mapped_files.dir"))
+@transform(tso_umi,
+           regex("processed_fastq.dir/(\S+)_polya_tso_UMI.fastq.gz"),
            r"mapped_files.dir/\1_tso_polya_UMI.sam")
 def mapping_trans(infile, outfile):
     '''map using minimap2 for the transcripts'''
@@ -224,8 +229,8 @@ def merge_count_unique(infiles, outfile):
 ## Gene level analysis ######
 #############################
 
-@transform(polya_umi,
-           regex("processed_fastq.dir/(\S+)_tso_polya_UMI.fastq.gz"),
+@transform(tso_umi,
+           regex("processed_fastq.dir/(\S+)_polya_tso_UMI.fastq.gz"),
            r"mapped_files.dir/\1_gene.sam")
 def mapping_gene(infile, outfile):
     '''map using minimap2 for the geness'''

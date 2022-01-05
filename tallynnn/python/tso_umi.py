@@ -131,7 +131,7 @@ with pysam.FastxFile(args.infile) as fh:
             else:
 
                 after_umi = after_smart[37:]
-                record_new = record.name + "_" + str(umi_tso)
+                record_new = record.name +  str(umi_tso)
                 quality_afterumismart = record.quality[i.end()+38:]
                 seq_afterumismart = seq_nano[i.end()+38:]
                 if len(umi_tso) == 36:
