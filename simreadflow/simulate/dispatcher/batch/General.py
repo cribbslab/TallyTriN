@@ -3,6 +3,7 @@ __copyright__ = "Copyright 2021"
 __license__ = "MIT"
 __lab__ = "Adam Cribbs lab"
 
+import sys
 import numpy as np
 from simreadflow.simulate.dispatcher.single.General import general as simugeneral
 from Path import to
@@ -10,7 +11,7 @@ from Path import to
 
 class general(object):
 
-    def __init__(self, ):
+    def __init__(self, working_dir):
         # ### /*** block. general ***/
         # self.permutation_num = 10
         #
@@ -32,8 +33,8 @@ class general(object):
 
         # ### /*** block. bulk ***/
         self.permutation_num = 10
-
-        self.umi_unit_len_fixed = 12
+        self.umi_unit_pattern = 1
+        self.umi_unit_len_fixed = 36
         self.umi_num_fixed = 50
         self.pcr_num_fixed = 8
         self.pcr_err_fixed = 1e-3
@@ -41,14 +42,16 @@ class general(object):
         self.ampl_rate_fixed = 0.85
         self.sim_thres_fixed = 3
         self.seq_sub_spl_rate = 1
+        self.working_dir = working_dir
 
         self.ampl_rates = np.linspace(0.1, 1, 10)
         self.umi_unit_lens = np.arange(6, 36 + 1, 1)
         self.umi_nums = np.arange(20, 140 + 20, 20)
         self.pcr_nums = np.arange(1, 20 + 1, 1)
         self.pcr_errs, self.seq_errs = self.errors()
-        self.pcr_errs = [1e-05, 2.5e-05, 5e-05, 7.5e-05, 0.0001, 0.00025, 0.0005, 0.00075, 0.001, 0.0025, 0.005, 0.0075, 0.01]
-        print(self.pcr_errs, self.seq_errs)
+        # self.pcr_errs = [1e-05, 2.5e-05, 5e-05, 7.5e-05, 0.0001, 0.00025, 0.0005, 0.00075, 0.001, 0.0025, 0.005, 0.0075, 0.01]
+        print(self.pcr_errs)
+        print(self.seq_errs)
 
         self.metrics = {
             'pcr_nums': self.pcr_nums,
@@ -81,16 +84,16 @@ class general(object):
 
                 seq_errs.append(7.5 * e)
             e = 10 * e
-        # pcr_errs.append(0.125)
-        # seq_errs.append(0.125)
-        # pcr_errs.append(0.15)
-        # seq_errs.append(0.15)
+        pcr_errs.append(0.125)
+        seq_errs.append(0.125)
+        pcr_errs.append(0.15)
+        seq_errs.append(0.15)
         pcr_errs.append(0.2)
         seq_errs.append(0.2)
-        # pcr_errs.append(0.225)
-        # seq_errs.append(0.225)
-        # pcr_errs.append(0.25)
-        # seq_errs.append(0.25)
+        pcr_errs.append(0.225)
+        seq_errs.append(0.225)
+        pcr_errs.append(0.25)
+        seq_errs.append(0.25)
         pcr_errs.append(0.3)
         seq_errs.append(0.3)
         # print(pcr_errs)
@@ -178,29 +181,19 @@ class general(object):
         return
 
     def seqErrs(self, ):
+        sys.stdout = open(self.working_dir + 'log.txt', 'w')
         for pn in range(self.permutation_num):
             simu_params = {
                 'init_seq_setting': {
                     'seq_num': self.umi_num_fixed,
-                    'umi_unit_pattern': 2,
+                    'umi_unit_pattern': self.umi_unit_pattern,
                     'umi_unit_len': self.umi_unit_len_fixed,
                     # 'seq_len': self.seq_len_fixed - self.umi_unit_len_fixed,
                     'is_seed': True,
 
-                    # ### /*** block. general ***/
-                    # 'working_dir': to('data/simu/monomer/general/1/seq_errs/permute_') + str(pn) + '/',
-                    # 'is_sv_umi_lib': True,
-                    # 'umi_lib_fpn': to('data/simu/monomer/general/1/seq_errs/permute_') + str(pn) + '/umi.txt',
-
-                    # ### /*** block. dimer ***/
-                    'working_dir': to('data/simu/dimer/pcr8/seq_errs/permute_') + str(pn) + '/',
+                    'working_dir': self.working_dir + 'seq_errs/permute_' + str(pn) + '/',
                     'is_sv_umi_lib': True,
-                    'umi_lib_fpn': to('data/simu/dimer/pcr8/seq_errs/permute_') + str(pn) + '/umi.txt',
-
-                    # ### /*** block. trimer ***/
-                    # 'working_dir': to('data/simu/trimer/pcr8/seq_errs/permute_') + str(pn) + '/',
-                    # 'is_sv_umi_lib': True,
-                    # 'umi_lib_fpn': to('data/simu/trimer/pcr8/seq_errs/permute_') + str(pn) + '/umi.txt',
+                    'umi_lib_fpn': self.working_dir + 'seq_errs/permute_' + str(pn) + '/umi.txt',
 
                     'condis': ['umi'],
                     'sim_thres': self.sim_thres_fixed,
@@ -215,12 +208,13 @@ class general(object):
                 'use_seed': False,
                 'seed': None,
                 'write': {
-                    'fastq_fp': to('data/simu/dimer/pcr8/seq_errs/permute_') + str(pn) + '/',
+                    'fastq_fp': self.working_dir + 'seq_errs/permute_' + str(pn) + '/',
                     'fastq_fn': '',
                 }
             }
             p = simugeneral(simu_params)
             print(p.ondemandSeqErrs())
+        sys.stdout.close()
         return
 
     def umiLens(self, ):
@@ -295,13 +289,15 @@ class general(object):
 
 
 if __name__ == "__main__":
-    p = general()
+    p = general(
+        working_dir=to('data/simu/trimer/pcr8_mono24/')
+    )
+
+    print(p.seqErrs())
 
     # print(p.pcrNums())
 
     # print(p.pcrErrs())
-
-    print(p.seqErrs())
 
     # print(p.umiLens())
 

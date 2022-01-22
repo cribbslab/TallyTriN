@@ -2,7 +2,7 @@
 <project version="4">
   <component name="WebServers">
     <option name="servers">
-      <webServer id="21c86569-a7af-4092-b770-856ed7eac1e2" name="lh_mcl">
+      <webServer id="21c86569-a7af-4092-b770-856ed7eac1e2" name="lh_mcl (project level)">
         <fileTransfer accessType="SFTP" host="192.168.0.2" port="22" sshConfigId="46a82fcf-458d-49db-9b59-29842abdf1c9" sshConfig="lh_mcl">
           <advancedOptions>
             <advancedOptions dataProtectionLevel="Private" passiveMode="true" shareSSLContext="true" />

@@ -3,6 +3,7 @@ __copyright__ = "Copyright 2021"
 __license__ = "MIT"
 __lab__ = "Adam Cribbs lab"
 
+import sys
 import numpy as np
 from simreadflow.simulate.dispatcher.single.UMIDouble import umiDouble as simugeneral
 from Path import to
@@ -10,14 +11,15 @@ from Path import to
 
 class umiDouble(object):
 
-    def __init__(self, ):
+    def __init__(self, working_dir):
         # ### /*** block. general ***/
         self.permutation_num = 10
 
+        self.working_dir = working_dir
         self.umi_unit_pattern = 3
         self.umi_unit_len_fixed = 12
         self.umi_num_fixed = 100
-        self.pcr_num_fixed = 8
+        self.pcr_num_fixed = 10
         self.pcr_err_fixed = 1e-3
         self.seq_err_fixed = 1e-3
         self.ampl_rate_fixed = 0.85
@@ -34,7 +36,7 @@ class umiDouble(object):
 
         # ### /*** block. bulk ***/
         # self.permutation_num = 10
-        #
+
         # self.umi_unit_pattern = 3
         # self.umi_unit_len_fixed = 12
         # self.umi_num_fixed = 100
@@ -44,7 +46,7 @@ class umiDouble(object):
         # self.ampl_rate_fixed = 0.85
         # self.sim_thres_fixed = 3
         # self.seq_sub_spl_rate = 1
-        #
+
         # self.ampl_rates = np.linspace(0.1, 1, 10)
         # self.umi_unit_lens = np.arange(6, 36 + 1, 1)
         # self.umi_nums = np.arange(20, 140 + 20, 20)
@@ -84,103 +86,24 @@ class umiDouble(object):
 
                 seq_errs.append(7.5 * e)
             e = 10 * e
-        # pcr_errs.append(0.125)
-        # seq_errs.append(0.125)
-        # pcr_errs.append(0.15)
-        # seq_errs.append(0.15)
+        pcr_errs.append(0.125)
+        seq_errs.append(0.125)
+        pcr_errs.append(0.15)
+        seq_errs.append(0.15)
         pcr_errs.append(0.2)
         seq_errs.append(0.2)
-        # pcr_errs.append(0.225)
-        # seq_errs.append(0.225)
-        # pcr_errs.append(0.25)
-        # seq_errs.append(0.25)
+        pcr_errs.append(0.225)
+        seq_errs.append(0.225)
+        pcr_errs.append(0.25)
+        seq_errs.append(0.25)
         pcr_errs.append(0.3)
         seq_errs.append(0.3)
         # print(pcr_errs)
         # print(seq_errs)
         return pcr_errs, seq_errs
 
-    def pcrNums(self, ):
-        for pn in range(self.permutation_num):
-            simu_params = {
-                'init_seq_setting': {
-                    'seq_num': self.umi_num_fixed,
-                    'umi_unit_pattern': 1,
-                    'umi_unit_len': self.umi_unit_len_fixed,
-                    # 'seq_len': self.seq_len_fixed - self.umi_unit_len_fixed,
-                    'is_seed': True,
-                    'working_dir': to('data/simu/monomer/general/1/pcr_num/permute_') + str(pn) + '/',
-                    'is_sv_umi_lib': True,
-                    'umi_lib_fpn': to('data/simu/monomer/general/1/pcr_num/permute_') + str(pn) + '/umi.txt',
-                    # 'is_sv_seq_lib': True,
-                    # 'seq_lib_fpn': to('data/simu/monomer/general/1/pcr_num/permute_') + str(pn) + '/seq.txt',
-                    'condis': ['umi'],
-                    'sim_thres': self.sim_thres_fixed,
-                    'permutation': pn,
-                },
-                'ampl_rate': self.ampl_rate_fixed,
-                'pcr_nums': self.pcr_nums,
-                'err_num_met': 'nbinomial',
-                'pcr_error': self.pcr_err_fixed,
-                'seq_error': self.seq_err_fixed,
-                'seq_sub_spl_rate': self.seq_sub_spl_rate,
-                'use_seed': False,
-                'seed': None,
-                'write': {
-                    'fastq_fp': to('data/simu/monomer/general/1/pcr_num/permute_') + str(pn) + '/',
-                    'fastq_fn': '',
-                }
-            }
-            p = simugeneral(simu_params)
-            print(p.ondemandPCRNums())
-        return
-
-    def pcrErrs(self, ):
-        for pn in range(self.permutation_num):
-            simu_params = {
-                'init_seq_setting': {
-                    'seq_num': self.umi_num_fixed,
-                    'umi_unit_pattern': 3,
-                    'umi_unit_len': self.umi_unit_len_fixed,
-                    # 'seq_len': self.seq_len_fixed - self.umi_unit_len_fixed,
-                    'is_seed': True,
-                    # ### /*** block. general ***/
-                    # 'working_dir': to('data/simu/monomer/general/1/pcr_err/permute_') + str(pn) + '/',
-                    # 'is_sv_umi_lib': True,
-                    # 'umi_lib_fpn': to('data/simu/monomer/general/1/pcr_err/permute_') + str(pn) + '/umi.txt',
-
-                    # # ### /*** block. dimer ***/
-                    # 'working_dir': to('data/simu/dimer/pcr_err/permute_') + str(pn) + '/',
-                    # 'is_sv_umi_lib': True,
-                    # 'umi_lib_fpn': to('data/simu/dimer/pcr_err/permute_') + str(pn) + '/umi.txt',
-
-                    # ### /*** block. trimer ***/
-                    'working_dir': to('data/simu/trimer/pcr_err/permute_') + str(pn) + '/',
-                    'is_sv_umi_lib': True,
-                    'umi_lib_fpn': to('data/simu/trimer/pcr_err/permute_') + str(pn) + '/umi.txt',
-
-                    'condis': ['umi'],
-                    'sim_thres': self.sim_thres_fixed,
-                    'permutation': pn,
-                },
-                'ampl_rate': self.ampl_rate_fixed,
-                'pcr_num': self.pcr_num_fixed,
-                'err_num_met': 'nbinomial',
-                'pcr_errors': self.pcr_errs,
-                'seq_error': self.seq_err_fixed,
-                'seq_sub_spl_rate': self.seq_sub_spl_rate,
-                'use_seed': False,
-                'seed': None,
-                'write': {
-                    'fastq_fp': to('data/simu/trimer/pcr_err/permute_') + str(pn) + '/',
-                    'fastq_fn': '',
-                }
-            }
-            p = simugeneral(simu_params)
-            print(p.ondemandPCRErrs())
-        return
-
     def seqErrs(self, ):
+        sys.stdout = open(self.working_dir + 'log.txt', 'w')
         for pn in range(self.permutation_num):
             simu_params = {
                 'init_seq_setting': {
@@ -195,9 +118,9 @@ class umiDouble(object):
                     # 'umi_lib_fpn': to('data/simu/transloc/trimer/single_read/seq_errs/permute_') + str(pn) + '/umi.txt',
 
                     # ### /*** block. trimer ***/
-                    'working_dir': to('data/simu/transloc/trimer/single_read/seq_errs/permute_') + str(pn) + '/',
                     'is_sv_umi_lib': True,
-                    'umi_lib_fpn': to('data/simu/transloc/trimer/single_read/seq_errs/permute_') + str(pn) + '/umi.txt',
+                    'working_dir': self.working_dir + 'seq_errs/permute_' + str(pn) + '/',
+                    'umi_lib_fpn': self.working_dir + 'seq_errs/permute_' + str(pn) + '/umi.txt',
 
                     'condis': ['umi'],
                     'sim_thres': self.sim_thres_fixed,
@@ -213,87 +136,20 @@ class umiDouble(object):
                 'use_seed': False,
                 'seed': None,
                 'write': {
-                    'fastq_fp': to('data/simu/transloc/trimer/single_read/seq_errs/permute_') + str(pn) + '/',
+                    'fastq_fp': self.working_dir + 'seq_errs/permute_' + str(pn) + '/',
                     'fastq_fn': '',
                 }
             }
             p = simugeneral(simu_params)
             print(p.ondemandSeqErrs())
-        return
-
-    def umiLens(self, ):
-        for pn in range(self.permutation_num):
-            simu_params = {
-                'init_seq_setting': {
-                    'seq_num': self.umi_num_fixed,
-                    'umi_unit_pattern': 1,
-                    'umi_unit_lens': self.umi_unit_lens,
-                    # 'seq_len': self.seq_len_fixed,
-                    'is_seed': True,
-                    'working_dir': to('data/simu/monomer/general/1/umi_len/permute_') + str(pn) + '/',
-                    'is_sv_umi_lib': True,
-                    'umi_lib_fp': to('data/simu/monomer/general/1/umi_len/permute_') + str(pn) + '/',
-                    # 'is_sv_seq_lib': True,
-                    # 'seq_lib_fpn': to('data/simu/monomer/general/1/umi_len/permute_') + str(pn) + '/',
-                    'condis': ['umi'],
-                    'sim_thres': self.sim_thres_fixed,
-                    'permutation': pn,
-                },
-                'ampl_rate': self.ampl_rate_fixed,
-                'pcr_num': self.pcr_num_fixed,
-                'err_num_met': 'nbinomial',
-                'pcr_error': self.pcr_err_fixed,
-                'seq_error': self.seq_err_fixed,
-                'seq_sub_spl_rate': self.seq_sub_spl_rate,
-                'use_seed': False,
-                'seed': None,
-                'write': {
-                    'fastq_fp': to('data/simu/monomer/general/1/umi_len/permute_') + str(pn) + '/',
-                    'fastq_fn': '',
-                }
-            }
-            p = simugeneral(simu_params)
-            print(p.ondemandUMILens())
-        return
-
-    def amplRates(self, ):
-        for pn in range(self.permutation_num):
-            simu_params = {
-                'init_seq_setting': {
-                    'seq_num': self.umi_num_fixed,
-                    'umi_unit_pattern': 1,
-                    'umi_unit_len': self.umi_unit_len_fixed,
-                    # 'seq_len': self.seq_len_fixed - self.umi_unit_len_fixed,
-                    'is_seed': True,
-                    'working_dir': to('data/simu/monomer/general/1/ampl_rate/permute_') + str(pn) + '/',
-                    'is_sv_umi_lib': True,
-                    'umi_lib_fpn': to('data/simu/monomer/general/1/ampl_rate/permute_') + str(pn) + '/umi.txt',
-                    # 'is_sv_seq_lib': True,
-                    # 'seq_lib_fpn': to('data/simu/monomer/general/1/ampl_rate/permute_') + str(pn) + '/seq.txt',
-                    'condis': ['umi'],
-                    'sim_thres': self.sim_thres_fixed,
-                    'permutation': pn,
-                },
-                'ampl_rates': self.ampl_rates,
-                'pcr_num': self.pcr_num_fixed,
-                'err_num_met': 'nbinomial',
-                'pcr_error': self.pcr_err_fixed,
-                'seq_error': self.seq_err_fixed,
-                'seq_sub_spl_rate': self.seq_sub_spl_rate,
-                'use_seed': False,
-                'seed': None,
-                'write': {
-                    'fastq_fp': to('data/simu/monomer/general/1/ampl_rate/permute_') + str(pn) + '/',
-                    'fastq_fn': '',
-                }
-            }
-            p = simugeneral(simu_params)
-            print(p.ondemandAmplRates())
+        sys.stdout.close()
         return
 
 
 if __name__ == "__main__":
-    p = umiDouble()
+    p = umiDouble(
+        working_dir=to('data/simu/transloc/trimer/single_read/pcr10/')
+    )
 
     # print(p.pcrNums())
 

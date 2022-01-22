@@ -39,35 +39,55 @@ class selfHealing(Config.config):
             for id, i_seq_err in enumerate(self.seq_errs):
                 read_stime = time.time()
                 names, seqs, _, _ = self.rfastq.fromgz(
-                    fastq_path=self.fastq_fp  + '/permute_' + str(i_pn) + '/trimmed/',
+                    fastq_path=self.fastq_fp + 'seq_errs/permute_' + str(i_pn) + '/trimmed/',
                     fastq_name=self.cat + '_' + str(id),
                     method='pyfastx',
                 )
-                print('===>file read time: {:.3f}s'.format(time.time() - read_stime))
+                print('permutation {}, No.{} with criterion: {}'.format(i_pn, id, i_seq_err))
                 df_fastq = self.trimreader.todf(names=names, seqs=seqs)
+                # print(df_fastq)
                 df_fastq['origin_info'] = df_fastq['name'].apply(lambda x: x.split('_')[0])
                 mono_corr_stime = time.time()
                 df_fastq['umi_monos'] = df_fastq['umi'].apply(lambda x: self.split(x))
+                df_fastq['umi_correct'] = df_fastq['umi'].apply(lambda x: self.correct(x))
                 df_fastq['umi_mark'] = df_fastq['umi_monos'].apply(lambda x: self.marker(x))
                 df_fastq['umi_l'] = df_fastq['umi_monos'].apply(lambda x: x.split(';')[0])
                 df_fastq['umi_r'] = df_fastq['umi_monos'].apply(lambda x: x.split(';')[1])
-                print(df_fastq['umi_r'])
-                print(df_fastq.columns)
                 df_fastq['to_fas'] = df_fastq.apply(lambda x: x['origin_info'] + '_' + x['umi_l'], axis=1)
-                print(df_fastq['to_fas'])
+                df_fastq['to_fas_correct'] = df_fastq.apply(lambda x: x['origin_info'] + '_' + x['umi_correct'], axis=1)
+                df_fastq_cp = df_fastq.copy()
+                df_fastq_cp['to_fas'] = df_fastq_cp.apply(lambda x: x['origin_info'] + '_' + x['umi_r'], axis=1)
                 df_umi_extra = df_fastq.loc[df_fastq['umi_mark'] == 1]
                 df_umi_extra['to_fas'] = df_umi_extra.apply(lambda x: x['origin_info'] + '_' + x['umi_r'], axis=1)
-                print(df_umi_extra['to_fas'])
-                df = pd.concat([df_fastq[['seq_raw', 'to_fas']], df_umi_extra[['seq_raw', 'to_fas']]], axis=0).reset_index(drop=True)
+                # print(df_umi_extra['to_fas'])
+                df = pd.concat(
+                    [df_fastq[['seq_raw', 'to_fas']], df_fastq_cp[['seq_raw', 'to_fas']]],
+                    axis=0,
+                ).reset_index(drop=True)
                 print(df)
+                df_extra = pd.concat(
+                    [df_fastq[['seq_raw', 'to_fas']], df_umi_extra[['seq_raw', 'to_fas']]],
+                    axis=0,
+                ).reset_index(drop=True)
+                print(df_extra)
                 self.wfastq.togz(
                     list_2d=df_fastq[['seq_raw', 'to_fas']].values,
-                    sv_fp=self.fastq_fp + '/permute_' + str(i_pn) + '/ref/',
+                    sv_fp=self.fastq_fp + 'seq_errs/permute_' + str(i_pn) + '/ref/',
+                    fn=self.cat + '_' + str(id),
+                )
+                self.wfastq.togz(
+                    list_2d=df_fastq[['seq_raw', 'to_fas_correct']].values,
+                    sv_fp=self.fastq_fp + 'seq_errs/permute_' + str(i_pn) + '/correct/',
                     fn=self.cat + '_' + str(id),
                 )
                 self.wfastq.togz(
                     list_2d=df.values,
-                    sv_fp=self.fastq_fp + '/permute_' + str(i_pn) + '/bipartite/',
+                    sv_fp=self.fastq_fp + 'seq_errs/permute_' + str(i_pn) + '/double/',
+                    fn=self.cat + '_' + str(id),
+                )
+                self.wfastq.togz(
+                    list_2d=df_extra.values,
+                    sv_fp=self.fastq_fp + 'seq_errs/permute_' + str(i_pn) + '/bipartite/',
                     fn=self.cat + '_' + str(id),
                 )
                 print('===>monos time: {:.3f}s'.format(time.time() - mono_corr_stime))
@@ -87,6 +107,19 @@ class selfHealing(Config.config):
         # print(r)
         return l + ';' + r
 
+    def correct(self, umi):
+        umi_dimers = textwrap.wrap(umi, 2)
+        t = []
+        # print(umi_dimers)
+        for umi_dimer in umi_dimers:
+            if umi_dimer[0] != umi_dimer[1]:
+                rand_index = np.random.randint(low=0, high=2, size=1)[0]
+                # print(rand_index)
+                t.append(umi_dimer[rand_index])
+            else:
+                t.append(umi_dimer[0])
+        return ''.join(t)
+
     def marker(self, umi):
         tt = umi.split(';')
         if tt[0] != tt[1]:
@@ -97,8 +130,8 @@ class selfHealing(Config.config):
 
 if __name__ == "__main__":
     p = selfHealing(
-        umi_ref_fp=to('data/simu/dimer/pcr8/seq_errs/'),
-        fastq_fp=to('data/simu/dimer/pcr8/seq_errs/'),
+        umi_ref_fp=to('data/simu/dimer/pcr8/'),
+        fastq_fp=to('data/simu/dimer/pcr8/'),
         cat='seq_err',
     )
     print(p.rea())

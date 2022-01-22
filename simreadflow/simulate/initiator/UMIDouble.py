@@ -81,16 +81,15 @@ class umiDouble(object):
 
         etime = time.time()
         print("===>time for generating initial pool of sequences: {:.3f}s".format(etime-stime))
-        reads = list(np.reshape(seqs, (int(self.seq_num/2), 4)))
+        print(seqs)
+        reads = list(np.reshape(seqs, (int(self.seq_num / 2), 4)))
         c = []
-        pos_transloc = np.random.choice(int(self.seq_num/2), int(0.1*self.seq_num), replace=False)
+        pos_transloc = np.random.choice(int(self.seq_num / 2), int(0.1 * self.seq_num), replace=False)
         print(pos_transloc)
         for i, r in enumerate(reads):
-            if i in pos_transloc:
-                # ===> 'read', 'r1_id', 'r2_id', 'transloc_stat', 'transloc_side', 'sam_id', 'source'
-                c.append([r[0] + r[2], r[1], r[3], 'real_yes', 'none', i, 'init'])
-            else:
-                c.append([r[0] + r[2], r[1], r[3], 'real_no', 'none', i, 'init'])
+            mark = 'real_yes' if i in pos_transloc else 'real_no'
+            # ===> 'read', 'r1_id', 'r2_id', 'transloc_stat', 'transloc_side', 'sam_id', 'source'
+            c.append([r[0] + r[2], r[1], r[3], mark, 'none', i, 'init'])
         return c
 
     def paste(self, read_struct=[]):
@@ -104,12 +103,12 @@ if __name__ == "__main__":
     }
     # print(DEFINE['cand_pool_fpn'])
     p = umiDouble(
-        seq_num=100,
+        seq_num=50,
         umi_unit_pattern=3,
         umi_unit_len=12,
         is_seed=True,
 
-        is_sv_umi_lib=True,
+        is_sv_umi_lib=False,
         umi_lib_fpn=to('data/simu/transloc/trimer/umi.txt'),
         working_dir=to('data/simu/transloc/trimer/'),
 

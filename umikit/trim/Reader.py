@@ -21,7 +21,7 @@ class reader(object):
         df_fastq['umi_src'] = df_fastq['name'].apply(lambda x: x.split('_')[0].split('-')[1])
         # df_fastq['umi_pcr#'] = df_fastq['name'].apply(lambda x: self.pcrnum(x))
         df_fastq['umi#'] = df_fastq['umi#'].astype(int)
-        print(df_fastq)
+        # print(df_fastq)
         # print(df_fastq['name'])
         # print(df_fastq['umi'])
         # print(df_fastq['umi#'])

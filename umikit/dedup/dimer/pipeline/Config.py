@@ -66,8 +66,16 @@ class config(object):
 
                 seq_errs.append(7.5 * e)
             e = 10 * e
+        pcr_errs.append(0.125)
+        seq_errs.append(0.125)
+        pcr_errs.append(0.15)
+        seq_errs.append(0.15)
         pcr_errs.append(0.2)
         seq_errs.append(0.2)
+        pcr_errs.append(0.225)
+        seq_errs.append(0.225)
+        pcr_errs.append(0.25)
+        seq_errs.append(0.25)
         pcr_errs.append(0.3)
         seq_errs.append(0.3)
         # print(pcr_errs)

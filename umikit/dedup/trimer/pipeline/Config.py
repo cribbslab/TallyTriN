@@ -29,9 +29,10 @@ class config(object):
         self.pcr_errs, self.seq_errs = self.errors()
         self.pcr_errs = [1e-05, 2.5e-05, 5e-05, 7.5e-05, 0.0001, 0.00025, 0.0005, 0.00075, 0.001, 0.0025, 0.005, 0.0075, 0.01]
 
-        # self.seq_fix_errs = [1e-05, 2.5e-05, 5e-05, 7.5e-05, 0.0001, 0.00025, 0.0005, 0.00075, 0.001, 0.0025, 0.005, 0.0075, 0.01, 0.025, 0.05, 0.075, 0.1, 0.2]
+        self.seq_fix_errs = [1e-05, 2.5e-05, 5e-05, 7.5e-05, 0.0001, 0.00025, 0.0005, 0.00075, 0.001, 0.0025, 0.005, 0.0075, 0.01, 0.025, 0.05, 0.075, 0.1, 0.2]
         # self.seq_errs = [1e-05, 2.5e-05, 5e-05, 7.5e-05, 0.0001, 0.00025, 0.0005, 0.00075, 0.001, 0.0025, 0.005, 0.0075, 0.01, 0.025, 0.05]
         print(self.pcr_errs, self.seq_errs)
+        # self.seq_fix_errs = self.seq_errs
 
         self.metric_vals = {
             'pcr_nums': self.pcr_nums,
@@ -65,8 +66,16 @@ class config(object):
 
                 seq_errs.append(7.5 * e)
             e = 10 * e
+        pcr_errs.append(0.125)
+        seq_errs.append(0.125)
+        pcr_errs.append(0.15)
+        seq_errs.append(0.15)
         pcr_errs.append(0.2)
         seq_errs.append(0.2)
+        pcr_errs.append(0.225)
+        seq_errs.append(0.225)
+        pcr_errs.append(0.25)
+        seq_errs.append(0.25)
         pcr_errs.append(0.3)
         seq_errs.append(0.3)
         # print(pcr_errs)

@@ -24,20 +24,26 @@ from simreadflow.read.similarity.distance.Hamming import hamming
 
 class umiTranslocSelf(Config.config):
 
-    def __init__(self, metric, method, comp_cat, umi_lib_fp=None, fastq_fp=None, is_trim=False, is_tobam=False, is_self_healing=False, is_dedup=False):
+    def __init__(self, metric, method, umi_lib_fp=None, fastq_fp=None, is_trim=False, is_tobam=False, is_self_healing=False, is_self_healing_bulk=None, is_dedup=False):
         super(umiTranslocSelf, self).__init__()
         self.metric = metric
-        self.comp_cat = comp_cat
         self.gbfscc = gbfscc()
         self.gfreader = gfreader()
+        self.gwriter = gwriter()
         self.rannum = rannum()
         self.umimonorel = umimonorel
         self.umi_lib_fp = umi_lib_fp
         self.method = method
-        self.gwriter = gwriter()
         self.seq_num = 100
         df_dedup = pd.DataFrame()
-        df_proc_bam = pd.DataFrame()
+        df_fake_sgl_est = pd.DataFrame()
+        df_fake_sgl_act = pd.DataFrame()
+        df_real_sgl_est = pd.DataFrame()
+        df_real_sgl_act = pd.DataFrame()
+        df_fake_bulk_est = pd.DataFrame()
+        df_fake_bulk_act = pd.DataFrame()
+        df_real_bulk_est = pd.DataFrame()
+        df_real_bulk_act = pd.DataFrame()
 
         for i_pn in range(self.permutation_num):
             self.df_umi = self.gfreader.generic(df_fpn=self.umi_lib_fp + self.metric + '/permute_' + str(i_pn) + '/umi.txt')[0].values
@@ -46,10 +52,18 @@ class umiTranslocSelf(Config.config):
             # print(self.df_umi[0].tolist())
             self.df_umi['collap'] = self.df_umi['raw'].apply(lambda x: ''.join([i[0] for i in textwrap.wrap(x, 3)]))
             self.umi_collap_map = {i: e for i, e in enumerate(self.df_umi['collap'])}
-            # print(self.umi_collap_map)
+            print(self.umi_collap_map)
             # reads = np.reshape(self.df_umi[['collap', 'index']].values.tolist(), (int(self.seq_num / 2), 4))
             # print(pd.DataFrame(reads))
 
+            est_fake_sgl_arr = []
+            act_fake_sgl_arr = []
+            est_real_sgl_arr = []
+            act_real_sgl_arr = []
+            est_fake_bulk_arr = []
+            act_fake_bulk_arr = []
+            est_real_bulk_arr = []
+            act_real_bulk_arr = []
             dedup_arr = []
             for id, i_metric in enumerate(self.metric_vals[self.metric]):
                 if self.metric == 'pcr_nums':
@@ -157,59 +171,199 @@ class umiTranslocSelf(Config.config):
                         fastq_fpn=fastq_fp + self.metric + '/permute_' + str(i_pn) + '/trimmed/' + fn + '.fastq.gz',
                         bam_fpn=fastq_fp + self.metric + '/permute_' + str(i_pn) + '/bam/' + fn,
                     ).tobam()
-                if is_self_healing:
-                    self.alireader = aliread(
-                        bam_fpn=fastq_fp + self.metric + '/permute_' + str(i_pn) + '/bam/' + fn + '.bam',
-                        verbose=False
-                    )
-                    self.df_bam = self.alireader.todf(tags=['PO'])
-                    self.df_bam['names'] = self.df_bam.query_name.apply(lambda x: self.bamproc(x))
-                    self.df_bam['r1_id'] = self.df_bam.names.apply(lambda x: x[0])
-                    self.df_bam['r2_id'] = self.df_bam.names.apply(lambda x: x[1])
-                    self.df_bam['transloc_stat'] = self.df_bam.names.apply(lambda x: x[2])
-                    self.df_bam['transloc_side'] = self.df_bam.names.apply(lambda x: x[3])
-                    self.df_bam['sam_id'] = self.df_bam.names.apply(lambda x: x[4])
-                    self.df_bam['source'] = self.df_bam.names.apply(lambda x: x[5])
-                    self.df_bam['umi_l'] = self.df_bam.names.apply(lambda x: x[6][:36])
-                    self.df_bam['umi_r'] = self.df_bam.names.apply(lambda x: x[6][36:])
-                    self.df_bam['umi_corr_r'] = self.df_bam.umi_r.apply(lambda x: self.correct(x))
-                    self.df_fake = self.df_bam.loc[(self.df_bam['transloc_stat'] == 'fake_yes')]
-                    # self.df_fake['r2_umi_ref'] = self.df_fake.r1_id.apply(lambda x: print(int(x) + 1))
-                    self.df_fake['r2_umi_ref'] = self.df_fake.r1_id.apply(lambda x: self.umi_collap_map[int(x) + 1])
-                    # print(self.df_fake['r2_umi_ref'])
-                    self.df_fake['cons'] = self.df_fake.apply(lambda x: self.screen1(x), axis=1)
-                    self.df_fake['hamm'] = self.df_fake.apply(lambda x: self.screen2(x), axis=1)
-                    # print(self.df_fake['hamm'])
-                    # print(self.df_fake.loc[self.df_fake['cons'] == 0][['umi_corr_r', 'r2_umi_ref', 'r1_id', 'r2_id', 'transloc_stat', 'source', 'sam_id']])
-                    print(self.df_fake.loc[self.df_fake['hamm'] > 6].shape)
+
+                    # fas2bam(
+                    #     fastq_fpn=fastq_fp + self.metric + '/permute_' + str(i_pn) + '/trimmed/' + fn + '.fastq.gz',
+                    #     bam_fpn=fastq_fp + self.metric + '/permute_' + str(i_pn) + '/bam/' + fn,
+                    # ).tobamSimuBulk()
                 if is_dedup:
                     # if self.metric == 'seq_errs':
                     #     if i_metric == 0.125 or i_metric == 0.15:
                     #         continue
                     #     else:
-                            dedup_ob = dedupPos(
-                                mode='internal',
-                                method=self.method,
-                                # bam_fpn=to('example/data/example.bam'),
-                                bam_fpn=fastq_fp + self.metric + '/permute_' + str(i_pn) + '/bam/' + fn + '.bam',
-                                pos_tag='PO',
-                                mcl_fold_thres=self.mcl_fold_thres,
-                                inflat_val=self.mcl_inflat,
-                                exp_val=self.mcl_exp,
-                                iter_num=100,
-                                verbose=False,
-                                ed_thres=1,
-                                is_sv=False,
-                                sv_fpn=fastq_fp + self.metric + '/trimer/permute_' + str(i_pn) + '/summary/' + self.comp_cat + '/' + fn,
-                            )
-                            dedup_arr.append(dedup_ob.dedup_num)
+                    dedup_ob = dedupPos(
+                        mode='internal',
+                        method=self.method,
+                        # bam_fpn=to('example/data/example.bam'),
+                        bam_fpn=fastq_fp + self.metric + '/permute_' + str(i_pn) + '/bam/' + fn + '.bam',
+                        pos_tag='PO',
+                        mcl_fold_thres=self.mcl_fold_thres,
+                        inflat_val=self.mcl_inflat,
+                        exp_val=self.mcl_exp,
+                        iter_num=100,
+                        verbose=False,
+                        ed_thres=1,
+                        is_sv=False,
+                        sv_fpn=fastq_fp + self.metric + '/trimer/permute_' + str(i_pn) + '/summary/' + fn,
+                    )
+                    dedup_arr.append(dedup_ob.dedup_num)
+                if is_self_healing_bulk:
+                    self.alireader = aliread(
+                        bam_fpn=fastq_fp + self.metric + '/permute_' + str(i_pn) + '/bam/' + fn + '.bam',
+                        verbose=False,
+                    )
+                    self.df_bam = self.alireader.todf(tags=['XT'])
+                    self.df_bam_gps = self.df_bam.groupby(by=['XT'])
+                    self.df_bam_gp_keys = self.df_bam_gps.groups.keys()
+                    est_fake_sub_bulk_arr = []
+                    act_fake_sub_bulk_arr = []
+                    est_real_sub_bulk_arr = []
+                    act_real_sub_bulk_arr = []
+                    for k in self.df_bam_gp_keys:
+                        self.df_bam_gp = self.df_bam_gps.get_group(k)
+                        self.df_bam_gp['names'] = self.df_bam_gp['query_name'].apply(lambda x: self.bamproc(x))
+                        self.df_bam_gp['r1_id'] = self.df_bam_gp['names'].apply(lambda x: x[0])
+                        self.df_bam_gp['r2_id'] = self.df_bam_gp['names'].apply(lambda x: x[1])
+                        self.df_bam_gp['transloc_stat'] = self.df_bam_gp['names'].apply(lambda x: x[2])
+                        self.df_bam_gp['transloc_side'] = self.df_bam_gp['names'].apply(lambda x: x[3])
+                        self.df_bam_gp['sam_id'] = self.df_bam_gp['names'].apply(lambda x: x[4])
+                        self.df_bam_gp['source'] = self.df_bam_gp['names'].apply(lambda x: x[5])
+                        self.df_bam_gp['umi_l'] = self.df_bam_gp['names'].apply(lambda x: x[6][:36])
+                        self.df_bam_gp['umi_r'] = self.df_bam_gp['names'].apply(lambda x: x[6][36:])
+                        self.df_bam_gp['umi_corr_r'] = self.df_bam_gp.umi_r.apply(lambda x: self.correct(x))
+
+                        self.df_fake = self.df_bam_gp.loc[(self.df_bam_gp['transloc_stat'] == 'fake_yes')]
+                        act_fake_bulk_num = self.df_fake.shape[0]
+                        act_fake_sub_bulk_arr.append(act_fake_bulk_num)
+                        self.df_fake['r2_umi_ref'] = self.df_fake.r1_id.apply(lambda x: self.umi_collap_map[int(x) + 1])
+                        self.df_fake['cons'] = self.df_fake.apply(lambda x: self.screen1(x), axis=1)
+                        self.df_fake['hamm'] = self.df_fake.apply(lambda x: self.screen2(x), axis=1)
+                        est_fake_found_out_bulk_num = self.df_fake.loc[self.df_fake['hamm'] > 6].shape[0]
+                        est_fake_bulk_num = act_fake_bulk_num - est_fake_found_out_bulk_num
+                        est_fake_sub_bulk_arr.append(est_fake_bulk_num)
+
+                        self.df_real = self.df_bam_gp.loc[(self.df_bam_gp['transloc_stat'] == 'real_yes')]
+                        if self.df_real.empty:
+                            act_real_sub_bulk_arr.append(0)
+                            est_real_sub_bulk_arr.append(0)
+                        else:
+                            # print(self.df_real)
+                            act_real_bulk_num = self.df_real.shape[0]
+                            act_real_sub_bulk_arr.append(act_real_bulk_num)
+                            self.df_real['r2_umi_ref'] = self.df_real.r1_id.apply(
+                                lambda x: self.umi_collap_map[int(x) + 1])
+                            self.df_real['cons'] = self.df_real.apply(lambda x: self.screen1(x), axis=1)
+                            self.df_real['hamm'] = self.df_real.apply(lambda x: self.screen2(x), axis=1)
+                            est_real_found_out_bulk_num = self.df_real.loc[self.df_real['hamm'] < 3].shape[0]
+                            est_real_bulk_num = act_real_bulk_num - est_real_found_out_bulk_num
+                            est_real_sub_bulk_arr.append(est_real_bulk_num)
+                            print(act_real_bulk_num, est_real_bulk_num)
+
+                    act_fake_bulk_arr.append(sum(act_fake_sub_bulk_arr) / len(act_fake_sub_bulk_arr))
+                    est_fake_bulk_arr.append(sum(est_fake_sub_bulk_arr) / len(est_fake_sub_bulk_arr))
+                    act_real_bulk_arr.append(sum(act_real_sub_bulk_arr) / len(act_real_sub_bulk_arr))
+                    est_real_bulk_arr.append(sum(est_real_sub_bulk_arr) / len(est_real_sub_bulk_arr))
+                if is_self_healing:
+                    self.alireader = aliread(
+                        bam_fpn=fastq_fp + self.metric + '/permute_' + str(i_pn) + '/bam/' + fn + '.bam',
+                        verbose=False,
+                    )
+                    self.df_bam = self.alireader.todf(tags=['PO'])
+                    self.df_bam['names'] = self.df_bam['query_name'].apply(lambda x: self.bamproc(x))
+                    self.df_bam['r1_id'] = self.df_bam['names'].apply(lambda x: x[0])
+                    self.df_bam['r2_id'] = self.df_bam['names'].apply(lambda x: x[1])
+                    self.df_bam['transloc_stat'] = self.df_bam['names'].apply(lambda x: x[2])
+                    self.df_bam['transloc_side'] = self.df_bam['names'].apply(lambda x: x[3])
+                    # print(self.df_bam[self.df_bam['transloc_side'] != 'none'])
+                    self.df_bam['sam_id'] = self.df_bam['names'].apply(lambda x: x[4])
+                    self.df_bam['source'] = self.df_bam['names'].apply(lambda x: x[5])
+                    self.df_bam['umi_l'] = self.df_bam['names'].apply(lambda x: x[6][:36])
+                    self.df_bam['umi_r'] = self.df_bam['names'].apply(lambda x: x[6][36:])
+                    self.df_bam['umi_corr_r'] = self.df_bam['umi_r'].apply(lambda x: self.correct(x))
+                    self.df_fake = self.df_bam.loc[
+                        (self.df_bam['transloc_stat'] == 'fake_yes')
+                        # (self.df_bam['transloc_stat'] != 'real_yes')
+                        # & (self.df_bam['transloc_stat'] != 'real_no')
+                    ]
+                    print(self.df_fake)
+                    fake_sgl_num = self.df_fake.shape[0]
+                    act_fake_sgl_arr.append(fake_sgl_num)
+                    # print(self.df_fake['r1_id'])
+                    # print(self.df_fake[self.df_fake['r1_id'] == 100])
+                    self.df_fake['r2_umi_ref'] = self.df_fake['r1_id'].apply(lambda x: self.umi_collap_map[int(x) + 1])
+                    # self.df_fake['cons'] = self.df_fake.apply(lambda x: self.screen1(x), axis=1)
+                    # print(self.df_fake['cons'])
+                    # est_fake_found_out_sgl_num = self.df_fake.loc[self.df_fake['cons'] == 0].shape[0]
+                    self.df_fake['hamm'] = self.df_fake.apply(lambda x: self.screen2(x), axis=1)
+                    # print(self.df_fake['hamm'])
+                    scp = self.df_fake.loc[self.df_fake['hamm'] >= 6]
+                    # print(scp)
+                    # self.gwriter.generic(scp, sv_fpn=fastq_fp + 'asd')
+                    # print(scp.loc[scp['transloc_stat'] == 'fake_yes'].shape)
+                    est_fake_found_out_sgl_num = scp.shape[0]
+                    # est_fake_sgl_num = fake_sgl_num - est_fake_found_out_sgl_num
+                    est_fake_sgl_num = est_fake_found_out_sgl_num
+                    est_fake_sgl_arr.append(est_fake_sgl_num)
+                    print(fake_sgl_num, est_fake_sgl_num)
+
+                    self.df_real = self.df_bam.loc[(self.df_bam['transloc_stat'] == 'real_yes')]
+                    real_sgl_num = self.df_real.shape[0]
+                    act_real_sgl_arr.append(real_sgl_num)
+                    self.df_real['r2_umi_ref'] = self.df_real['r1_id'].apply(lambda x: self.umi_collap_map[int(x) + 1])
+                    self.df_real['cons'] = self.df_real.apply(lambda x: self.screen1(x), axis=1)
+                    self.df_real['hamm'] = self.df_real.apply(lambda x: self.screen2(x), axis=1)
+                    est_real_found_out_sgl_num = self.df_real.loc[self.df_real['hamm'] <= 1].shape[0]
+                    # est_real_sgl_num = real_sgl_num - est_real_found_out_sgl_num
+                    est_real_sgl_num = est_real_found_out_sgl_num
+                    est_real_sgl_arr.append(est_real_sgl_num)
+                    print(real_sgl_num, est_real_sgl_num)
+            df_fake_sgl_act['pn' + str(i_pn)] = act_fake_sgl_arr
+            df_fake_sgl_est['pn' + str(i_pn)] = est_fake_sgl_arr
+            df_real_sgl_act['pn' + str(i_pn)] = act_real_sgl_arr
+            df_real_sgl_est['pn' + str(i_pn)] = est_real_sgl_arr
+            df_fake_bulk_act['pn' + str(i_pn)] = act_fake_bulk_arr
+            df_fake_bulk_est['pn' + str(i_pn)] = est_fake_bulk_arr
+            df_real_bulk_act['pn' + str(i_pn)] = act_real_bulk_arr
+            df_real_bulk_est['pn' + str(i_pn)] = est_real_bulk_arr
             df_dedup['pn' + str(i_pn)] = dedup_arr
-            # print(df_dedup)
-        self.gwriter.generic(
-            df=df_dedup,
-            sv_fpn=fastq_fp + self.metric + '/' + str(self.method) + '_' + self.comp_cat + '.txt',
-            header=True,
-        )
+        if is_self_healing:
+            self.gwriter.generic(
+                df=df_fake_sgl_act,
+                sv_fpn=fastq_fp + self.metric + '/' + 'act_fake_healing_sgl' + '.txt',
+                header=True,
+            )
+            self.gwriter.generic(
+                df=df_fake_sgl_est,
+                sv_fpn=fastq_fp + self.metric + '/' + 'est_fake_healing_sgl' + '.txt',
+                header=True,
+            )
+            self.gwriter.generic(
+                df=df_real_sgl_act,
+                sv_fpn=fastq_fp + self.metric + '/' + 'act_real_healing_sgl' + '.txt',
+                header=True,
+            )
+            self.gwriter.generic(
+                df=df_real_sgl_est,
+                sv_fpn=fastq_fp + self.metric + '/' + 'est_real_healing_sgl' + '.txt',
+                header=True,
+            )
+        if is_self_healing_bulk:
+            self.gwriter.generic(
+                df=df_fake_bulk_act,
+                sv_fpn=fastq_fp + self.metric + '/' + 'act_fake_healing_bulk' + '.txt',
+                header=True,
+            )
+            self.gwriter.generic(
+                df=df_fake_bulk_est,
+                sv_fpn=fastq_fp + self.metric + '/' + 'est_fake_healing_bulk' + '.txt',
+                header=True,
+            )
+            self.gwriter.generic(
+                df=df_real_bulk_act,
+                sv_fpn=fastq_fp + self.metric + '/' + 'act_real_healing_bulk' + '.txt',
+                header=True,
+            )
+            self.gwriter.generic(
+                df=df_real_bulk_est,
+                sv_fpn=fastq_fp + self.metric + '/' + 'est_real_healing_bulk' + '.txt',
+                header=True,
+            )
+        if is_dedup:
+            self.gwriter.generic(
+                df=df_dedup,
+                sv_fpn=fastq_fp + self.metric + '/' + str(self.method) + '.txt',
+                header=True,
+            )
 
     def screen(self, x):
         if x['r1_id'] != x['r2_id']:
@@ -307,18 +461,19 @@ if __name__ == "__main__":
         method='mcl_val',
         # method='mcl_ed',
 
-        # comp_cat='ref',
-        comp_cat='bipartite',
-
         # is_trim=True,
         # is_tobam=True,
         # is_dedup=False,
 
         is_trim=False,
         is_tobam=False,
-        is_self_healing=True,
         is_dedup=False,
-        umi_lib_fp=to('data/simu/transloc/trimer/single_read/'),
-        fastq_fp=to('data/simu/transloc/trimer/single_read/'),
+        is_self_healing=True,
+        is_self_healing_bulk=False,
+        umi_lib_fp=to('data/simu/transloc/trimer/single_read/pcr8/'),
+        fastq_fp=to('data/simu/transloc/trimer/single_read/pcr8/'),
+
+        # umi_lib_fp=to('data/simu/transloc/trimer/bulk/'),
+        # fastq_fp=to('data/simu/transloc/trimer/bulk/'),
     )
     # print(p.evaluate())
