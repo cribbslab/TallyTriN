@@ -91,6 +91,7 @@ def merge_featurecounts_data(infiles):
     final_df.columns = names
     return final_df
 
+# fastqsplitter input.fastq.gz -n 3 --prefix split
 
 @follows(mkdir("processed_fastq.dir"))
 @transform(FASTQTARGET,
@@ -235,7 +236,11 @@ def merge_count_unique(infiles, outfile):
 def mapping_gene(infile, outfile):
     '''map using minimap2 for the geness'''
 
-    statement = '''minimap2 -ax splice  -k 14 --sam-hit-only --secondary=no --junc-bed %(junc_bed)s %(genome_fasta)s %(infile)s > %(outfile)s  2> %(outfile)s.log'''
+    if PARAMS['minimap2_splitprefix']:
+        statement = """minimap2 -ax splice  -k 14 --split-prefix tmp_sam_ --sam-hit-only --secondary=no --junc-bed %(junc_bed)s %(genome_fasta)s %(infile)s > %(outfile)s  2> %(outfile)s.log"""
+
+    else:
+        statement = '''minimap2 -ax splice  -k 14 --sam-hit-only --secondary=no --junc-bed %(junc_bed)s %(genome_fasta)s %(infile)s > %(outfile)s  2> %(outfile)s.log'''
 
     P.run(statement, job_memory="40G")
 
@@ -248,7 +253,7 @@ def samtools_sort(infile, outfile):
 
     name = infile.replace("_gene.sam", "")
 
-    statement = '''cgat bam2bam --method=strip-sequence -L strip.log < %(infile)s > %(name)s_gene_strip.sam &&
+    statement = '''cgat bam2bam --method=strip-sequence -L strip.log -I %(infile)s -S %(name)s_gene_strip.sam &&
                    samtools view -bh %(name)s_gene_strip.sam > %(name)s_gene.bam &&
                    samtools sort %(name)s_gene.bam -o %(name)s_gene_sorted.bam &&
                    samtools index %(name)s_gene_sorted.bam'''
@@ -320,7 +325,7 @@ def merge_count_gene_unique(infiles, outfile):
 def merge_featurecounts(outfile):
     ''' '''
 
-    infiles = glob.glob("*_gene_assigned.txt")
+    infiles = glob.glob("mapped_files.dir/*_gene_assigned.txt")
     final_df = merge_featurecounts_data(infiles)
     names = [x.replace("_gene_assigned.txt", "") for x in infiles]
     final_df.columns = names

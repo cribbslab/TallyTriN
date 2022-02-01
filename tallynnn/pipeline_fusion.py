@@ -64,8 +64,8 @@ FASTQTARGET = tuple([os.path.join("data.dir/", suffix_name)
 
 
 
-@transform(FASTQTARGET,
-         regex("data.dir/(\S+).bam$"),
+@transform("data.dir/*.bam",
+         regex("data.dir/(\S+).bam"),
          r"\1_SA.bam")
 def make_sabam(infile, outfile):
     '''Create a bam file with all of the reads listed as chimeric'''

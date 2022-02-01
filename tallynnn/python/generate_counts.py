@@ -43,8 +43,13 @@ bed1 = open(args.bed1, "r")
 bed2 = open(args.bed2, "r")
 
 out_table = open(args.outfile, "w")
+out_log = open(args.outfile + ".log", "w")
 
 trans_list = []
+
+
+mouse_human = 0
+total = 0
 
 #gc.disable()
 n = 0
@@ -54,9 +59,15 @@ for bed1, bed2 in zip(bed1, bed2):
     ig = bed1.split("\t")[3]
     transloc = bed2.split("\t")[3]
     trans_gene = ig + "_" + transloc + "_"+ barcode.strip()
+
+    total += 1
+
+    if  "ENSG" in trans_gene and "ENSM" in trans_gene:
+        mouse_human +=1
     trans_list.append(str(trans_gene))
 
 out_table.write("gene1\tgene2\ttrans\tbarcode\tcount\n")
+out_log.write("Total = %s\n mouse and human fusions = %s"%(total, mouse_human))
 
 trans_counter =collections.Counter(trans_list)
 

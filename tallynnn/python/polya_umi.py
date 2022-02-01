@@ -110,8 +110,8 @@ with pysam.FastxFile(args.infile) as fh:
         m=regex.finditer("(GTACTCTGCGTTGATACCACTGCTT){e<=0}", str(record.sequence))
         
         for i in m:
-            after_polya = seq_nano[i.start()-18:]
-            umi_polya = seq_nano[i.start()-18:i.start()]
+            after_polya = seq_nano[i.start()-30:]
+            umi_polya = seq_nano[i.start()-30:i.start()]
 
             new_umi = []
 
@@ -134,14 +134,14 @@ with pysam.FastxFile(args.infile) as fh:
             if errors > 2:
                 pass
             else:
-                after_umi = seq_nano[:i.start()-18]
+                after_umi = seq_nano[:i.start()-30]
 
                 record_new = record.name + "_" + str(umi_polya)
             
-                quality_afterumipolya = record.quality[:i.start()-36]
-                seq_afterumipolya = seq_nano[:i.start()-36]
+                quality_afterumipolya = record.quality[:i.start()-30]
+                seq_afterumipolya = seq_nano[:i.start()-30]
             
-                if len(umi_polya) == 18:
+                if len(umi_polya) == 30:
                     y += 1
                     outfile.write("@%s\n%s\n+\n%s\n" % (record_new, seq_afterumipolya, quality_afterumipolya))
                 else:
