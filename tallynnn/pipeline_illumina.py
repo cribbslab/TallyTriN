@@ -30,7 +30,7 @@ Pipeline illumina
 Overview
 ==================
 
-This workflow processes scBUC-seq illumina sequenced fastq files. The aim of
+This workflow processes trimer UMI illumina sequenced fastq files. The aim of
 this pipeline is to process the fastq file, collapse the double barcodes/UMI
 of read1 so that it is compatible with the downstream kallisto bustools
 single-cell analysis.
@@ -85,6 +85,7 @@ import os
 import re
 import sqlite3
 import glob
+import pandas as pd
 
 import cgatcore.pipeline as P
 import cgatcore.experiment as E
@@ -116,194 +117,131 @@ SEQUENCEFILES = tuple([os.path.join(DATADIR, suffix_name)
                        for suffix_name in SEQUENCESUFFIXES])
 
 
-@follows(mkdir("split_tmp.dir"))
-@split('data.dir/*.fastq.1.gz', "split_tmp.dir/read1*")
-def split_fastq_perfect(infile, outfiles):
-    '''
-    Split the fastq file before identifying perfect barcodes
-    '''
-    infile = "".join(infile)
-    second_read = infile.replace(".fastq.1.gz", ".fastq.2.gz")
 
-    statement = '''zcat %(infile)s | split -l %(split)s - read1. &&
-                   zcat %(second_read)s | split -l %(split)s - read2. &&
-                   mv read*.* split_tmp.dir/'''
-
-    P.run(statement)
-
-
-@follows(mkdir("perfect_reads_split.dir"))
-@transform(split_fastq_perfect,
-           regex("split_tmp.dir/read1.(\S+)"),
-           [r"perfect_reads_split.dir/\1_perfect.fastq.1.gz", r"perfect_reads_split.dir/\1_error.fastq.1.gz"])
-def perfect_reads(infile, outfiles):
-    '''calulate perfect and error reads in fastq'''
+@follows(mkdir("corrected_umis.dir"))
+@transform(SEQUENCEFILES,
+           regex("data.dir/(\S+).fastq.1.gz"),
+           r"corrected_umis.dir/\1_corrected.fastq.gz")
+def correct_umis(infile, outfile):
+    '''correct the umi sequences in the illumina data'''
 
     read1 = infile
-    read2 = infile.replace("read1.", "read2.")
+    read2 = infile.replace(".fastq.1.gz", ".fastq.2.gz")
 
-    name = infile.replace("read1.", "")
-    name = name.replace("split_tmp.dir/", "")
+    name = infile.replace("", ".fastq.1.gz")
+    name = name.replace("data.dir/", "")
 
     PYTHON_ROOT = os.path.join(os.path.dirname(__file__), "python/")
 
-    statement = '''python %(PYTHON_ROOT)sidentify_perfect.py --read1=%(read1)s --read2=%(read2)s --outname=%(name)s'''
+    statement = '''python %(PYTHON_ROOT)s/correct_illumina_umi.py --read1=%(read1)s --read2=%(read2)s --outname=%(outfile)s'''
 
     P.run(statement)
 
 
-@merge(perfect_reads, "perfect.fastq.1.gz")
-def merge_fastq_perfect(infiles, outfile):
-    '''merge read1 of fastq in perparation for running umi-tools whitelist'''
+@transform(correct_umis,
+           regex("corrected_umis.dir/(\S+)_corrected.fastq.gz"),
+           r"mapped.dir/\1.sam")
+def map_hisat2(infile, outfile):
+    """map with hiat2"""
 
-    infile = []
-    infile2 = []
-
-    for i in infiles:
-        infile2.append(i[0].replace(".fastq.1.gz", ".fastq.2.gz"))
-        infile.append(str(i[0]))
-
-    outfile2 = outfile.replace(".fastq.1.gz", ".fastq.2.gz")
-
-    infiles = " ".join(infile)
-    infiles2 = " ".join(infile2)
-
-    statement = '''cat %(infiles)s > %(outfile)s &&
-                   cat %(infiles2)s > %(outfile2)s'''
+    statement = """hisat2 -x %(hisat2_index)s -U %(infile)s -S %(outfile)s"""
 
     P.run(statement)
 
 
-@follows(mkdir("whitelist.dir"))
-@transform(merge_fastq_perfect,
-           regex("(\S+).fastq.1.gz"),
-           r"whitelist.dir/whitelist.txt")
-def whitelist(infile, outfile):
+@transform(map_hisat2,
+           regex("mapped.dir/(\S+).sam"),
+           r"mapped.dir/\1_sorted.bam")
+def run_samtools(infile, outfile):
+    """convert sam to bam and sort """
+
+    statement = """samtools view -bh  %(infile)s > %(infile)s_final_gene.bam &&
+                   samtools sort %(infile)s_final_gene.bam -o %(outfile)s &&
+                   samtools index %(outfile)s"""
+    
+    P.run(statement)
+
+
+@transform(run_samtools,
+           regex("mapped.dir/(\S+)_sorted.bam"),
+           r"mapped.dir/\1_Aligned_final_gene_sorted.bam")
+def featurecounts(infile, outfile):
+    """run featurecounts and output bam file"""
+
+    name = outfile.replace("_Aligned_final_gene_sorted.bam", "_gene_assigned")
+
+    statement = """featureCounts -a %(gtf)s -o %(name)s -R BAM %(infile)s &&
+                   samtools sort %(infile)s.featureCounts.bam  -o %(outfile)s &&
+                   samtools index %(outfile)s"""
+
+    P.run(statement)
+
+
+@follows(mkdir("featurecounts.dir"))
+@transform(featurecounts,
+           regex("mapped.dir/(\S+)_Aligned_final_gene_sorted.bam"),
+           r"featurecounts.dir/\1_counts_genes.tsv.gz")
+def count_genes(infile, outfile):
+    '''use umi_tools to count the reads - need to adapt umi tools to double oligo'''
+
+    statement = '''umi_tools count --per-gene --gene-tag=XT  -I %(infile)s -S %(outfile)s'''
+
+    P.run(statement)
+
+
+@transform(featurecounts,
+           regex("mapped.dir/(\S+)_Aligned_final_gene_sorted.bam"),
+           r"featurecounts.dir/\1_counts_genes_noumis.tsv.gz")
+def count_genes_noumis(infile, outfile):
+    '''use umi_tools to count the reads - need to adapt umi tools to double oligo'''
+
+    statement = '''umi_tools count --method=unique --per-gene --gene-tag=XT  -I %(infile)s -S %(outfile)s'''
+
+    P.run(statement)
+
+
+def merge_featurecounts_data(infiles):
+    '''will merge all of the input files from featurecounts count output'''
+
+    final_df = pd.DataFrame()
+    for infile in infiles:
+    
+        tmp_df = pd.read_table(infile, sep="\t", header=0, index_col=0, skiprows = 0, compression='gzip')
+        tmp_df = tmp_df.iloc[:,-1:]
+        tmp_df.columns = ["count"]
+        final_df = final_df.merge(tmp_df, how="outer", left_index=True, right_index=True, suffixes=("","_drop"))
+
+    names = [x.replace("", "") for x in infiles]
+    final_df.columns = names
+    return final_df
+
+@follows(count_genes)
+@originate("counts_gene.tsv.gz")
+def merge_genes(outfile):
     ''' '''
 
-    cell_num = PARAMS['whitelist']
-    statement = '''umi_tools whitelist --stdin=%(infile)s --bc-pattern=CCCCCCCCCCCCCCCCCCCCCCCCNNNNNNNNNNNNNNNN
-                   --set-cell-number=%(cell_num)s -L extract.log > whitelist.dir/whitelist.txt
- '''
-
-    P.run(statement)
-
-
-@follows(mkdir("corrected_reads.dir"))
-@transform(perfect_reads,
-           regex("perfect_reads_split.dir/(\S+)_perfect.fastq.1.gz"),
-           add_inputs(whitelist),
-           r"corrected_reads.dir/\1_corrected.fastq.1.gz")
-def correct_reads(infiles, outfile):
-    '''Correct barcodes that are from the error files '''
-
-    infile1, infile2 = infiles
-
-    read1 = infile1[1].replace("_perfect.fastq.1.gz", "_error.fastq.1.gz")
-    read2 = infile1[0].replace("_perfect.fastq.1.gz", "_error.fastq.2.gz")
-
-    name = infile1[0].replace("_perfect.fastq.1.gz", "")
-    name = name.replace("perfect_reads_split.dir/", "")
-
-    distance = PARAMS['distance']
-
-    PYTHON_ROOT = os.path.join(os.path.dirname(__file__), "python/")
-    statement = '''python %(PYTHON_ROOT)s/correct_barcode.py --whitelist=%(infile2)s --read1=%(read1)s --read2=%(read2)s --outname=%(name)s --distance=%(distance)s'''
-
-    P.run(statement)
+    infiles = glob.glob("featurecounts.dir/*_counts_genes.tsv.gz")
+    final_df = merge_featurecounts_data(infiles)
+    names = [x.replace("_counts_genes.tsv.gz", "") for x in infiles]
+    final_df.columns = names
+    df = final_df.fillna(0)
+    df.to_csv(outfile, sep="\t", compression="gzip")
 
 
-@merge(correct_reads, "corrected.fastq.1.gz")
-def merge_corrected(infiles, outfile):
-    '''merge the corrected reads '''
-
-    infile = []
-    infile2 = []
-
-    for i in infiles:
-        infile2.append(i.replace(".fastq.1.gz", ".fastq.2.gz"))
-        infile.append(str(i))
-
-    infiles = " ".join(infile)
-    infiles2 = " ".join(infile2)
-
-    outfile2 = outfile.replace(".fastq.1.gz", ".fastq.2.gz")
-
-    statement = '''cat %(infiles)s > %(outfile)s &&
-                   cat %(infiles2)s > %(outfile2)s'''
-
-    P.run(statement)
-
-
-@follows(mkdir("collapsed_reads.dir"))
-@transform(perfect_reads,
-           regex("perfect_reads_split.dir/(\S+)_perfect.fastq.1.gz"),
-           r"collapsed_reads.dir/\1_corrected.fastq.1.gz")
-def reads_toillumina(infiles, outfile):
+@follows(count_genes_noumis)
+@originate("counts_gene_noumi.tsv.gz")
+def merge_genes_noumi(outfile):
     ''' '''
 
-    infile1, infile2 = infiles
-
-    read1 = infile1.replace(".fastq.1.gz", ".fastq.2.gz")
-    read2 = infile1.replace(".fastq.1.gz", ".fastq.2.gz")
-
-    name = outfile.replace(".fastq.1.gz", "")
-
-    PYTHON_ROOT = os.path.join(os.path.dirname(__file__), "python/")
-    statement = '''python %(PYTHON_ROOT)s/collapse_bcumi.py --read1=%(read1)s --read2=%(read2)s --outname=%(name)s'''
-
-    P.run(statement)
+    infiles = glob.glob("featurecounts.dir/*_counts_genes_noumis.tsv.gz")
+    final_df = merge_featurecounts_data(infiles)
+    names = [x.replace("_counts_genes_noumis.tsv.gz", "") for x in infiles]
+    final_df.columns = names
+    df = final_df.fillna(0)
+    df.to_csv(outfile, sep="\t", compression="gzip")
 
 
-@merge(reads_toillumina, "perfect_collapsed.fastq.1.gz")
-def merge_fastq_perfect_collapsed(infiles, outfile):
-    '''merge read1 of fastq in perparation for running umi-tools whitelist'''
-
-    infile = []
-    infile2 = []
-
-    for i in infiles:
-        infile2.append(i.replace(".fastq.1.gz", ".fastq.2.gz"))
-        infile.append(str(i))
-
-    outfile2 = outfile.replace(".fastq.1.gz", ".fastq.2.gz")
-
-    infiles = " ".join(infile)
-    infiles2 = " ".join(infile2)
-
-    statement = '''cat %(infiles)s > %(outfile)s &&
-                   cat %(infiles2)s > %(outfile2)s'''
-
-    P.run(statement)
-
-
-@transform(merge_corrected,
-           regex("(\S+).fastq.1.gz"),
-           add_inputs(merge_fastq_perfect_collapsed),
-           r"final.fastq.1.gz")
-def combine_perfect_corrected(infiles, outfile):
-    '''Combine the the perfect and the corrected reads together'''
-
-    infile_1_R1, infile_2_R1 = infiles
-
-    infile_1_R2 = infile_1_R1.replace(".fastq.1.gz", ".fastq.2.gz")
-    infile_2_R2 = infile_2_R1.replace(".fastq.1.gz", ".fastq.2.gz")
-
-    statement = '''cat %(infile_1_R1)s %(infile_2_R1)s > final.fastq.1.gz &&
-                  cat %(infile_1_R2)s %(infile_2_R2)s > final.fastq.2.gz '''
-
-    P.run(statement)
-
-
-def correct_reads(infile, outfile):
-    '''Use levenshtein distance and correct the barcodes '''
-
-    statement = ''' '''
-
-    P.run(statement)
-
-
-@follows(combine_perfect_corrected)
+@follows(merge_genes, merge_genes_noumi)
 def full():
     pass
 
