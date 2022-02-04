@@ -65,6 +65,19 @@ FASTQTARGET = tuple([os.path.join("data.dir/", suffix_name)
                        for suffix_name in SEQUENCESUFFIXES])
 
 
+def merge_trans_noumi_data(infiles):
+    """will merge all the dataframes across samples for trancripts """
+
+    final_df = pd.DataFrame()
+    for infile in infiles:
+        name = infile.replace(".counts_noumis.tsv.gz", "")
+        tmp_df = pd.read_table(infile, sep="\t", header=1, index_col=0, skiprows = 1)
+        tmp_df = tmp_df.iloc[:,-1:]
+        tmp_df.columns = [name]
+        final_df = final_df.merge(tmp_df, how="outer", left_index=True, right_index=True, suffixes=("","_drop"))
+
+    return final_df
+
 def merge_feature_data(infiles):
     '''will merge all of the input files'''
 
@@ -208,6 +221,19 @@ def count_trans_unique(infile, outfile):
     P.run(statement)
 
 
+@transform(xt_tag,
+           regex("mapped_files.dir/(\S+)_XT.bam"),
+           r"counts_trans.dir/\1.counts_noumis.tsv.gz")
+def count_trans_noumis(infile, outfile):
+    '''Use script to count transcripts without taking into account the umi'''
+
+    PYTHON_ROOT = os.path.join(os.path.dirname(__file__), "python/")
+
+    statement = '''python %(PYTHON_ROOT)s/trans_count.py --infile=%(infile)s --outfile=%(outfile)s'''
+
+    P.run(statement)
+
+
 @merge(count_trans, "counts_trans.dir/counts.tsv.gz")
 def merge_count(infiles, outfile):
     '''merge counts from ech sample into one'''
@@ -224,6 +250,16 @@ def merge_count_unique(infiles, outfile):
     df = merge_feature_data(infiles)
     df = df.fillna(0)
     df.to_csv(outfile, sep="\t", compression="gzip")
+
+
+@merge(count_trans_noumis, "counts_trans.dir/counts_noumis.tsv.gz")
+def merge_trans_noumi(infiles, outfile):
+    '''merge counts from each sample into one'''
+
+    df = merge_trans_noumi_data(infiles)
+    df = df.fillna(0)
+    df.to_csv(outfile, sep="\t", compression="gzip")
+
 
 
 #############################
