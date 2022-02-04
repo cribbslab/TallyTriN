@@ -229,7 +229,7 @@ def merge_genes(outfile):
 
 
 @follows(count_genes_noumis)
-@originate("counts_gene_noumi.tsv.gz")
+@originate("counts_gene_unique.tsv.gz")
 def merge_genes_noumi(outfile):
     ''' '''
 
@@ -241,7 +241,27 @@ def merge_genes_noumi(outfile):
     df.to_csv(outfile, sep="\t", compression="gzip")
 
 
-@follows(merge_genes, merge_genes_noumi)
+@follows(featurecounts)
+@originate("counts_gene_noumis.tsv.gz")
+def merge_featurecounts(outfile):
+    ''' '''
+
+    infiles = glob.glob("mapped.dir/*_gene_assigned")
+    final_df = pd.DataFrame()
+
+    for infile in infiles:
+    
+        tmp_df = pd.read_table(infile, sep="\t", header=0, index_col=0, skiprows = 1)
+        tmp_df = tmp_df.iloc[:,-1:]
+        tmp_df.columns = ["count"]
+        final_df = final_df.merge(tmp_df, how="outer", left_index=True, right_index=True, suffixes=("","_drop"))
+    names = [x.replace("_gene_assigned", "") for x in infiles]
+    final_df.columns = names
+    
+    df = final_df.fillna(0)
+    df.to_csv(outfile, sep="\t", compression="gzip")
+
+@follows(merge_genes, merge_genes_noumi, merge_featurecounts)
 def full():
     pass
 
