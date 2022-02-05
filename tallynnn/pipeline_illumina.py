@@ -133,7 +133,12 @@ def correct_umis(infile, outfile):
 
     PYTHON_ROOT = os.path.join(os.path.dirname(__file__), "python/")
 
-    statement = '''python %(PYTHON_ROOT)s/correct_illumina_umi.py --read1=%(read1)s --read2=%(read2)s --outname=%(outfile)s'''
+
+    if PARAMS["correct"]:
+        statement = '''python %(PYTHON_ROOT)s/correct_illumina_umi.py --read1=%(read1)s --read2=%(read2)s --outname=%(outfile)s'''
+    else:
+        statement = '''python %(PYTHON_ROOT)s/uncorrect_illumina.py --read1=%(read1)s --read2=%(read2)s --outname=%(outfile)s'''
+
 
     P.run(statement)
 
