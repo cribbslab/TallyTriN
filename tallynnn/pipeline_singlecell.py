@@ -23,14 +23,14 @@
 
 """
 =================
-Pipeline nanopore
+Pipeline single-cell
 =================
 
 
 Overview
 ==================
 
-This workflow processes scBUC-seq nanopore fastq files. The aim of this pipeline
+This workflow processes scCOLOR-seq-homotrimerUMI nanopore fastq files. The aim of this pipeline
 is to generate both a gene level and transcript level market matrix counts
 matrix (.mtx).
 
@@ -160,7 +160,7 @@ def correct_polyA(infile, outfile):
 
     PYTHON_ROOT = os.path.join(os.path.dirname(__file__), "python/")
 
-    statement = '''python %(PYTHON_ROOT)s/complement_polyA.py --infile=%(infile)s --outname=%(outfile)s'''
+    statement = '''python %(PYTHON_ROOT)s/complement_polyA_singlecell.py --infile=%(infile)s --outname=%(outfile)s'''
 
     P.run(statement)
 
