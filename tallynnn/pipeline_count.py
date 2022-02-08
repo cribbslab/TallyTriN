@@ -210,6 +210,18 @@ def count_trans(infile, outfile):
     P.run(statement)
 
 
+@follows(mkdir('counts_trans_mclumi.dir'))
+@transform(xt_tag,
+           regex("mapped_files.dir/(\S+)_XT.bam"),
+           r"counts_trans_mclumi.dir/\1.counts_mclumi.tsv.gz")
+def count_trans_mclumi(infile, outfile):
+    '''Use mclumi to collapse UMIs and generate counts table'''
+
+    statement = '''mclumi dedup_gene -m mcl_ed -gt XT -gist XS -ed 1 -ibam %(infile)s -obam %(outfile)s'''
+
+    P.run(statement)
+
+
 @transform(xt_tag,
            regex("mapped_files.dir/(\S+)_XT.bam"),
            r"counts_trans.dir/\1.counts_unique.tsv.gz")
