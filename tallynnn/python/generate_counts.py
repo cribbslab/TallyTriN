@@ -51,14 +51,18 @@ trans_list = []
 mouse_human = 0
 total = 0
 
-#gc.disable()
+trans_list = []
+
+mouse_human = 0
+total = 0
 n = 0
 for bed1, bed2 in zip(bed1, bed2):
 
-    barcode = bed1.split("\t")[4]
+
+    umi = bed1.split("\t")[4]
     ig = bed1.split("\t")[3]
     transloc = bed2.split("\t")[3]
-    trans_gene = ig + "_" + transloc + "_"+ barcode.strip()
+    trans_gene = ig + "_" + transloc 
 
     total += 1
 
@@ -66,19 +70,21 @@ for bed1, bed2 in zip(bed1, bed2):
         mouse_human +=1
     trans_list.append(str(trans_gene))
 
-out_table.write("gene1\tgene2\ttrans\tbarcode\tcount\n")
+out_table.write("trans\tcount\n")
 out_log.write("Total = %s\n mouse and human fusions = %s"%(total, mouse_human))
+
 
 trans_counter =collections.Counter(trans_list)
 
 for k in trans_counter:
-    ig, gene, barcode = k.split("_")
+    ig, gene = k.split("_")
     if ig == gene:
         pass
     else:
         gene2 = ig + "_" + gene
         counter = trans_counter[k]
+        print(gene2, counter)
 
-        out_table.write("%s\t%s\t%s\t%s\t%s\n"%(ig, gene, gene2, barcode, str(counter)))
+        out_table.write("%s\t%s\n"%(gene2, str(counter)))
     
 out_table.close()

@@ -105,7 +105,7 @@ with pysam.FastxFile(args.infile) as fh:
         n += 1
         seq_nano = record.sequence
         
-        m=regex.finditer("(AAGCAGTGGTATCAACGCAGAGTAAT){e<=3}", str(record.sequence))
+        m=regex.finditer("(AAGCAGTGGTATCAACGCAGAGTAAT){e<=1}", str(record.sequence))
         for i in m:
             after_smart = seq_nano[i.end():]
             umi_tso = after_smart[:36]
@@ -131,7 +131,7 @@ with pysam.FastxFile(args.infile) as fh:
             else:
 
                 after_umi = after_smart[37:]
-                record_new = record.name +  str(umi_tso)
+                record_new = record.name + "_"+  str(umi_tso)
                 quality_afterumismart = record.quality[i.end()+38:]
                 seq_afterumismart = seq_nano[i.end()+38:]
                 if len(umi_tso) == 36:
