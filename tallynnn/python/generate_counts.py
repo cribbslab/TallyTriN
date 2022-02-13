@@ -51,10 +51,6 @@ trans_list = []
 mouse_human = 0
 total = 0
 
-trans_list = []
-
-mouse_human = 0
-total = 0
 n = 0
 for bed1, bed2 in zip(bed1, bed2):
 

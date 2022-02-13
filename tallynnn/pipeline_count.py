@@ -213,13 +213,15 @@ def count_trans(infile, outfile):
 @follows(mkdir('counts_trans_mclumi.dir'))
 @transform(xt_tag,
            regex("mapped_files.dir/(\S+)_XT.bam"),
-           r"counts_trans_mclumi.dir/\1.counts_mclumi.tsv.gz")
+           r"counts_trans_mclumi.dir/\1.counts_mclumi.txt")
 def count_trans_mclumi(infile, outfile):
     '''Use mclumi to collapse UMIs and generate counts table'''
 
-    statement = '''mclumi dedup_gene -m mcl_ed -gt XT -gist XS -ed 1 -ibam %(infile)s -obam %(outfile)s'''
+    output_bam = outfile.replace("_XT.bam", "_mclumi_XT.bam")
 
-    P.run(statement)
+    statement = '''mclumi dedup_gene -m mcl_ed -gt XT -gist XS -ed 1 -ibam=%(infile)s -obam=%(output_bam)s -odsum=%(outfile)s'''
+
+    P.run(statement, job_memory="40G")
 
 
 @transform(xt_tag,
@@ -333,6 +335,20 @@ def count_gene(infile, outfile):
     statement = '''umi_tools count --per-gene --gene-tag=XT -I %(infile)s -S %(outfile)s'''
 
     P.run(statement)
+
+
+@follows(mkdir('counts_genes_mclumi.dir'))
+@transform(featurecounts,
+           regex("mapped_files.dir/(\S+)_featurecounts_gene_sorted.bam"),
+           r"counts_genes_mclumi.dir/\1.counts_gene.txt")
+def count_gene_mclumi(infile, outfile):
+    '''Use mclumi to count genes'''
+
+    output_bam = outfile.replace("featurecounts_gene_sorted.bam", "_mclumi_featurecounts_gene_sorted.bam")
+
+    statement = '''mclumi dedup_gene -m mcl_ed -gt XT -gist XS -ed 1 -ibam %(infile)s -obam %(output_bam)s -odsum %(outfile)s'''
+
+    P.run(statement, job_memory="40G")
 
 
 @merge(count_gene, "counts_genes.dir/counts_gene.tsv.gz")
