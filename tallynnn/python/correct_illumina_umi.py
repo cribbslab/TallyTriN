@@ -112,9 +112,10 @@ def correct_umi(umis):
         if errors > int(args.errors):
             pass
         else:
-            final_umi = new_umi[:30]
-            corrected_umis.append(final_umi[::3])
-    return(corrected_umis)
+            
+            corrected_umis.append(new_umi[::3])
+            n = errors
+    return(corrected_umis, n)
 
 
 outfile = iotools.open_file(args.outname, "w")
@@ -131,12 +132,19 @@ with pysam.FastxFile(args.read1) as fh, pysam.FastxFile(args.read2) as fh2:
         else:
             y += 1
             single_nuc = []
-            trimers = [umi[i:i+3] for i in range(0, len(umi), 3)]
-            collapsed_trimer = "".join(correct_umi(trimers))
+
+            collapsed_trimer, error = correct_umi([umi])
+
+            collapsed_trimer = "".join(collapsed_trimer)
+
+            if error > int(args.errors):
+                pass
+
+            else:
+
+                record_new = record2.name + "_" + str(collapsed_trimer)
             
-            record_new = record2.name + "_" + str(collapsed_trimer)
-            
-            outfile.write("@%s\n%s\n+\n%s\n" % (record_new, record2.sequence, record2.quality))
+                outfile.write("@%s\n%s\n+\n%s\n" % (record_new, record2.sequence, record2.quality))
 
 outfile.close()
 
