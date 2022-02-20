@@ -21,3 +21,6 @@ tso_present: 1
 
 # Specify if a split prefix of index is needed for running minimap2 if the index is large
 minimap2_splitprefix: 0
+
+# Threshold to remove UMI errors
+error_removal: 1

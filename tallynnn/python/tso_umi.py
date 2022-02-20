@@ -23,6 +23,9 @@ parser.add_argument("--infile", default=None, type=str,
                     help='infile fastq  file')
 parser.add_argument("--outname", default=None, type=str,
                     help='name for output fastq files')
+parser.add_argument("--error", default=None, type=str,
+                    help='Errors threshold for UMI')
+
 
 args = parser.parse_args()
 
@@ -105,30 +108,20 @@ with pysam.FastxFile(args.infile) as fh:
         n += 1
         seq_nano = record.sequence
         
-        m=regex.finditer("(AAGCAGTGGTATCAACGCAGAGTAAT){e<=1}", str(record.sequence))
+        m=regex.finditer("(AAGCAGTGGTATCAACGCAGAGTAAT){e<=0}", str(record.sequence))
         for i in m:
             after_smart = seq_nano[i.end():]
             umi_tso = after_smart[:36]
             
             new_umi = []
 
-            for x in range(0, len(umi_tso)):
-                if x % 3 == 0:
 
-                    if x == 0:
-                            #print(x, umi)
-                        sub_umi = remove_indels(x, umi_tso, first=True)
-                    else:
-                        sub_umi = remove_indels(x, umi_tso, first=False)
-
-                    new_umi.append(sub_umi)
-
-            umi_tso = "".join(new_umi)
             umi_tso, errors = remove_point_mutations(umi_tso)
 
-            if errors > 4:
+            if errors > int(args.errors):
                 pass
             else:
+
 
                 after_umi = after_smart[37:]
                 record_new = record.name + "_"+  str(umi_tso)

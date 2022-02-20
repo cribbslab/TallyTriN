@@ -128,10 +128,10 @@ def polya_umi(infile, outfile):
     PYTHON_ROOT = os.path.join(os.path.dirname(__file__), "python/")
 
     if not PARAMS['correct']:
-        statement = """python %(PYTHON_ROOT)s/polya_umi_nocorrect.py --infile=%(infile)s --outname=%(outfile)s"""
+        statement = """python %(PYTHON_ROOT)s/polya_umi_nocorrect.py --infile=%(infile)s --outname=%(outfile)s """
 
     else:
-        statement = '''python %(PYTHON_ROOT)s/polya_umi.py --infile=%(infile)s --outname=%(outfile)s'''
+        statement = '''python %(PYTHON_ROOT)s/polya_umi.py --infile=%(infile)s --outname=%(outfile)s --errors=%(error_removal)s'''
 
     P.run(statement)
 
@@ -150,7 +150,7 @@ def tso_umi(infile, outfile):
             statement = """python %(PYTHON_ROOT)s/tso_umi_nocorrect.py --infile=%(infile)s --outname=%(outfile)s"""
 
         else:
-            statement = '''python %(PYTHON_ROOT)s/tso_umi.py --infile=%(infile)s --outname=%(outfile)s'''
+            statement = '''python %(PYTHON_ROOT)s/tso_umi.py --infile=%(infile)s --outname=%(outfile)s --errors=%(error_removal)s'''
 
     else:
         statement = """cp %(infile)s %(outfile)s"""
@@ -217,11 +217,11 @@ def count_trans(infile, outfile):
 def count_trans_mclumi(infile, outfile):
     '''Use mclumi to collapse UMIs and generate counts table'''
 
-    output_bam = outfile.replace("_XT.bam", "_mclumi_XT.bam")
+    output_bam = infile.replace("_XT.bam", "_mclumi_XT.bam")
 
-    statement = '''mclumi dedup_gene -m mcl_ed -gt XT -gist XS -ed 1 -ibam=%(infile)s -obam=%(output_bam)s -odsum=%(outfile)s'''
+    statement = '''mclumi dedup_gene -m mcl_ed -gt XT -gist XS -ed 1 -ibam %(infile)s -obam %(output_bam)s -odsum %(outfile)s'''
 
-    P.run(statement, job_memory="40G")
+    P.run(statement, job_memory="60G")
 
 
 @transform(xt_tag,
@@ -292,7 +292,7 @@ def mapping_gene(infile, outfile):
     else:
         statement = '''minimap2 -ax splice  -k 14 --sam-hit-only --secondary=no --junc-bed %(junc_bed)s %(genome_fasta)s %(infile)s > %(outfile)s  2> %(outfile)s.log'''
 
-    P.run(statement, job_memory="40G")
+    P.run(statement, job_memory="60G")
 
 
 @transform(mapping_gene,
@@ -344,7 +344,7 @@ def count_gene(infile, outfile):
 def count_gene_mclumi(infile, outfile):
     '''Use mclumi to count genes'''
 
-    output_bam = outfile.replace("featurecounts_gene_sorted.bam", "_mclumi_featurecounts_gene_sorted.bam")
+    output_bam = infile.replace("featurecounts_gene_sorted.bam", "_mclumi_featurecounts_gene_sorted.bam")
 
     statement = '''mclumi dedup_gene -m mcl_ed -gt XT -gist XS -ed 1 -ibam %(infile)s -obam %(output_bam)s -odsum %(outfile)s'''
 
@@ -397,7 +397,7 @@ def merge_featurecounts(outfile):
     df.to_csv(outfile, sep="\t", compression="gzip")
 
 
-@follows(merge_count, merge_count_unique, merge_count_gene, merge_count_gene_unique, merge_featurecounts)
+@follows(merge_count, merge_count_unique, merge_count_gene, merge_count_gene_unique, merge_featurecounts, count_trans_mclumi, count_gene_mclumi)
 def full():
     pass
 

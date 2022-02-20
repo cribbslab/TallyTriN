@@ -23,7 +23,8 @@ parser.add_argument("--infile", default=None, type=str,
                     help='infile fastq  file')
 parser.add_argument("--outname", default=None, type=str,
                     help='name for output fastq files')
-
+parser.add_argument("--errors", default=None, type=str,
+                    help='Number of errors to remove reads')
 args = parser.parse_args()
 
 L.info("args:")
@@ -57,12 +58,13 @@ def remove_point_mutations(umi):
 
         if allCharactersSame(trimer):
             point_remove.append(trimer)
+            n +=1
         if not allCharactersSame(trimer):
             base = collections.Counter(trimer).most_common(1)[0][0]
             base = base+base+base
             point_remove.append(base)
-            n += 1
-    return("".join(point_remove), n)
+            error_counter += 1
+    return("".join(point_remove), error_counter)
 
 
 def remove_indels(x, umi, first):
@@ -115,25 +117,13 @@ with pysam.FastxFile(args.infile) as fh:
 
             new_umi = []
 
-            
-            for x in range(0, len(umi_polya)):
-                if x % 3 == 0:
-
-                    if x == 0:
-                        #print(x, umi)
-                        sub_umi = remove_indels(x, umi_polya, first=True)
-                    else:
-                        sub_umi = remove_indels(x, umi_polya, first=False)
-
-                    new_umi.append(sub_umi)
-
-            umi_polya = "".join(new_umi)
-
             umi_polya, errors = remove_point_mutations(umi_polya)
-
-            if errors > 2:
+            
+            if errors > int(args.errors):
                 pass
             else:
+
+
                 after_umi = seq_nano[:i.start()-30]
 
                 record_new = record.name + "_" + str(umi_polya)
