@@ -25,6 +25,8 @@ parser.add_argument("--read2", default=None, type=str,
                     help='infile fastq.2.gz  file')
 parser.add_argument("--outname", default=None, type=str,
                     help='name for output fastq files')
+parser.add_argument("--errors", default=None, type=str,
+                    help='number of errors to remove')
 
 args = parser.parse_args()
 
@@ -106,23 +108,10 @@ def correct_umi(umis):
     for umi in umis:
         n +=1
 
-        new_umi = []
-        umi, errors = remove_point_mutations(umi)
-        if errors > 2:
+        new_umi, errors = remove_point_mutations(umi)
+        if errors > int(args.errors):
             pass
         else:
-            for x in range(0, len(umi)):
-                if x % 3 == 0:
-
-                    if x == 0:
-                        #print(x, umi)
-                        sub_umi = remove_indels(x, umi, first=True)
-                    else:
-                        sub_umi = remove_indels(x, umi, first=False)
-
-                    new_umi.append(sub_umi)
-
-            new_umi = "".join(new_umi)
             final_umi = new_umi[:30]
             corrected_umis.append(final_umi[::3])
     return(corrected_umis)

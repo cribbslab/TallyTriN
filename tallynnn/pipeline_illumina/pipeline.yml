@@ -35,3 +35,6 @@ gtf: geneset_all.gtf.gz
 
 # Specify if the trimer correction method should be added
 correct: 1
+
+# Specify how many errors to remove
+errors: 1
