@@ -140,6 +140,9 @@ with pysam.FastxFile(args.read1) as fh, pysam.FastxFile(args.read2) as fh2:
             if error > int(args.errors):
                 pass
 
+            elif collapsed_trimer is "":
+                pass
+
             else:
 
                 record_new = record2.name + "_" + str(collapsed_trimer)
