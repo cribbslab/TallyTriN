@@ -95,7 +95,7 @@ class general(object):
             #     ).general(lib_fpn=self.seq_lib_fpn, is_sv=self.is_sv_seq_lib)
             #     read_struct_ref['seq'] = seq_i
             read_struct_pfd_order = {condi: read_struct_ref[condi] for condi in self.condis}
-            seqs.append([self.paste([*read_struct_pfd_order.values()]), id, 'init'])
+            seqs.append([self.paste([*read_struct_pfd_order.values()]), str(id), 'init'])
         # print(umi_cnt)
         # print(umi_pool)
         etime = time.time()

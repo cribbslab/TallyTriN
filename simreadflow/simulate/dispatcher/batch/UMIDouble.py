@@ -17,9 +17,9 @@ class umiDouble(object):
 
         self.working_dir = working_dir
         self.umi_unit_pattern = 3
-        self.umi_unit_len_fixed = 12
+        self.umi_unit_len_fixed = 10
         self.umi_num_fixed = 100
-        self.pcr_num_fixed = 10
+        self.pcr_num_fixed = 8
         self.pcr_err_fixed = 1e-3
         self.seq_err_fixed = 1e-3
         self.ampl_rate_fixed = 0.85
@@ -148,7 +148,7 @@ class umiDouble(object):
 
 if __name__ == "__main__":
     p = umiDouble(
-        working_dir=to('data/simu/transloc/trimer/single_read/pcr10/')
+        working_dir=to('data/simu/transloc/trimer/single_read/pcr8_umi30/')
     )
 
     # print(p.pcrNums())

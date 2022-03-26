@@ -17,8 +17,10 @@ class error(object):
 
     def __call__(self, deal):
         from functools import wraps
-        if self.method == 'default':
-            func = self.postable
+        if self.method == 'err2d':
+            func = self.table2D
+        else:
+            func = self.table1D
         @wraps(deal)
         def indexing(ph, *args, **kwargs):
             print('======>error making...')
@@ -27,7 +29,7 @@ class error(object):
             return func(res2p)
         return indexing
 
-    def postable(self, res2p, kind='index_by_same_len'):
+    def table1D(self, res2p, kind='index_by_same_len'):
         """
         ..  test:
             -----
@@ -148,7 +150,63 @@ class error(object):
         print('=========>the number of errors at this PCR: {}, '.format(res2p['recorder_pcr_err_num']))
         return res2p
 
+    def table2D(self, res2p):
+        pcr_stime = time.time()
+        data_pcr = pd.DataFrame(res2p['data_spl'], columns=['read', 'sam_id', 'source'])
+        data_pcr['read_len'] = data_pcr['read'].apply(lambda x: len(x))
+        data_pcr['num_err_per_read'] = data_pcr['read_len'].apply(lambda x: rannum().binomial(
+            n=x, p=res2p['pcr_error'], use_seed=False, seed=res2p['ipcr'] + 1
+        ))
+        data_pcr['pos_err_per_read'] = data_pcr.apply(lambda x: rannum().uniform(
+            low=0, high=x['read_len'], num=x['num_err_per_read'], use_seed=False, seed=res2p['ipcr'] + 1
+        ), axis=1)
+        data_pcr['base_roll_per_read'] = data_pcr['num_err_per_read'].apply(lambda x: rannum().uniform(
+            low=0, high=3, num=x, use_seed=False
+        ))
+        data_pcr['read_pcr'] = data_pcr.apply(lambda x: self.change(
+            read=x['read'],
+            pos_list=x['pos_err_per_read'],
+            base_list=x['base_roll_per_read'],
+        ), axis=1)
+        # print(data_pcr[['read', 'read_pcr', 'pos_err_per_read']])
+        del res2p['data_spl']
+        pcr_merge_stime = time.time()
+        data_pcr['sam_id'] = data_pcr['sam_id'].apply(lambda x: x + '_' + str(res2p['ipcr'] + 1))
+        data_pcr['source'] = 'pcr-' + str(res2p['ipcr'] + 1)
+        print(data_pcr)
+        data_pcr = np.array(data_pcr[['read_pcr', 'sam_id', 'source']])
+        res2p['data'] = np.concatenate((res2p['data'], data_pcr), axis=0)
+        del data_pcr
+        print('======>time for merging sequences {time:.2f}s'.format(time=time.time() - pcr_merge_stime))
+        print('======>Summary report:')
+        print('=========>PCR time: {time:.2f}s'.format(time=time.time() - pcr_stime))
+        print('=========>the dimensions of the data: number of reads: {}'.format(res2p['data'].shape))
+        print('=========>the number of reads at this PCR: {}, '.format(res2p['recorder_pcr_read_num']))
+        print('=========>the number of nucleotides at this PCR: {}, '.format(res2p['recorder_nucleotide_num']))
+        print('=========>the number of errors at this PCR: {}, '.format(res2p['recorder_pcr_err_num']))
+        return res2p
+
     def postableIndexBySameLen(self, seq_len, num_seq):
+        """
+        If each read has 10 positions, this function returns
+        seq_ids
+        1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 3, 3, 3, 3, 3, 3, 3, 3, 3, 3, ...
+        seq_pos_ids
+        0, 1, 2, 3, 4, 5, 6, 7, 8, 9, 0, 1, 2, 3, 4, 5, 6, 7, 8, 9, 0, 1, 2, 3, 4, 5, 6, 7, 8, 9, ...
+
+        Parameters
+        ----------
+        seq_len
+        num_seq
+
+        Returns
+        -------
+        seq_ids
+            1d list, the id of the ith read
+        seq_pos_ids
+            1d list, the base positions (starting from 0 every time for each read) of reads
+
+        """
         nt_ids = [i for i in range(seq_len)]
         seq_pos_ids = nt_ids * num_seq
         seq_ids = np.array([[i] * seq_len for i in range(num_seq)]).ravel().tolist()

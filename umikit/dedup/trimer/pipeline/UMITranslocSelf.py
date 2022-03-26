@@ -6,6 +6,7 @@ __lab__ = "Adam Cribbs lab"
 import time
 import numpy as np
 import pandas as pd
+pd.options.mode.chained_assignment = None  # default='warn'
 from umikit.fastq.Convert import convert as fas2bam
 from umikit.trim.Template import template as umitrim
 from umikit.util.Writer import writer as gwriter
@@ -276,6 +277,10 @@ class umiTranslocSelf(Config.config):
                         # & (self.df_bam['transloc_stat'] != 'real_no')
                     ]
                     print(self.df_fake)
+                    print(self.df_fake.columns)
+                    print(self.df_fake.r1_id)
+                    print(self.df_fake.r2_id)
+                    print(self.df_fake.transloc_stat)
                     fake_sgl_num = self.df_fake.shape[0]
                     act_fake_sgl_arr.append(fake_sgl_num)
                     # print(self.df_fake['r1_id'])
@@ -316,54 +321,54 @@ class umiTranslocSelf(Config.config):
             df_real_bulk_act['pn' + str(i_pn)] = act_real_bulk_arr
             df_real_bulk_est['pn' + str(i_pn)] = est_real_bulk_arr
             df_dedup['pn' + str(i_pn)] = dedup_arr
-        if is_self_healing:
-            self.gwriter.generic(
-                df=df_fake_sgl_act,
-                sv_fpn=fastq_fp + self.metric + '/' + 'act_fake_healing_sgl' + '.txt',
-                header=True,
-            )
-            self.gwriter.generic(
-                df=df_fake_sgl_est,
-                sv_fpn=fastq_fp + self.metric + '/' + 'est_fake_healing_sgl' + '.txt',
-                header=True,
-            )
-            self.gwriter.generic(
-                df=df_real_sgl_act,
-                sv_fpn=fastq_fp + self.metric + '/' + 'act_real_healing_sgl' + '.txt',
-                header=True,
-            )
-            self.gwriter.generic(
-                df=df_real_sgl_est,
-                sv_fpn=fastq_fp + self.metric + '/' + 'est_real_healing_sgl' + '.txt',
-                header=True,
-            )
-        if is_self_healing_bulk:
-            self.gwriter.generic(
-                df=df_fake_bulk_act,
-                sv_fpn=fastq_fp + self.metric + '/' + 'act_fake_healing_bulk' + '.txt',
-                header=True,
-            )
-            self.gwriter.generic(
-                df=df_fake_bulk_est,
-                sv_fpn=fastq_fp + self.metric + '/' + 'est_fake_healing_bulk' + '.txt',
-                header=True,
-            )
-            self.gwriter.generic(
-                df=df_real_bulk_act,
-                sv_fpn=fastq_fp + self.metric + '/' + 'act_real_healing_bulk' + '.txt',
-                header=True,
-            )
-            self.gwriter.generic(
-                df=df_real_bulk_est,
-                sv_fpn=fastq_fp + self.metric + '/' + 'est_real_healing_bulk' + '.txt',
-                header=True,
-            )
-        if is_dedup:
-            self.gwriter.generic(
-                df=df_dedup,
-                sv_fpn=fastq_fp + self.metric + '/' + str(self.method) + '.txt',
-                header=True,
-            )
+        # if is_self_healing:
+        #     self.gwriter.generic(
+        #         df=df_fake_sgl_act,
+        #         sv_fpn=fastq_fp + self.metric + '/' + 'act_fake_healing_sgl' + '.txt',
+        #         header=True,
+        #     )
+        #     self.gwriter.generic(
+        #         df=df_fake_sgl_est,
+        #         sv_fpn=fastq_fp + self.metric + '/' + 'est_fake_healing_sgl' + '.txt',
+        #         header=True,
+        #     )
+        #     self.gwriter.generic(
+        #         df=df_real_sgl_act,
+        #         sv_fpn=fastq_fp + self.metric + '/' + 'act_real_healing_sgl' + '.txt',
+        #         header=True,
+        #     )
+        #     self.gwriter.generic(
+        #         df=df_real_sgl_est,
+        #         sv_fpn=fastq_fp + self.metric + '/' + 'est_real_healing_sgl' + '.txt',
+        #         header=True,
+        #     )
+        # if is_self_healing_bulk:
+        #     self.gwriter.generic(
+        #         df=df_fake_bulk_act,
+        #         sv_fpn=fastq_fp + self.metric + '/' + 'act_fake_healing_bulk' + '.txt',
+        #         header=True,
+        #     )
+        #     self.gwriter.generic(
+        #         df=df_fake_bulk_est,
+        #         sv_fpn=fastq_fp + self.metric + '/' + 'est_fake_healing_bulk' + '.txt',
+        #         header=True,
+        #     )
+        #     self.gwriter.generic(
+        #         df=df_real_bulk_act,
+        #         sv_fpn=fastq_fp + self.metric + '/' + 'act_real_healing_bulk' + '.txt',
+        #         header=True,
+        #     )
+        #     self.gwriter.generic(
+        #         df=df_real_bulk_est,
+        #         sv_fpn=fastq_fp + self.metric + '/' + 'est_real_healing_bulk' + '.txt',
+        #         header=True,
+        #     )
+        # if is_dedup:
+        #     self.gwriter.generic(
+        #         df=df_dedup,
+        #         sv_fpn=fastq_fp + self.metric + '/' + str(self.method) + '.txt',
+        #         header=True,
+        #     )
 
     def screen(self, x):
         if x['r1_id'] != x['r2_id']:

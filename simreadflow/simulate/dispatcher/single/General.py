@@ -8,6 +8,9 @@ from simreadflow.simulate.initiator.General import general as simuip
 from simreadflow.pcr.Amplify import amplify as pcr
 from simreadflow.sequencing.Calling import calling as seq
 from simreadflow.util.sequence.fastq.Write import write as wfastq
+from simreadflow.util.file.read.Reader import reader as pfreader
+from simreadflow.util.random.Number import number as rannum
+from simreadflow.util.sequence.symbol.Single import single as dnasgl
 from Path import to
 
 
@@ -21,7 +24,7 @@ class general(object):
         self.wfastq = wfastq
 
     def ondemandSeqErrs(self, ):
-        # /*** block. Init a pool of sequences ***/
+        # ### /*** block. Init a pool of sequences ***/
         print('->Init pool of sequences has started.')
         init_seqs = simuip(
             seq_num=self.args['init_seq_setting']['seq_num'],
@@ -37,11 +40,12 @@ class general(object):
         print('->Init pool of sequences has completed.')
         # print(init_seqs)
 
-        # /*** block. PCR amplification ***/
+        # ### /*** block. PCR amplification ***/
         print('->PCR amplification has started...')
         pcr_params = {
             'data': np.array(init_seqs),
             'ampl_rate': self.args['ampl_rate'],
+            'err_route': self.args['err_route'],
             'pcr_error': self.args['pcr_error'],
             'pcr_num': self.args['pcr_num'],
             'err_num_met': self.args['err_num_met'],
@@ -51,11 +55,12 @@ class general(object):
             'recorder_pcr_err_num': [],
             'recorder_pcr_read_num': [],
         }
+
         pcr = self.pcr(pcr_params=pcr_params).np()
         print(pcr.keys())
         print('->PCR amplification has completed.')
 
-        # /*** block. Sequencing ***/
+        ### /*** block. Sequencing ***/
         print('->Sequencing has started...')
         for id, iseq_err in enumerate(self.args['seq_errors']):
             seq_params = {
@@ -77,6 +82,7 @@ class general(object):
             )
             del seq
         return
+
 
     def ondemandPCRErrs(self, ):
         # /*** block. Init a pool of sequences ***/

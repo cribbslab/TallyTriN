@@ -3,6 +3,7 @@ __copyright__ = "Copyright 2021"
 __license__ = "MIT"
 __author__ = "Adam Cribbs lab"
 
+import time
 import numpy as np
 import pandas as pd
 from functools import wraps
@@ -38,17 +39,21 @@ class ordering(object):
 
     def shuffle(self, data, use_seed=True, seed=1):
         num_samples = len(data)
+        print(num_samples)
         if isinstance(data, pd.DataFrame):
-            print('shuffle')
             if use_seed:
                 state = np.random.RandomState(seed)
                 data = data.iloc[state.shuffle(num_samples)].reset_index(drop=True)
+                print(data)
             else:
                 data = data.iloc[np.random.shuffle(num_samples)].reset_index(drop=True)
         elif type(data) is np.ndarray:
             if use_seed:
+                print('=========>start shuffling...')
+                stime = time.time()
                 state = np.random.RandomState(seed)
                 state.shuffle(data)
+                print('=========>shuffling time: {}'.format(time.time() - stime))
             else:
                 np.random.shuffle(data)
         else:

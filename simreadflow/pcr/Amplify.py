@@ -18,7 +18,11 @@ class amplify(object):
         for ipcr in range(self.pcr_params['pcr_num']):
             print('===>at PCR {}'.format(ipcr + 1))
             self.pcr_params['ipcr'] = ipcr
-            self.pcr_params = self.flow(params=self.pcr_params)
+            print('Error assignment method: {}'.format(self.pcr_params['err_route']))
+            if self.pcr_params['err_route'] == 'err2d':
+                self.pcr_params = self.flow2D(params=self.pcr_params)
+            else:
+                self.pcr_params = self.flow(params=self.pcr_params)
             # print(std_flow_params.keys())
         return self.pcr_params
 
@@ -27,4 +31,11 @@ class amplify(object):
     @rannum(type='binomial')
     @ranord(method='uniform')
     def flow(self, params):
+        return params
+
+    @pcrerr(method='err2d')
+    @ranspl(method='uniform')
+    @rannum(type='binomial')
+    @ranord(method='uniform')
+    def flow2D(self, params):
         return params
