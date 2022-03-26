@@ -21,6 +21,8 @@ class amplify(object):
             print('Error assignment method: {}'.format(self.pcr_params['err_route']))
             if self.pcr_params['err_route'] == 'err2d':
                 self.pcr_params = self.flow2D(params=self.pcr_params)
+            elif self.pcr_params['err_route'] == 'tree':
+                self.pcr_params = self.flowTree(params=self.pcr_params)
             elif self.pcr_params['err_route'] == 'minnow':
                 self.pcr_params = self.flowMinnow(params=self.pcr_params)
             else:
@@ -49,3 +51,9 @@ class amplify(object):
     def flowMinnow(self, params):
         return params
 
+    @pcrerr(method='tree')
+    @ranspl(method='uniform')
+    @rannum(type='binomial')
+    @ranord(method='uniform')
+    def flowTree(self, params):
+        return params
