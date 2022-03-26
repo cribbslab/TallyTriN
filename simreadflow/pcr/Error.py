@@ -19,6 +19,8 @@ class error(object):
         from functools import wraps
         if self.method == 'err2d':
             func = self.table2D
+        elif self.method == 'minnow':
+            func = self.tableMinnow
         else:
             func = self.table1D
         @wraps(deal)
@@ -176,6 +178,43 @@ class error(object):
         print(data_pcr)
         data_pcr = np.array(data_pcr[['read_pcr', 'sam_id', 'source']])
         res2p['data'] = np.concatenate((res2p['data'], data_pcr), axis=0)
+        del data_pcr
+        print('======>time for merging sequences {time:.2f}s'.format(time=time.time() - pcr_merge_stime))
+        print('======>Summary report:')
+        print('=========>PCR time: {time:.2f}s'.format(time=time.time() - pcr_stime))
+        print('=========>the dimensions of the data: number of reads: {}'.format(res2p['data'].shape))
+        print('=========>the number of reads at this PCR: {}, '.format(res2p['recorder_pcr_read_num']))
+        print('=========>the number of nucleotides at this PCR: {}, '.format(res2p['recorder_nucleotide_num']))
+        print('=========>the number of errors at this PCR: {}, '.format(res2p['recorder_pcr_err_num']))
+        return res2p
+
+    def tableMinnow(self, res2p):
+        print('Minnow')
+        pcr_stime = time.time()
+        df_mut_info = pd.DataFrame()
+        data_pcr = pd.DataFrame(res2p['data_spl'], columns=['read_len', 'sam_id', 'source'])
+        data_pcr['num_err_per_read'] = data_pcr['read_len'].apply(lambda x: rannum().binomial(
+            n=int(x), p=res2p['pcr_error'], use_seed=False, seed=res2p['ipcr'] + 1
+        ))
+        df_mut_info['pos_err_per_read'] = data_pcr.apply(lambda x: rannum().uniform(
+            low=0, high=x['read_len'], num=x['num_err_per_read'], use_seed=False, seed=res2p['ipcr'] + 1
+        ), axis=1)
+        df_mut_info['base_roll_per_read'] = data_pcr['num_err_per_read'].apply(lambda x: rannum().uniform(
+            low=0, high=3, num=x, use_seed=False
+        ))
+
+        # print(data_pcr[['read', 'read_pcr', 'pos_err_per_read']])
+        del res2p['data_spl']
+        pcr_merge_stime = time.time()
+        data_pcr['sam_id'] = data_pcr['sam_id'].apply(lambda x: x + '_' + str(res2p['ipcr'] + 1))
+        data_pcr['source'] = 'pcr-' + str(res2p['ipcr'] + 1)
+
+        df_mut_info['sam_id'] = data_pcr['sam_id'].copy()
+        print(data_pcr)
+        print(df_mut_info)
+        data_pcr = np.array(data_pcr[['read_len', 'sam_id', 'source']])
+        res2p['data'] = np.concatenate((res2p['data'], data_pcr), axis=0)
+        res2p['mut_info'] = np.concatenate((res2p['mut_info'], np.array(df_mut_info)), axis=0)
         del data_pcr
         print('======>time for merging sequences {time:.2f}s'.format(time=time.time() - pcr_merge_stime))
         print('======>Summary report:')

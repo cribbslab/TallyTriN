@@ -55,10 +55,28 @@ class general(object):
             'recorder_pcr_err_num': [],
             'recorder_pcr_read_num': [],
         }
+        if pcr_params['err_route'] == 'minnow':
+            def calclen(a):
+                return len(a)
+            vfunc = np.vectorize(calclen)
+            pcr_params['data'] = np.hstack((vfunc(pcr_params['data'][:, 0])[:, np.newaxis], pcr_params['data'][:, 1:3]))
+            print(pcr_params['data'])
+            col_0 = np.array([[1] for _ in range(pcr_params['data'].shape[0])])
+            cc = np.hstack((col_0, col_0))
+            col_2 = pcr_params['data'][:, 1].astype(np.str)[:, np.newaxis]
+            print(col_2)
+            cc = np.hstack((cc, col_2))
+            print(cc)
+
+            pcr_params['mut_info'] = cc
+            # pcr_params['mut_info'] = np.empty(shape=[0, 3])
 
         pcr = self.pcr(pcr_params=pcr_params).np()
         print(pcr.keys())
         print('->PCR amplification has completed.')
+
+        if pcr_params['err_route'] == 'minnow':
+            pcr['data'] = self.subsamplingMinnow(pcr_dict=pcr)
 
         # ### /*** block. Sequencing ***/
         # print('->Sequencing has started...')
@@ -82,6 +100,74 @@ class general(object):
         #     )
         #     del seq
         return
+
+    def subsamplingMinnow(self, pcr_dict):
+        umi_map = pfreader().generic(self.args['init_seq_setting']['umi_lib_fpn'])[0].to_dict()
+        # print(umi_map)
+        nn = pcr_dict['data'].shape[0]
+        spl_ids = rannum().uniform(
+            low=0, high=nn, num=500, use_seed=False, seed=1
+        )
+        # print(spl_ids)
+        spl_id_map = self.tactic6(pcr_dict['data'][:, [1, 2]])
+        spl_mut_info = pcr_dict['mut_info'][spl_ids]
+        keys = spl_mut_info[:, 2]
+        print(keys)
+        pos_dict = self.tactic6(pcr_dict['mut_info'][:, [2, 0]])
+        base_dict = self.tactic6(pcr_dict['mut_info'][:, [2, 1]])
+        # print()
+        # print(self.tactic6(base_np))
+        res_data = []
+        for key in keys:
+            mol_id = key.split('_')[0]
+            k = key.split('_')[1:]
+            print('kkk', key, k)
+            read = umi_map[int(mol_id)]
+            for i in range(len(k)):
+                print('id', i)
+                sub_k = mol_id + '_' + '_'.join(k[:i+1]) if k != [] else mol_id
+                print(pos_dict[sub_k], base_dict[sub_k])
+                read = self.change(read, pos_list=pos_dict[sub_k], base_list=base_dict[sub_k])
+                print(read)
+            print(read)
+            res_data.append([
+                read,  # read
+                str(mol_id) + '_' + '_'.join(k) if k != [] else str(mol_id),  # sam id
+                spl_id_map[str(mol_id) + '_' + '_'.join(k)] if k != [] else 'init',  # source
+            ])
+            print(read)
+        print(np.array(res_data).shape)
+        return np.array(res_data)
+
+    def change(self, read, pos_list, base_list):
+        read_l = list(read)
+        for i, pos in enumerate(pos_list):
+            dna_map = dnasgl().todict(
+                nucleotides=dnasgl().getEleTrimmed(
+                    ele_loo=read_l[pos],
+                    universal=True,
+                ),
+                reverse=True,
+            )
+            read_l[pos] = dna_map[base_list[i]]
+        return ''.join(read_l)
+
+    def findListDuplicates(self, l):
+        seen = set()
+        seen_add = seen.add
+        seen_twice = set(x for x in l if x in seen or seen_add(x))
+        return list(seen_twice)
+
+    def tactic6(self, arr_2d):
+        result = {}
+        len_arr = len(arr_2d[0])
+        if len_arr == 2:
+            for item in arr_2d:
+                result[item[0]] = item[1]
+        else:
+            for item in arr_2d:
+                result[item[0]] = item[1:]
+        return result
 
     def ondemandPCRErrs(self, ):
         # /*** block. Init a pool of sequences ***/
