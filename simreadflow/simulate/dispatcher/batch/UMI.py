@@ -99,7 +99,7 @@ class umi(object):
                 },
                 'ampl_rate': self.ampl_rate_fixed,
                 'pcr_num': self.pcr_num_fixed,
-                'err_route': 'minnow', # tree minnow
+                'err_route': 'err2d', # tree minnow err2d
                 'err_num_met': 'nbinomial',
                 'pcr_error': self.pcr_err_fixed,
                 'seq_errors': self.seq_errs,

@@ -186,6 +186,19 @@ class error(object):
         print('=========>the number of errors at this PCR: {}, '.format(res2p['recorder_pcr_err_num']))
         return res2p
 
+    def change(self, read, pos_list, base_list):
+        read_l = list(read)
+        for i, pos in enumerate(pos_list):
+            dna_map = dnasgl().todict(
+                nucleotides=dnasgl().getEleTrimmed(
+                    ele_loo=read_l[pos],
+                    universal=True,
+                ),
+                reverse=True,
+            )
+            read_l[pos] = dna_map[base_list[i]]
+        return ''.join(read_l)
+
     def postableIndexBySameLen(self, seq_len, num_seq):
         """
         If each read has 10 positions, this function returns

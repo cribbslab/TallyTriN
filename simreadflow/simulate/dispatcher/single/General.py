@@ -60,29 +60,28 @@ class general(object):
         print(pcr.keys())
         print('->PCR amplification has completed.')
 
-        ### /*** block. Sequencing ***/
-        print('->Sequencing has started...')
-        for id, iseq_err in enumerate(self.args['seq_errors']):
-            seq_params = {
-                'data': pcr['data'],
-                'seq_sub_spl_rate': self.args['seq_sub_spl_rate'],
-                'seq_error': iseq_err,
-                'err_num_met': self.args['err_num_met'],
-                'use_seed': self.args['use_seed'],
-                'seed': self.args['seed'],
-            }
-            seq = self.seq(seq_params=seq_params).np()
-            print('->Sequencing has completed.')
-            print('->Write seqs in fastq format')
-            self.wfastq().togz(
-                list_2d=seq['data'],
-                sv_fp=self.args['write']['fastq_fp'],
-                fn=self.args['write']['fastq_fn'] + 'seq_err_' + str(id),
-                symbol='-',
-            )
-            del seq
+        # ### /*** block. Sequencing ***/
+        # print('->Sequencing has started...')
+        # for id, iseq_err in enumerate(self.args['seq_errors']):
+        #     seq_params = {
+        #         'data': pcr['data'],
+        #         'seq_sub_spl_rate': self.args['seq_sub_spl_rate'],
+        #         'seq_error': iseq_err,
+        #         'err_num_met': self.args['err_num_met'],
+        #         'use_seed': self.args['use_seed'],
+        #         'seed': self.args['seed'],
+        #     }
+        #     seq = self.seq(seq_params=seq_params).np()
+        #     print('->Sequencing has completed.')
+        #     print('->Write seqs in fastq format')
+        #     self.wfastq().togz(
+        #         list_2d=seq['data'],
+        #         sv_fp=self.args['write']['fastq_fp'],
+        #         fn=self.args['write']['fastq_fn'] + 'seq_err_' + str(id),
+        #         symbol='-',
+        #     )
+        #     del seq
         return
-
 
     def ondemandPCRErrs(self, ):
         # /*** block. Init a pool of sequences ***/
