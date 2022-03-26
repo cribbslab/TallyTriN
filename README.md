@@ -1,47 +1,84 @@
-# Bulk-TallyNNN
-Repo for working on long-read triple amidite bulk RNA-seq
+# TallyNNN
 
-## install
-`pip install -r requirements.txt`
 
-# simulate
 
-## download cdna lib at http://ftp.ensembl.org/pub/release-104/fasta/homo_sapiens/cdna/Homo_sapiens.GRCh38.cdna.all.fa.gz
+Overview
+========
+Long-read sequencing has become an increasingly popular tool for RNA sequencing that provides unprecedented insight into isoform, translocation and variant calling analysis.
 
-## define the data path
-```html
-DEFINE = {
-    'fasta_fpn': 'data/omics/genomics/fasta/cdna/GRCh38/Homo_sapiens.GRCh38.cdna.all.fa',
-    'sv_fpn_ids': 'data/omics/genomics/fasta/cdna/GRCh38/cdna_n.txt',
-    'sv_fasta_fp': 'data/omics/genomics/fasta/cdna/GRCh38/',
-}
-```
+Tally-NNN is a collection of bulk and single-cell workflows that utlise Unique Molecular Identifiers (UMIs) synthesised using trimer blocks of nucleosides.
 
-## generate ENST map
-```html
-sm2s(
-    fasta_fpn=DEFINE['fasta_fpn']
-).svid(
-    sv_fpn=DEFINE['sv_fpn_ids']
-)
-```
+Workflows
+=========
+Included within this repo are three workflows:
 
-## split the whole fasta into individual seqs and optimize I/O
-```html
-sm2s(
-    fasta_fpn=DEFINE['fasta_fpn']
-).save(
-    sv_fp=DEFINE['sv_fasta_fp']
-)
-```
+* pipeline_count - a bulk RNA-seq workflow that facilitates the analysis of UMIs synthesised using trimer nucleoside blocks added to the 5' and 3' of the RNA molecule.
+* pipeline_fusion - a bulk analysis pipeline for the analysis of fusion transcripts. It implements a strategy for removing chimeric artefacts and quantifies real genomic translocation at the RNA-seq level.
+* pipeline_singlecell - a workflow that facilitates the analysis of scCOLOR-seq nanopore single-cell sequencing data, but with trimers added at the 5' end of the RNA. 
 
-## simulate sequences by the native method - this will create a seq arr consisting of cdna_num (e.g., 1000) sequences
-```html
-simu_by_native = simunat(
-    cand_pool_fpn=DEFINE['sv_fpn_ids'],
-    cdna_fp=DEFINE['sv_fasta_fp'],
-    cdna_num=1000
-)
-seqs = simu_by_native.generate()
+Installation
+============
+
+We reccomend installing [miniconda](https://docs.conda.io/en/latest/miniconda.html), then creating
+a new environment and install mamba
+
+  ```
+  conda install mamba -c conda-forge
+  ```
+  
+Next install the required software using the conda yml file 
+
+  ```
+  mamba env update --file conda/environment.yml
+  ```
+
+Activate the condda environment
+
+  ```
+  conda activate trimer
+  ```
+
+Then, you will need to manually install TallyNN and the fork of umi tools. The fork is added as a submodule to this
+repo to help you easily install.
+
+  ```
+  # Clone the TallyNNN repo
+  git clone 
+  # Install TallyNNN code
+  python setup.py install
+  ```
+
+Documentation
+=============
+
+Further information how you can run the pipelines can be found at [read the docs](https://tallynnn.readthedocs.io/en/latest/)
+
+
+
+Usage
+=====
+
+Run the ``tallynn --help`` command to see what workflows are available and ``tallynnn count  -help`` to see how to use them.
+
+
+For example, to generate a configuration file run
+
+   ```
+   tallynnn count config
+   ```
+
+To set up the configuration file please refer to [read the docs](https://tallynnn.readthedocs.io/en/latest/getting_started/Tutorial.html#modify-the-config-file).
+
+To run the pipeline with all tasks then run
+   
+   ```
+   tallynnn count make full -v5 
+   ```
+
+Manuscript
+==========
+
+The bioRxiv manuscript accompanying this code can be found here: 
+
 
 ```
