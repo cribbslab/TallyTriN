@@ -13,7 +13,7 @@ class umiDouble(object):
 
     def __init__(self, working_dir):
         # ### /*** block. general ***/
-        self.permutation_num = 10
+        self.permutation_num = 1000
 
         self.working_dir = working_dir
         self.umi_unit_pattern = 3
@@ -105,6 +105,7 @@ class umiDouble(object):
     def seqErrs(self, ):
         sys.stdout = open(self.working_dir + 'log.txt', 'w')
         for pn in range(self.permutation_num):
+            print(pn)
             simu_params = {
                 'init_seq_setting': {
                     'seq_num': self.umi_num_fixed,
@@ -148,7 +149,7 @@ class umiDouble(object):
 
 if __name__ == "__main__":
     p = umiDouble(
-        working_dir=to('data/simu/transloc/trimer/single_read/pcr8_umi30/')
+        working_dir=to('data/simu/transloc/trimer/single_read/1000/')
     )
 
     # print(p.pcrNums())

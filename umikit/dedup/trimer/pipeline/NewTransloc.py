@@ -4,8 +4,8 @@ __license__ = "MIT"
 __lab__ = "Adam Cribbs lab"
 
 import time
-import numpy as np
 import json
+import numpy as np
 import pandas as pd
 pd.options.mode.chained_assignment = None
 from umikit.util.Writer import writer as gwriter
@@ -43,13 +43,14 @@ class newTransloc(Config.config):
         self.chi_yes = []
         self.cnt_dict = {}
         for i_pn in range(self.permutation_num):
+            print('permutation test: {}'.format(i_pn))
             self.df_umi = self.gfreader.generic(df_fpn=self.umi_lib_fp + self.metric + '/permute_' + str(i_pn) + '/umi.txt')[0].values
             self.df_umi = pd.DataFrame.from_dict({i: e for i, e in enumerate(self.df_umi)}, orient='index', columns=['raw'])
             self.df_umi['index'] = self.df_umi.index
             # print(self.df_umi[0].tolist())
             self.df_umi['collap'] = self.df_umi['raw'].apply(lambda x: ''.join([i[0] for i in textwrap.wrap(x, 3)]))
             self.umi_collap_map = {i: e for i, e in enumerate(self.df_umi['collap'])}
-            print(self.umi_collap_map)
+            # print(self.umi_collap_map)
             # reads = np.reshape(self.df_umi[['collap', 'index']].values.tolist(), (int(self.seq_num / 2), 4))
             # print(pd.DataFrame(reads))
             self.pn_real_yes = []
@@ -61,16 +62,8 @@ class newTransloc(Config.config):
                 self.tc_thres = self.cnt_paired_umis.quantile(.1)
             for id, i_metric in enumerate(self.metric_vals[self.metric]):
                 self.cnt_dict[i_pn][i_metric] = {}
-
-                if self.metric == 'pcr_nums':
-                    print('=>at PCR {}'.format(i_metric))
-                    fn_surf = str(i_metric)
-                    self.mcl_inflat = 2.3
-                    self.mcl_exp = 2
-                    self.mcl_fold_thres = 1
-                    self.umi_len = self.umi_unit_len_fixed * self.umi_unit_pattern
-                elif self.metric == 'seq_errs':
-                    print('=>No.{} sequencing error: {}'.format(id, i_metric))
+                if self.metric == 'seq_errs':
+                    # print('=>No.{} sequencing error: {}'.format(id, i_metric))
                     # self.mcl_inflat = 1.1 if i_metric > 0.005 else 2.7
                     # self.mcl_exp = 3
                     self.mcl_fold_thres = 1.6
@@ -108,7 +101,7 @@ class newTransloc(Config.config):
                 # print(self.df_bam['umi_corr_r'])
 
                 if self.section == 'dc_by_cnt':
-                    self.cnt_paired_umis = self.df_bam['umi'].value_counts()
+                    self.cnt_paired_umis = self.df_bam['umi_corr'].value_counts()
                     self.hash_paired_umis = self.cnt_paired_umis.to_dict()
                     self.df_bam['chimeric_mark'] = self.df_bam['umi_corr'].apply(
                         lambda x: 1 if self.hash_paired_umis[x] > self.tc_thres else 0
@@ -156,9 +149,9 @@ class newTransloc(Config.config):
                     self.pn_chi_yes.append(chi_num)
 
                 if self.section == 'dc_control':
-                    self.cnt_l_umis = self.df_bam['umi_l'].value_counts()
+                    self.cnt_l_umis = self.df_bam['umi_corr_l'].value_counts()
                     self.hash_paired_umis = self.cnt_l_umis.to_dict()
-                    self.df_bam['chimeric_mark'] = self.df_bam['umi_l'].apply(
+                    self.df_bam['chimeric_mark'] = self.df_bam['umi_corr_l'].apply(
                         lambda x: 1 if self.hash_paired_umis[x] > self.tc_thres else 0
                     )
                     self.chimerical_ids = self.df_bam.loc[self.df_bam['chimeric_mark'] == 0]
@@ -192,36 +185,37 @@ class newTransloc(Config.config):
                     self.cnt_dict[i_pn][i_metric]['r_corr_cnt'] = self.r_corr_cnt.values.tolist()
                     self.cnt_dict[i_pn][i_metric]['lr_corr_cnt'] = self.lr_corr_cnt.values.tolist()
             # print(self.cnt_dict)
-            with open(self.sv_cnt_lib_fpn, 'w') as fp:
-                json.dump(self.cnt_dict, fp)
-            with open(self.sv_cnt_lib_fpn) as fp1:
-                self.ft_n30_dict = json.load(fp1)
-            print(self.ft_n30_dict)
+            # with open(self.sv_cnt_lib_fpn, 'w') as fp:
+            #     json.dump(self.cnt_dict, fp)
+            # with open(self.sv_cnt_lib_fpn) as fp1:
+            #     self.ft_n30_dict = json.load(fp1)
+            # print(self.ft_n30_dict)
+
             self.real_yes.append(self.pn_real_yes)
             self.real_no.append(self.pn_real_no)
             self.fake_yes.append(self.pn_fake_yes)
             self.chi_yes.append(self.pn_chi_yes)
 
-        # self.gwriter.generic(
-        #     df=self.real_yes,
-        #     sv_fpn=fastq_fp + self.metric + '/real_yes_' + self.section + '_' + str(tc_thres) + '_' + self.fn_suffix + '.txt',
-        #     header=True,
-        # )
-        # self.gwriter.generic(
-        #     df=self.real_no,
-        #     sv_fpn=fastq_fp + self.metric + '/real_no_' + self.section + '_' + str(tc_thres) + '_' + self.fn_suffix + '.txt',
-        #     header=True,
-        # )
-        # self.gwriter.generic(
-        #     df=self.fake_yes,
-        #     sv_fpn=fastq_fp + self.metric + '/fake_yes_' + self.section + '_' + str(tc_thres) + '_' + self.fn_suffix + '.txt',
-        #     header=True,
-        # )
-        # self.gwriter.generic(
-        #     df=self.chi_yes,
-        #     sv_fpn=fastq_fp + self.metric + '/chi_yes_' + self.section + '_' + str(tc_thres) + '_' + self.fn_suffix + '.txt',
-        #     header=True,
-        # )
+        self.gwriter.generic(
+            df=self.real_yes,
+            sv_fpn=fastq_fp + self.metric + '/real_yes_' + self.section + '_' + str(tc_thres) + '_' + self.fn_suffix + '.txt',
+            header=True,
+        )
+        self.gwriter.generic(
+            df=self.real_no,
+            sv_fpn=fastq_fp + self.metric + '/real_no_' + self.section + '_' + str(tc_thres) + '_' + self.fn_suffix + '.txt',
+            header=True,
+        )
+        self.gwriter.generic(
+            df=self.fake_yes,
+            sv_fpn=fastq_fp + self.metric + '/fake_yes_' + self.section + '_' + str(tc_thres) + '_' + self.fn_suffix + '.txt',
+            header=True,
+        )
+        self.gwriter.generic(
+            df=self.chi_yes,
+            sv_fpn=fastq_fp + self.metric + '/chi_yes_' + self.section + '_' + str(tc_thres) + '_' + self.fn_suffix + '.txt',
+            header=True,
+        )
 
     def vote(self, umi, hash_left_umis, hash_right_umis, hash_paired_umis):
         len_l = len(next(iter(hash_left_umis)))
@@ -307,14 +301,14 @@ if __name__ == "__main__":
         metric='seq_errs',
         # section='dc_by_cnt',
         # section='dc_by_vote',
-        # section='dc_control',
-        section='cnt_lib',
+        section='dc_control',
+        # section='cnt_lib',
         # section='plot',
 
         tc_thres=5,
-        # fn_suffix='corr',
-        fn_suffix='sm&lg',
-        umi_lib_fp=to('data/simu/transloc/trimer/single_read/pcr8_umi30/'),
-        fastq_fp=to('data/simu/transloc/trimer/single_read/pcr8_umi30/'),
-        sv_cnt_lib_fpn=to('data/simu/transloc/trimer/single_read/pcr8_umi30/cnt_lib.json'),
+        fn_suffix='corr',
+        # fn_suffix='sm&lg',
+        umi_lib_fp=to('data/simu/transloc/trimer/single_read/1000/'),
+        fastq_fp=to('data/simu/transloc/trimer/single_read/1000/'),
+        sv_cnt_lib_fpn=to('data/simu/transloc/trimer/single_read/1000/cnt_lib.json'),
     )

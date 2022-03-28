@@ -156,7 +156,7 @@ class umiTranslocSelf(Config.config):
                         self.mcl_exp = 4
                     self.mcl_fold_thres = 11
 
-                    self.umi_len = i_metric
+                    self.umi_len = self.umi_unit_len_fixed * self.umi_unit_pattern
                 else:
                     fn_surf = str(i_metric)
                     self.umi_len = self.umi_unit_len_fixed * self.umi_unit_pattern
@@ -466,17 +466,17 @@ if __name__ == "__main__":
         method='mcl_val',
         # method='mcl_ed',
 
-        # is_trim=True,
-        # is_tobam=True,
-        # is_dedup=False,
-
-        is_trim=False,
-        is_tobam=False,
+        is_trim=True,
+        is_tobam=True,
         is_dedup=False,
-        is_self_healing=True,
+
+        # is_trim=False,
+        # is_tobam=False,
+        # is_dedup=False,
+        is_self_healing=False,
         is_self_healing_bulk=False,
-        umi_lib_fp=to('data/simu/transloc/trimer/single_read/pcr8/'),
-        fastq_fp=to('data/simu/transloc/trimer/single_read/pcr8/'),
+        umi_lib_fp=to('data/simu/transloc/trimer/single_read/1000/'),
+        fastq_fp=to('data/simu/transloc/trimer/single_read/1000/'),
 
         # umi_lib_fp=to('data/simu/transloc/trimer/bulk/'),
         # fastq_fp=to('data/simu/transloc/trimer/bulk/'),

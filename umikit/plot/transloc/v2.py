@@ -299,12 +299,12 @@ if __name__ == "__main__":
     p = protTrimerSplit(
         fpns=DEFINE['fpns']
     )
-    # print(p.errorbar())
+    print(p.errorbar())
     # print(p.errorband())
-    print(p.sglband(
-        # norm=10,
-        # met='real (estimated)',
-
-        norms=[250, 10],
-        mets=['artifactual', 'real'],
-    ))
+    # print(p.sglband(
+    #     # norm=10,
+    #     # met='real (estimated)',
+    #
+    #     norms=[250, 10],
+    #     mets=['artifactual', 'real'],
+    # ))

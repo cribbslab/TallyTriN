@@ -213,6 +213,6 @@ if __name__ == "__main__":
         # is_trim=False,
         # is_tobam=False,
         # is_dedup=True,
-        # fastq_fp=to('data/simu/dimer/pcr8/'),
-        fastq_fp=to('data/simu/dimer/pcr8_mono24/'),
+        fastq_fp=to('data/simu/trimer/pcr8/'),
+        # fastq_fp=to('data/simu/dimer/pcr8_mono24/'),
     )

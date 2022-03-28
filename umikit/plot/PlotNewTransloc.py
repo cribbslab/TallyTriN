@@ -34,6 +34,7 @@ class newTransloc(Config.config):
         self.sv_cnt_lib_fpn = sv_cnt_lib_fpn
         self.method = method
         self.section = section
+        self.fastq_fp = fastq_fp
         self.seq_num = 100
         self.num_tc_thres = 5
 
@@ -43,7 +44,8 @@ class newTransloc(Config.config):
             # print(self.cnt_dict)
         else:
             df = pd.DataFrame()
-            for tc_thres in np.arange(self.num_tc_thres) + 1:
+            # for tc_thres in np.arange(self.num_tc_thres) + 1:
+            for tc_thres in [self.num_tc_thres]:
                 df_real_mean, df_fake_yes_mean, df_chi_yes_mean = self.read(
                     fastq_fp=fastq_fp,
                     tc_thres=tc_thres,
@@ -324,6 +326,95 @@ class newTransloc(Config.config):
             )
             plt.show()
 
+        if section == 'plot_boxplot':
+            fig, axes = plt.subplots(nrows=1, ncols=1, figsize=(6, 5), sharey=False, sharex='all')
+            meanpointprops = {
+                'marker': 'D',
+                'markeredgecolor': 'black',
+                'markerfacecolor': 'black',
+                'markersize': 5,
+                'alpha': 0.80,
+            }
+            palette = [
+                'pink',
+                'seagreen',
+            ]
+            df_dc_by_cnt = self.read_boxplot(self.fastq_fp, method='dc_by_cnt', tc_thres=5)
+            df_control = self.read_boxplot(self.fastq_fp, method='dc_control', tc_thres=5)
+            df_cnt = df_dc_by_cnt[df_dc_by_cnt['sort'] == 'fake_yes']
+            df_ctrl = df_control[df_control['sort'] == 'fake_yes']
+            print(df_cnt)
+            print(df_control)
+            cols = [
+                '10', '16',
+            ]
+            pos = [np.arange(len(cols))-0.2, np.arange(len(cols))+0.2]
+            ctrl_coor = [-0.2, 0.2]
+            for i, df_focus in enumerate([df_cnt, df_ctrl]):
+                bplot = axes.boxplot(
+                    df_focus[cols].values,
+                    positions=pos[i],
+                    showmeans=True,
+                    meanprops=meanpointprops,
+                    patch_artist=True,
+                )
+                axes.spines['right'].set_color('none')
+                axes.spines['top'].set_color('none')
+                axes.set_xticks([0, 1])
+                axes.set_xticklabels(['{:.1E}'.format(0.005), '{:.1E}'.format(0.1)], fontsize=11)
+                axes.set_xlabel('Sequencing error', fontsize=14)
+                axes.set_ylabel('Chimeric reads (%) detected', fontsize=14)
+                # axes.yaxis.get_major_formatter().set_powerlimits((0, 1))
+                for patch in bplot['boxes']:
+                    patch.set(color='black', linewidth=1)
+                    # patch.set_edgecolor(color='black')
+                for patch in bplot['boxes']:
+                    # patch.set(facecolor='snow', alpha=0.2)
+                    patch.set_facecolor('white')
+                    patch.set_alpha(0.001)
+                    patch.set_zorder(1)
+                for whisker in bplot['whiskers']:
+                    whisker.set(color='black', linewidth=2)
+                for cap in bplot['caps']:
+                    cap.set(color='black', linewidth=2)
+                for median in bplot['medians']:
+                    median.set(color='black', linewidth=2)
+                for flier in bplot['fliers']:
+                    flier.set(marker='o', color='y', alpha=0.5)
+                for ii, i_col in enumerate(cols):
+                    y = df_focus[i_col].values
+                    print(len(y))
+                    x = [np.random.normal(ii, 0.05, len(y)) + ctrl_coor[i], np.random.normal(ii, 0.05, len(y)) + ctrl_coor[i]]
+                    axes.scatter(
+                        x[ii],
+                        y,
+                        color=palette[i],
+                        alpha=0.01,
+                        s=24,
+                        marker='o',
+                        zorder=2,
+                        # label='protein chain' if i == 0 else None,
+                        # edgecolors='grey',
+                        linewidths=2,
+                    )
+            from matplotlib.lines import Line2D
+            custom_dots = [
+                Line2D([0], [0], marker='o', color='w', label='umiRarity',
+                          markerfacecolor='pink', markeredgecolor='pink', markersize=9, alpha=0.7),
+                Line2D([0], [0], marker='o', color='w', label='control',
+                       markerfacecolor='seagreen', markeredgecolor='seagreen', markersize=9, alpha=0.7),
+            ]
+            plt.legend(handles=custom_dots, fontsize=12)
+            plt.subplots_adjust(
+                top=0.92,
+                bottom=0.14,
+                left=0.12,
+                right=0.98,
+                hspace=0.40,
+                wspace=0.15,
+            )
+            plt.show()
+
     def read(self, fastq_fp, tc_thres):
         df_real_yes = self.gfreader.generic(
             df_fpn=fastq_fp + self.metric + '/real_yes_' + self.method + '_' + str(
@@ -368,6 +459,43 @@ class newTransloc(Config.config):
         print(df_chi_yes_mean)
 
         return df_real_mean, df_fake_yes_mean, df_chi_yes_mean
+
+    def read_boxplot(self, fastq_fp, method, tc_thres):
+        df_real_yes = self.gfreader.generic(
+            df_fpn=fastq_fp + self.metric + '/real_yes_' + method + '_' + str(
+                tc_thres) + '_' + self.fn_suffix + '.txt',
+            header=0,
+        ) / 250
+        df_real_yes['sort'] = 'real_yes'
+        df_real_no = self.gfreader.generic(
+            df_fpn=fastq_fp + self.metric + '/real_no_' + method + '_' + str(
+                tc_thres) + '_' + self.fn_suffix + '.txt',
+            header=0,
+        ) / 250
+        df_real_no['sort'] = 'real_no'
+        df_fake_yes = self.gfreader.generic(
+            df_fpn=fastq_fp + self.metric + '/fake_yes_' + method + '_' + str(
+                tc_thres) + '_' + self.fn_suffix + '.txt',
+            header=0,
+        ) / 250
+        df_fake_yes['sort'] = 'fake_yes'
+        df_chi_yes = self.gfreader.generic(
+            df_fpn=fastq_fp + self.metric + '/chi_yes_' + method + '_' + str(
+                tc_thres) + '_' + self.fn_suffix + '.txt',
+            header=0,
+        ) / 250
+        df_chi_yes['sort'] = 'chi_yes'
+
+        df = pd.concat([
+            df_real_yes,
+            df_real_no,
+            df_fake_yes,
+            df_chi_yes,
+
+        ], axis=0)
+        df['met'] = method
+        df = df.reset_index(drop=True)
+        return df
 
     def read_met_compare(self, fastq_fp):
         df_dc_by_cnt_noncorr = self.gfreader.generic(
@@ -466,15 +594,19 @@ if __name__ == "__main__":
         # method='dc_control',
         # method='cnt_lib',
 
-        section='plot',
+        # section='plot',
         # section='plot_line',
         # section='plot_cnt',
         # section='plot_cnt_umi',
+        section='plot_boxplot',
 
-        tc_thres=1,
+        tc_thres=5,
         fn_suffix='corr',
         # fn_suffix='sm&sm',
         # fn_suffix='sm&lg',
-        fastq_fp=to('data/simu/transloc/trimer/single_read/pcr8_umi30/'),
-        sv_cnt_lib_fpn=to('data/simu/transloc/trimer/single_read/pcr8_umi30/cnt_lib.json'),
+        # fastq_fp=to('data/simu/transloc/trimer/single_read/pcr8_umi30/'),
+        # sv_cnt_lib_fpn=to('data/simu/transloc/trimer/single_read/pcr8_umi30/cnt_lib.json'),
+
+        fastq_fp=to('data/simu/transloc/trimer/single_read/1000/'),
+        sv_cnt_lib_fpn=to('data/simu/transloc/trimer/single_read/1000/cnt_lib.json'),
     )
