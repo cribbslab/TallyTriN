@@ -13,14 +13,14 @@ class umi(object):
 
     def __init__(self, working_dir):
         self.working_dir = working_dir
-        self.permutation_num = 1
+        self.permutation_num = 10
 
-        self.umi_unit_len_fixed = 12
+        self.umi_unit_len_fixed = 10
         self.umi_unit_pattern = 1
         self.umi_num_fixed = 50
-        self.pcr_num_fixed = 10
-        self.pcr_err_fixed = 0.2
-        # self.pcr_err_fixed = 1e-3
+        self.pcr_num_fixed = 8
+        # self.pcr_err_fixed = 0.2
+        self.pcr_err_fixed = 1e-3
         self.seq_err_fixed = 1e-3
         self.ampl_rate_fixed = 0.85
         self.sim_thres_fixed = 3
@@ -99,7 +99,7 @@ class umi(object):
                 },
                 'ampl_rate': self.ampl_rate_fixed,
                 'pcr_num': self.pcr_num_fixed,
-                'err_route': 'tree', # tree minnow
+                'err_route': 'tree',  # err2d minnow tree
                 'err_num_met': 'nbinomial',
                 'pcr_error': self.pcr_err_fixed,
                 'seq_errors': self.seq_errs,
@@ -125,7 +125,9 @@ class umi(object):
 
 if __name__ == "__main__":
     p = umi(
-        working_dir=to('data/simu/trimer/error2d/')
+        working_dir=to('data/simu/monomer/tree1000/'),
+        # working_dir=to('data/simu/dimer/tree1000/'),
+        # working_dir=to('data/simu/trimer/tree1000/'),
     )
 
     # print(p.pcrNums())

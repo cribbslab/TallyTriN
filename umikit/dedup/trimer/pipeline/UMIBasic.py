@@ -190,10 +190,10 @@ if __name__ == "__main__":
         # metric='ampl_rates',
         # metric='umi_lens',
 
-        method='unique',
+        # method='unique',
         # method='cluster',
         # method='adjacency',
-        # method='directional',
+        method='directional',
         # method='mcl',
         # method='mcl_val',
         # method='mcl_ed',
@@ -206,13 +206,13 @@ if __name__ == "__main__":
         # comp_cat='double',
         # comp_cat='correct',
 
-        is_trim=False,
-        is_tobam=False,
-        is_dedup=True,
+        is_trim=True,
+        is_tobam=True,
+        is_dedup=False,
 
         # is_trim=False,
         # is_tobam=False,
         # is_dedup=True,
-        fastq_fp=to('data/simu/trimer/pcr8/'),
+        fastq_fp=to('data/simu/monomer/tree1000/'),
         # fastq_fp=to('data/simu/dimer/pcr8_mono24/'),
     )

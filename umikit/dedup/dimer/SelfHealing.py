@@ -3,19 +3,19 @@ __copyright__ = "Copyright 2021"
 __license__ = "MIT"
 __author__ = "Adam Cribbs lab"
 
+import time
+import textwrap
 import numpy as np
 import pandas as pd
-import time
 from simreadflow.util.sequence.fastq.Read import read as rfastq
 from simreadflow.util.random.Number import number as rannum
 from umikit.trim.Template import template as umitrim
 from umikit.trim.Reader import reader as trimreader
-from Path import to
 from simreadflow.util.file.read.Reader import reader as gfreader
 from simreadflow.simulate.dispatcher.batch.UMI import umi as generalstarter
-import textwrap
 from simreadflow.read.similarity.distance.Hamming import hamming
 from simreadflow.util.file.write.Writer import writer as fwriter
+from Path import to
 
 
 class selfHealing(generalstarter):

@@ -44,18 +44,19 @@ class selfHealing(Config.config):
                     fastq_name=self.cat + '_' + str(id),
                     method='pyfastx',
                 )
-                df_fastq = self.trimreader.todf(names=names, seqs=seqs)
-                # print(df_fastq)
-                df_fastq['origin_info'] = df_fastq['name'].apply(lambda x: x.split('_')[0])
+                # df = self.trimreader.todf(names=names, seqs=seqs)
+                df = self.trimreader.todfFromTree(names=names, seqs=seqs)
+                # print(df)
+                df['origin_info'] = df['name'].apply(lambda x: x.split('_')[0])
                 mono_corr_stime = time.time()
 
-                df_fastq['umi_extract'] = df_fastq['umi'].apply(lambda x: self.extract(x))
-                df_fastq['umi_l_extract'] = df_fastq['umi_extract'].apply(lambda x: x.split(';')[0])
-                df_fastq['umi_m_extract'] = df_fastq['umi_extract'].apply(lambda x: x.split(';')[1])
-                df_fastq['umi_r_extract'] = df_fastq['umi_extract'].apply(lambda x: x.split(';')[2])
-                df_fastq_cp_l = df_fastq.copy()
-                df_fastq_cp_m = df_fastq.copy()
-                df_fastq_cp_r = df_fastq.copy()
+                df['umi_extract'] = df['umi'].apply(lambda x: self.extract(x, num=30))
+                df['umi_l_extract'] = df['umi_extract'].apply(lambda x: x.split(';')[0])
+                df['umi_m_extract'] = df['umi_extract'].apply(lambda x: x.split(';')[1])
+                df['umi_r_extract'] = df['umi_extract'].apply(lambda x: x.split(';')[2])
+                df_fastq_cp_l = df.copy()
+                df_fastq_cp_m = df.copy()
+                df_fastq_cp_r = df.copy()
                 df_fastq_cp_l['to_fas'] = df_fastq_cp_l.apply(lambda x: x['origin_info'] + '_' + x['umi_l_extract'], axis=1)
                 df_fastq_cp_m['to_fas'] = df_fastq_cp_m.apply(lambda x: x['origin_info'] + '_' + x['umi_m_extract'], axis=1)
                 df_fastq_cp_r['to_fas'] = df_fastq_cp_r.apply(lambda x: x['origin_info'] + '_' + x['umi_r_extract'], axis=1)
@@ -68,56 +69,59 @@ class selfHealing(Config.config):
                     axis=0,
                 ).reset_index(drop=True)
 
-                df_fastq['umi_monos'] = df_fastq['umi'].apply(lambda x: self.split(x))
-                df_fastq['umi_ref'] = df_fastq['umi_monos'].apply(lambda x: x.split(';')[0])
-                df_fastq['umi_l'] = df_fastq['umi_monos'].apply(lambda x: x.split(';')[1])
-                df_fastq['umi_m'] = df_fastq['umi_monos'].apply(lambda x: x.split(';')[2])
-                df_fastq['umi_r'] = df_fastq['umi_monos'].apply(lambda x: x.split(';')[3])
+                df['umi_monos'] = df['umi'].apply(lambda x: self.split(x, num=30))
+                df['umi_ref'] = df['umi_monos'].apply(lambda x: x.split(';')[0])
+                df['umi_l'] = df['umi_monos'].apply(lambda x: x.split(';')[1])
+                df['umi_m'] = df['umi_monos'].apply(lambda x: x.split(';')[2])
+                df['umi_r'] = df['umi_monos'].apply(lambda x: x.split(';')[3])
 
-                df_fastq['to_fas'] = df_fastq.apply(lambda x: x['origin_info'] + '_' + x['umi_ref'], axis=1)
-                df_fastq['umi_mark'] = df_fastq['umi'].apply(lambda x: self.marker(x))
-                # print(df_fastq['umi_mark'])
-                df_fastq_yes_3differ = df_fastq.loc[df_fastq['umi_mark'] == 1]
-                df_fastqYes3_cp = df_fastq_yes_3differ.copy()
-                df_fastq_yes_3differ = df_fastq_yes_3differ.drop('umi_r', 1)
-                df_fastqYes3_cp = df_fastqYes3_cp.drop('umi_m', 1)
-                df_fastq_yes_3differ = df_fastq_yes_3differ.rename(columns={"umi_m": "umi_bi"})
-                df_fastqYes3_cp = df_fastqYes3_cp.rename(columns={"umi_r": "umi_bi"})
-                df_yes_3differ = pd.concat([df_fastq_yes_3differ, df_fastqYes3_cp], axis=0).reset_index(drop=True)
-                df_yes_3differ['to_fas'] = df_yes_3differ.apply(lambda x: x['origin_info'] + '_' + x['umi_bi'], axis=1)
-                # print(df_fastq_yes_3differ['umi_bi'])
-                # print(df_yes_3differ['umi_bi'])
-                df_fastq_no_3differ = df_fastq.loc[df_fastq['umi_mark'] != 1]
-                df_fastq_no_3differ['to_fas'] = df_fastq_no_3differ.apply(lambda x: x['origin_info'] + '_' + x['umi_l'], axis=1)
-                if df_yes_3differ.empty:
-                    df = df_fastq_no_3differ[['seq_raw', 'to_fas']].reset_index(drop=True)
+                df['to_fas'] = df.apply(lambda x: x['origin_info'] + '_' + x['umi_ref'], axis=1)
+                df['umi_mark'] = df['umi'].apply(lambda x: self.marker(x, num=30))
+                # print(df['umi_mark'])
+                df_3differ = df.loc[df['umi_mark'] == 1]
+                df_3differ_cp = df_3differ.copy()
+                df_3differ = df_3differ.drop('umi_r', 1)
+                df_3differ_cp = df_3differ_cp.drop('umi_m', 1)
+                df_3differ = df_3differ.rename(columns={"umi_m": "umi_bi"})
+                df_3differ_cp = df_3differ_cp.rename(columns={"umi_r": "umi_bi"})
+
+                df_umi_3differ = pd.concat([df_3differ, df_3differ_cp], axis=0).reset_index(drop=True)
+                print(df_umi_3differ)
+
+                df_umi_3differ['to_fas'] = df_umi_3differ.apply(lambda x: x['origin_info'] + '_' + x['umi_bi'], axis=1)
+                print(df_3differ['umi_bi'])
+                # print(df_umi_3differ['umi_bi'])
+                df_not3differ = df.loc[df['umi_mark'] != 1]
+                df_not3differ['to_fas'] = df_not3differ.apply(lambda x: x['origin_info'] + '_' + x['umi_l'], axis=1)
+                if df_umi_3differ.empty:
+                    df_merge = df_not3differ[['seq_raw', 'to_fas']].reset_index(drop=True)
                 else:
-                    df = pd.concat(
-                        [df_yes_3differ[['seq_raw', 'to_fas']], df_fastq_no_3differ[['seq_raw', 'to_fas']]],
+                    df_merge = pd.concat(
+                        [df_umi_3differ[['seq_raw', 'to_fas']], df_not3differ[['seq_raw', 'to_fas']]],
                         axis=0,
                     ).reset_index(drop=True)
-                print(df)
+                print(df_merge)
                 self.wfastq.togz(
                     list_2d=df_lmr[['seq_raw', 'to_fas']].values,
                     sv_fp=self.fastq_fp + 'seq_errs/permute_' + str(i_pn) + '/lmr/',
                     fn=self.cat + '_' + str(id),
                 )
-                # self.wfastq.togz(
-                #     list_2d=df_fastq[['seq_raw', 'to_fas']].values,
-                #     sv_fp=self.fastq_fp + 'seq_errs/permute_' + str(i_pn) + '/ref/',
-                #     fn=self.cat + '_' + str(id),
-                # )
-                # self.wfastq.togz(
-                #     list_2d=df.values,
-                #     sv_fp=self.fastq_fp + 'seq_errs/permute_' + str(i_pn) + '/bipartite/',
-                #     fn=self.cat + '_' + str(id),
-                # )
-                # print(df_fastq['umi_monosa'])
+                self.wfastq.togz(
+                    list_2d=df[['seq_raw', 'to_fas']].values,
+                    sv_fp=self.fastq_fp + 'seq_errs/permute_' + str(i_pn) + '/ref/',
+                    fn=self.cat + '_' + str(id),
+                )
+                self.wfastq.togz(
+                    list_2d=df_merge.values,
+                    sv_fp=self.fastq_fp + 'seq_errs/permute_' + str(i_pn) + '/bipartite/',
+                    fn=self.cat + '_' + str(id),
+                )
+                # print(df['umi_monosa'])
                 print('===>getting it done with time: {:.3f}s'.format(time.time() - mono_corr_stime))
         return
 
-    def split(self, umi):
-        vernier = [i for i in range(36) if i % 3 == 0]
+    def split(self, umi, num=36):
+        vernier = [i for i in range(num) if i % 3 == 0]
         umi_trimers = [umi[v: v+3] for v in vernier]
         ref = []
         l = []
@@ -145,8 +149,8 @@ class selfHealing(Config.config):
         r = ''.join(r)
         return ref + ';' + l + ';' + m + ';' + r
 
-    def extract(self, umi):
-        vernier = [i for i in range(36) if i % 3 == 0]
+    def extract(self, umi, num=36):
+        vernier = [i for i in range(num) if i % 3 == 0]
         umi_trimers = [umi[v: v + 3] for v in vernier]
         l = []
         m = []
@@ -160,8 +164,8 @@ class selfHealing(Config.config):
         r = ''.join(r)
         return l + ';' + m + ';' + r
 
-    def marker(self, umi):
-        vernier = [i for i in range(36) if i % 3 == 0]
+    def marker(self, umi, num=36):
+        vernier = [i for i in range(num) if i % 3 == 0]
         umi_trimers = [umi[v: v+3] for v in vernier]
         slens = [len(set(umi_trimer)) for umi_trimer in umi_trimers]
         if 3 in slens:
@@ -172,7 +176,7 @@ class selfHealing(Config.config):
 
 if __name__ == "__main__":
     p = selfHealing(
-        fastq_fp=to('data/simu/trimer/pcr8/'),
+        fastq_fp=to('data/simu/trimer/tree1000/'),
         cat='seq_err',
     )
     print(p.rea())

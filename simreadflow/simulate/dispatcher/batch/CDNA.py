@@ -56,7 +56,6 @@ class general(object):
                 pcr_errs.append(7.5 * e)
                 seq_errs.append(2.5 * e)
                 seq_errs.append(5 * e)
-
                 seq_errs.append(7.5 * e)
             e = 10 * e
         pcr_errs.append(0.2)

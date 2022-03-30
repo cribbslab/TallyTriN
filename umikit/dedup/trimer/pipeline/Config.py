@@ -9,9 +9,9 @@ import numpy as np
 class config(object):
 
     def __init__(self, ):
-        self.permutation_num = 1000
+        self.permutation_num = 10
 
-        self.umi_unit_pattern = 3
+        self.umi_unit_pattern = 1
         self.umi_unit_len_fixed = 10
         self.umi_num_fixed = 50
         self.pcr_num_fixed = 16
@@ -50,6 +50,38 @@ class config(object):
             'umi_lens': 'umi_len_',
         }
 
+    # def errors(self, ):
+    #     pcr_errs = []
+    #     seq_errs = []
+    #     e = 1e-5
+    #     while e < 3e-1:
+    #         pcr_errs.append(e)
+    #         seq_errs.append(e)
+    #         if 5 * e < 3e-1:
+    #             pcr_errs.append(2.5 * e)
+    #             pcr_errs.append(5 * e)
+    #             pcr_errs.append(7.5 * e)
+    #             seq_errs.append(2.5 * e)
+    #             seq_errs.append(5 * e)
+    #
+    #             seq_errs.append(7.5 * e)
+    #         e = 10 * e
+    #     pcr_errs.append(0.125)
+    #     seq_errs.append(0.125)
+    #     pcr_errs.append(0.15)
+    #     seq_errs.append(0.15)
+    #     pcr_errs.append(0.2)
+    #     seq_errs.append(0.2)
+    #     pcr_errs.append(0.225)
+    #     seq_errs.append(0.225)
+    #     pcr_errs.append(0.25)
+    #     seq_errs.append(0.25)
+    #     pcr_errs.append(0.3)
+    #     seq_errs.append(0.3)
+    #     # print(pcr_errs)
+    #     # print(seq_errs)
+    #     return pcr_errs, seq_errs
+
     def errors(self, ):
         pcr_errs = []
         seq_errs = []
@@ -66,16 +98,8 @@ class config(object):
 
                 seq_errs.append(7.5 * e)
             e = 10 * e
-        pcr_errs.append(0.125)
-        seq_errs.append(0.125)
-        pcr_errs.append(0.15)
-        seq_errs.append(0.15)
         pcr_errs.append(0.2)
         seq_errs.append(0.2)
-        pcr_errs.append(0.225)
-        seq_errs.append(0.225)
-        pcr_errs.append(0.25)
-        seq_errs.append(0.25)
         pcr_errs.append(0.3)
         seq_errs.append(0.3)
         # print(pcr_errs)

@@ -85,26 +85,26 @@ class general(object):
             pcr['data'] = self.subsamplingMinnow(pcr_dict=pcr)
 
         # ### /*** block. Sequencing ***/
-        # print('->Sequencing has started...')
-        # for id, iseq_err in enumerate(self.args['seq_errors']):
-        #     seq_params = {
-        #         'data': pcr['data'],
-        #         'seq_sub_spl_rate': self.args['seq_sub_spl_rate'],
-        #         'seq_error': iseq_err,
-        #         'err_num_met': self.args['err_num_met'],
-        #         'use_seed': self.args['use_seed'],
-        #         'seed': self.args['seed'],
-        #     }
-        #     seq = self.seq(seq_params=seq_params).np()
-        #     print('->Sequencing has completed.')
-        #     print('->Write seqs in fastq format')
-        #     self.wfastq().togz(
-        #         list_2d=seq['data'],
-        #         sv_fp=self.args['write']['fastq_fp'],
-        #         fn=self.args['write']['fastq_fn'] + 'seq_err_' + str(id),
-        #         symbol='-',
-        #     )
-        #     del seq
+        print('->Sequencing has started...')
+        for id, iseq_err in enumerate(self.args['seq_errors']):
+            seq_params = {
+                'data': pcr['data'],
+                'seq_sub_spl_rate': self.args['seq_sub_spl_rate'],
+                'seq_error': iseq_err,
+                'err_num_met': self.args['err_num_met'],
+                'use_seed': self.args['use_seed'],
+                'seed': self.args['seed'],
+            }
+            seq = self.seq(seq_params=seq_params).np()
+            print('->Sequencing has completed.')
+            print('->Write seqs in fastq format')
+            self.wfastq().togz(
+                list_2d=seq['data'],
+                sv_fp=self.args['write']['fastq_fp'],
+                fn=self.args['write']['fastq_fn'] + 'seq_err_' + str(id),
+                symbol='-',
+            )
+            del seq
         return
 
     def subsamplingMinnow(self, pcr_dict):
@@ -199,7 +199,7 @@ class general(object):
 
         nn = pcr_dict['data'].shape[0]
         spl_ids = rannum().uniform(
-            low=0, high=nn, num=500, use_seed=False, seed=1
+            low=0, high=nn, num=1000, use_seed=False, seed=1
         )
         # print(spl_ids)
         spl_data = pcr_dict['data'][spl_ids]
