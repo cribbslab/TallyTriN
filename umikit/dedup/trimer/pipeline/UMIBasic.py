@@ -201,10 +201,10 @@ if __name__ == "__main__":
         # comp_cat='',
         # comp_cat='trimmed',
         # comp_cat='lmr',
-        # comp_cat='ref',
+        comp_cat='ref',
         # comp_cat='bipartite',
         # comp_cat='double',
-        comp_cat='correct',
+        # comp_cat='correct',
 
         # is_trim=True,
         # is_tobam=True,
@@ -217,6 +217,6 @@ if __name__ == "__main__":
         is_trim=False,
         is_tobam=False,
         is_dedup=True,
-        fastq_fp=to('data/simu/dimer/tree250/'),
+        fastq_fp=to('data/simu/dimer/tree100/'),
         # fastq_fp=to('data/simu/dimer/pcr8_mono24/'),
     )

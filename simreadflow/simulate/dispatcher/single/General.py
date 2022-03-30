@@ -199,7 +199,7 @@ class general(object):
 
         nn = pcr_dict['data'].shape[0]
         spl_ids = rannum().uniform(
-            low=0, high=nn, num=250, use_seed=False, seed=1
+            low=0, high=nn, num=100, use_seed=False, seed=1
         )
         # print(spl_ids)
         spl_data = pcr_dict['data'][spl_ids]

@@ -125,9 +125,9 @@ class umi(object):
 
 if __name__ == "__main__":
     p = umi(
-        # working_dir=to('data/simu/monomer/tree250/'),
-        working_dir=to('data/simu/dimer/tree250/'),
-        # working_dir=to('data/simu/trimer/tree250/'),
+        # working_dir=to('data/simu/monomer/tree100/'),
+        working_dir=to('data/simu/dimer/tree100/'),
+        # working_dir=to('data/simu/trimer/tree100/'),
     )
 
     # print(p.pcrNums())
