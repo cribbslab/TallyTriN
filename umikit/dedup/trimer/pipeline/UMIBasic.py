@@ -217,6 +217,6 @@ if __name__ == "__main__":
         is_trim=False,
         is_tobam=False,
         is_dedup=True,
-        fastq_fp=to('data/simu/dimer/tree1000/'),
+        fastq_fp=to('data/simu/dimer/tree250/'),
         # fastq_fp=to('data/simu/dimer/pcr8_mono24/'),
     )

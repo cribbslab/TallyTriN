@@ -16,7 +16,7 @@ class umi(object):
         self.permutation_num = 10
 
         self.umi_unit_len_fixed = 10
-        self.umi_unit_pattern = 1
+        self.umi_unit_pattern = 2
         self.umi_num_fixed = 50
         self.pcr_num_fixed = 8
         # self.pcr_err_fixed = 0.2
@@ -125,9 +125,9 @@ class umi(object):
 
 if __name__ == "__main__":
     p = umi(
-        working_dir=to('data/simu/monomer/tree1000/'),
-        # working_dir=to('data/simu/dimer/tree1000/'),
-        # working_dir=to('data/simu/trimer/tree1000/'),
+        # working_dir=to('data/simu/monomer/tree250/'),
+        working_dir=to('data/simu/dimer/tree250/'),
+        # working_dir=to('data/simu/trimer/tree250/'),
     )
 
     # print(p.pcrNums())
