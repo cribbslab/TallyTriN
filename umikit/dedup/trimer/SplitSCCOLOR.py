@@ -47,7 +47,8 @@ class selfHealing(Config.config):
                 # df = self.trimreader.todf(names=names, seqs=seqs)
                 df = self.trimreader.todfFromTree(names=names, seqs=seqs)
                 # print(df)
-                df['origin_info'] = df['name'].apply(lambda x: x.split('_')[0])
+                # df['origin_info'] = df['name'].apply(lambda x: x.split('_')[0])
+                df['origin_info'] = df.apply(lambda x: str(x['umi#']) + '_' + x['umi_src'], axis=1)
                 mono_corr_stime = time.time()
 
                 df['umi_extract'] = df['umi'].apply(lambda x: self.extract(x, num=30))
@@ -85,12 +86,17 @@ class selfHealing(Config.config):
                 df_3differ = df_3differ.rename(columns={"umi_m": "umi_bi"})
                 df_3differ_cp = df_3differ_cp.rename(columns={"umi_r": "umi_bi"})
 
-                df_umi_3differ = pd.concat([df_3differ, df_3differ_cp], axis=0).reset_index(drop=True)
-                print(df_umi_3differ)
+                df_umi_3differ = pd.concat(
+                    [df_3differ, df_3differ_cp],
+                    axis=0,
+                ).reset_index(drop=True)
+                # print(df_umi_3differ)
 
-                df_umi_3differ['to_fas'] = df_umi_3differ.apply(lambda x: x['origin_info'] + '_' + x['umi_bi'], axis=1)
-                print(df_3differ['umi_bi'])
+                if not df_umi_3differ.empty:
+                    df_umi_3differ['to_fas'] = df_umi_3differ.apply(lambda x: x['origin_info'] + '_' + x['umi_bi'], axis=1)
+                    print(df_umi_3differ)
                 # print(df_umi_3differ['umi_bi'])
+
                 df_not3differ = df.loc[df['umi_mark'] != 1]
                 df_not3differ['to_fas'] = df_not3differ.apply(lambda x: x['origin_info'] + '_' + x['umi_l'], axis=1)
                 if df_umi_3differ.empty:
@@ -116,7 +122,6 @@ class selfHealing(Config.config):
                     sv_fp=self.fastq_fp + 'seq_errs/permute_' + str(i_pn) + '/bipartite/',
                     fn=self.cat + '_' + str(id),
                 )
-                # print(df['umi_monosa'])
                 print('===>getting it done with time: {:.3f}s'.format(time.time() - mono_corr_stime))
         return
 

@@ -56,7 +56,9 @@ class dedupPos():
         self.df_bam = self.df_bam.loc[self.df_bam['reference_id'] != -1]
         self.console.print('======># of reads with qualified chrs: {}'.format(self.df_bam.shape[0]))
 
-        self.df_bam['umi'] = self.df_bam['query_name'].apply(lambda x: x.split('_')[1])
+        # self.df_bam['umi'] = self.df_bam['query_name'].apply(lambda x: x.split('_')[1])
+        self.df_bam['umi'] = self.df_bam['query_name'].apply(lambda x: x.split('_')[-1])
+        # print(self.df_bam['umi'])
         self.console.print('======># of unique umis: {}'.format(self.df_bam['umi'].unique().shape[0]))
         self.console.print('======># of redundant umis: {}'.format(self.df_bam['umi'].shape[0]))
 

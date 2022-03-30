@@ -11,7 +11,7 @@ class config(object):
     def __init__(self, ):
         self.permutation_num = 10
 
-        self.umi_unit_pattern = 1
+        self.umi_unit_pattern = 2
         self.umi_unit_len_fixed = 10
         self.umi_num_fixed = 50
         self.pcr_num_fixed = 16

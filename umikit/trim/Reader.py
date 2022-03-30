@@ -36,7 +36,7 @@ class reader(object):
         df_fastq['name'] = names
         df_fastq['umi'] = df_fastq['name'].apply(lambda x: x.split('_')[-1])
         df_fastq['umi#'] = df_fastq['name'].apply(lambda x: self.srcnumTickout(x))
-        df_fastq['umi_src'] = df_fastq['name'].apply(lambda x: '*'.join(x.split('_')[1:-1]))
+        df_fastq['umi_src'] = df_fastq['name'].apply(lambda x: '-'.join(x.split('_')[1:-1]))
         # print(df_fastq)
         # df_fastq['umi_pcr#'] = df_fastq['name'].apply(lambda x: self.pcrnum(x))
         df_fastq['umi#'] = df_fastq['umi#'].astype(int)

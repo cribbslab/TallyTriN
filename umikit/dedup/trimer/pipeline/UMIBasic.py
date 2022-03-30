@@ -199,20 +199,24 @@ if __name__ == "__main__":
         # method='mcl_ed',
 
         # comp_cat='',
-        comp_cat='trimmed',
+        # comp_cat='trimmed',
         # comp_cat='lmr',
         # comp_cat='ref',
         # comp_cat='bipartite',
         # comp_cat='double',
-        # comp_cat='correct',
+        comp_cat='correct',
 
-        is_trim=True,
-        is_tobam=True,
-        is_dedup=False,
+        # is_trim=True,
+        # is_tobam=True,
+        # is_dedup=False,
 
         # is_trim=False,
-        # is_tobam=False,
-        # is_dedup=True,
-        fastq_fp=to('data/simu/monomer/tree1000/'),
+        # is_tobam=True,
+        # is_dedup=False,
+
+        is_trim=False,
+        is_tobam=False,
+        is_dedup=True,
+        fastq_fp=to('data/simu/dimer/tree1000/'),
         # fastq_fp=to('data/simu/dimer/pcr8_mono24/'),
     )
