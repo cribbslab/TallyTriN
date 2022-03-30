@@ -9,7 +9,7 @@ import numpy as np
 class config(object):
 
     def __init__(self, ):
-        self.permutation_num = 10
+        self.permutation_num = 2
 
         self.umi_unit_pattern = 2
         self.umi_unit_len_fixed = 10

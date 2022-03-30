@@ -129,7 +129,7 @@ class selfHealing(Config.config):
 
 if __name__ == "__main__":
     p = selfHealing(
-        fastq_fp=to('data/simu/dimer/tree100/'),
+        fastq_fp=to('data/simu/dimer/treepcr22_250/'),
         cat='seq_err',
     )
     print(p.rea())
