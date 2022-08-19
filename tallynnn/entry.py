@@ -6,15 +6,15 @@ aattggcc.py - Single Cell analysis workflows for nanopore seq
 
 To use a specific workflow, type::
 
-    tallynn <workflow> [workflow options] [workflow arguments]
+    tallynnn <workflow> [workflow options] [workflow arguments]
 
 For this message and a list of available keywords type::
 
-    tallynn --help
+    tallynnn --help
 
 To get help for a specify workflow, type::
 
-    tallynn <workflow> --help
+    tallynnn <workflow> --help
 '''
 
 import os
@@ -22,7 +22,7 @@ import sys
 import re
 import glob
 import imp
-import tallynn
+import tallynnn
 
 
 def printListInColumns(l, ncolumns):
@@ -61,7 +61,7 @@ def main(argv=None):
 
     # paths to look for pipelines:
     #print(pipelines.__file__)
-    path = os.path.abspath(os.path.dirname(tallynn.__file__))
+    path = os.path.abspath(os.path.dirname(tallynnn.__file__))
     relpath = os.path.abspath("../src")
 
     paths = [path, relpath]
