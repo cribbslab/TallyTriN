@@ -24,3 +24,9 @@ minimap2_splitprefix: 0
 
 # Threshold to remove UMI errors
 error_removal: 1
+
+# mclumi options
+
+mclumi:
+
+  editdistance: 9

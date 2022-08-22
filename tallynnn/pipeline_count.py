@@ -219,7 +219,7 @@ def count_trans_mclumi(infile, outfile):
 
     output_bam = infile.replace("_XT.bam", "_mclumi_XT.bam")
 
-    statement = '''mclumi dedup_gene -m mcl_ed -gt XT -gist XS -ed 4 -ibam %(infile)s -obam %(output_bam)s -odsum %(outfile)s'''
+    statement = '''mclumi dedup_gene -m mcl_ed -gt XT -gist XS -ed %(mclumi_editdistance)s -ibam %(infile)s -obam %(output_bam)s -odsum %(outfile)s'''
 
     P.run(statement, job_memory="60G")
 
@@ -346,7 +346,7 @@ def count_gene_mclumi(infile, outfile):
 
     output_bam = infile.replace("featurecounts_gene_sorted.bam", "_mclumi_featurecounts_gene_sorted.bam")
 
-    statement = '''mclumi dedup_gene -m mcl_ed -gt XT -gist XS -ed 4 -ibam %(infile)s -obam %(output_bam)s -odsum %(outfile)s'''
+    statement = '''mclumi dedup_gene -m mcl_ed -gt XT -gist XS -ed %(mclumi_editdistance)s -ibam %(infile)s -obam %(output_bam)s -odsum %(outfile)s'''
 
     P.run(statement, job_memory="40G")
 
