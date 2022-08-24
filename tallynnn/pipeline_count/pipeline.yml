@@ -30,3 +30,5 @@ error_removal: 1
 mclumi:
 
   editdistance: 9
+
+  memory: 100G

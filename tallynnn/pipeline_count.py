@@ -221,7 +221,7 @@ def count_trans_mclumi(infile, outfile):
 
     statement = '''mclumi dedup_gene -m mcl_ed -gt XT -gist XS -ed %(mclumi_editdistance)s -ibam %(infile)s -obam %(output_bam)s -odsum %(outfile)s'''
 
-    P.run(statement, job_memory="60G")
+    P.run(statement, job_memory=PARAMS['mclumi_memory'])
 
 
 @transform(xt_tag,
@@ -348,7 +348,7 @@ def count_gene_mclumi(infile, outfile):
 
     statement = '''mclumi dedup_gene -m mcl_ed -gt XT -gist XS -ed %(mclumi_editdistance)s -ibam %(infile)s -obam %(output_bam)s -odsum %(outfile)s'''
 
-    P.run(statement, job_memory="40G")
+    P.run(statement, job_memory=PARAMS['mclumi_memory'])
 
 
 @merge(count_gene, "counts_genes.dir/counts_gene.tsv.gz")
