@@ -286,8 +286,11 @@ def merge_trans_noumi(infiles, outfile):
 def mapping_gene(infile, outfile):
     '''map using minimap2 for the geness'''
 
+    name = infile.replace('processed_fastq.dir/','')
+    name = name.replace('_polya_tso_UMI.fastq.gz','_tmp_sam')
+
     if PARAMS['minimap2_splitprefix']:
-        statement = """minimap2 -ax splice  -k 14 --split-prefix tmp_sam_ --sam-hit-only --secondary=no --junc-bed %(junc_bed)s %(genome_fasta)s %(infile)s > %(outfile)s  2> %(outfile)s.log"""
+        statement = """minimap2 -ax splice  -k 14 --split-prefix %(name)s --sam-hit-only --secondary=no --junc-bed %(junc_bed)s %(genome_fasta)s %(infile)s > %(outfile)s  2> %(outfile)s.log"""
 
     else:
         statement = '''minimap2 -ax splice  -k 14 --sam-hit-only --secondary=no --junc-bed %(junc_bed)s %(genome_fasta)s %(infile)s > %(outfile)s  2> %(outfile)s.log'''
