@@ -4,7 +4,6 @@ import cgatcore.iotools as iotools
 import pysam
 import logging
 import argparse
-import Levenshtein
 import pandas as pd
 import scipy.sparse as sparse
 import scipy.io as io

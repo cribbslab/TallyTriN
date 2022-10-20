@@ -4,7 +4,9 @@ import cgatcore.iotools as iotools
 import pysam
 import logging
 import argparse
-
+import Bio
+import Bio.pairwise2
+from Bio.pairwise2 import format_alignment
 
 # ########################################################################### #
 # ###################### Set up the logging ################################# #
@@ -23,7 +25,7 @@ parser.add_argument("--whitelist", default=None, type=str,
                     help='a file naming the outfile for the whitelist of barcodes.')
 parser.add_argument("--infile", default=None, type=str,
                     help='nanopore infile fastq  file')
-parser.add_argument("--outname", default=None, type=str,
+parser.add_argument("--outfile", default=None, type=str,
                     help='name for output fastq files')
 
 args = parser.parse_args()
@@ -37,101 +39,63 @@ print(args)
 
 
 
-log =  iotools.open_file(args.outname + "_perfect_nano" + ".log","w")
+log =  iotools.open_file(args.outfile  + ".log","w")
 
 
-
-def count_pairs(s):
-    pairs_cnt = 0
-    unique_chars = set(s)
-    for char in unique_chars:
-        pairs_cnt += s.count(char + char)
-    return pairs_cnt
-
-read1 = iotools.open_file(args.outname + "_unambiguous_barcode_R1.fastq","w")
-read2 = iotools.open_file(args.outname + "_unambiguous_barcode_R2.fastq","w")
-
-read1_no = iotools.open_file(args.outname + "_ambiguous_barcode_R1.fastq","w")
-read2_no = iotools.open_file(args.outname + "_ambiguous_barcode_R2.fastq","w")
-
-
-a = 0
-ua = 0
-total = 0
 # generate set of barcodes for whitelist
 barcodes = []
+
+
+
+def most_common(lst):
+    return max(set(lst), key=lst.count)
+
+outfile = open(args.outfile, "w")
+
+n = 0
+y = 0
 with pysam.FastxFile(args.infile) as fh:
+    
     for record in fh:
-        
+        n += 1
 
-        
-        
-        seq_nano = record.sequence
-        total += 1
-
-        m=regex.finditer("(AAGCAGTGGTATCAACGCAGAGT){e<=2}", str(seq_nano))
-
-        for i in m:
-            
-            new_seq = seq_nano[i.end():]
-            new_seq_quality = record.quality[i.end():]
-
-            
-            m=regex.finditer("(TTTTTTTTTTTTTTTTTTTT){e<=3}", str(seq_nano))
-
-            for i in m:
-                read2_seq = seq_nano[i.start():]
-                read2_seq_quality = record.quality[i.start():]
-
-
-            barcode = new_seq[2:26] 
-            barcode_quality = new_seq_quality[2:26] 
-            umi = new_seq[26:42]
-            umi_quality = new_seq_quality[26:42]
-            
-            barcode_umi = barcode + umi
-            barcode_umi_quality = barcode_quality + umi_quality
-
-            if count_pairs(barcode) == 12:
-                barcode_umi = barcode + umi
-                barcodes.append(barcode)
-                
-                barcode_umi_quality = barcode_quality + umi_quality
-
-                if len(barcode_umi) == 40:
-                    ua += 1
-                    read1.write("@%s\n%s\n+\n%s\n" % (record.name, barcode_umi, barcode_umi_quality))
-                    read2.write("@%s\n%s\n+\n%s\n" % (record.name, read2_seq, read2_seq_quality))
-                else:
-                    pass
+        seq = record.sequence
+        first = 0
+        for a, b in zip(Bio.pairwise2.align.localms(seq,"GTACTCTGCGTT", 2, -1, -1, -1), Bio.pairwise2.align.localms(seq,"AAAAAAAAA", 2, -1, -1, -1)):
+            first +=1
+            if first == 1:
+                al1_a, al2_a, score_a, begin_a, end_a = a 
+                al1_a, al2_b, score_b, begin_b, end_b = b 
             else:
-                if len(barcode_umi) == 40: 
-                    a += 1
-                    read1_no.write("@%s\n%s\n+\n%s\n" % (record.name, barcode_umi, barcode_umi_quality))
-                    read2_no.write("@%s\n%s\n+\n%s\n" % (record.name, read2_seq, read2_seq_quality))
-                else:
-                    pass
+                first = 0
+                break
+            length_umibarcode = len(seq[end_b:begin_a])
+
+            if length_umibarcode > 48:
+                
+                barcode = seq[begin_a -30:begin_a]
+                barcodes.append(barcode)
+                umi = seq[end_b:end_b + 21]
+                seq_new = seq[:begin_b]
+                quality_new = record.quality[:begin_b]
+                y += 1
+                outfile.write("@%s\n%s\n+\n%s\n" % (record.name + "_" + barcode + "_" + umi, seq_new, quality_new))
+            else:
+                pass
+                
+outfile.close()
 
                 
-    # Write out a list of whitelist barcodes
-    out_barcodes = open(args.whitelist,"w")
-    y = 0
-    for i in set(barcodes):
-        y += 1
-        out_barcodes.write("%s\n" % (i))
-    out_barcodes.close()
+# Write out a list of whitelist barcodes
+out_barcodes = open(args.whitelist,"w")
+
+for i in set(barcodes):
+    out_barcodes.write("%s\n" % (i))
+out_barcodes.close()
         
-read1.close()
-read2.close()
-read1_no.close()
-read2_no.close()
 
-
-log.write("The number of unambiguous barcodes in whitelist identified is: %s\n" %(y))
-log.write("The number of unambiguous barcode reads identified is: %s\n" %(ua))
-log.write("The number of ambiguous barcode reads identified is: %s\n" %(a))
-log.write("The total number of barcode reads identified is: %s\n" %(total))
-log.write("The percent of unambiguous barcode reads : %s\n" %((ua/total)*100))
-log.write("The percent of ambiguous barcode reads : %s\n" %((a/total)*100))
+log.write("The number of total reads: %s\n" %(n))
+log.write("The number of total reads that have a correct barcode and UMI: %s\n" %(y))
+log.write("The number of total recovered percent is: %s\n" %((y/n)*100))
 
 log.close()
