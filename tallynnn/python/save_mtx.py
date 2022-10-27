@@ -84,9 +84,12 @@ def save_mtx(data, destination, cell_names=None, gene_names=None):
 
 
 infile = pd.read_table(args.data, sep="\t", header=0)
-infile = infile[infile['count'] > 0]
+df = infile[infile['count'] >= 1]
 
-infile = infile.pivot(index='cell', columns='gene', values='count')
-infile.fillna(0, inplace=True)
+chunk_size = 5000
+chunks = [x for x in range(0, df.shape[0], chunk_size)]
+df_new = pd.concat([df.iloc[ chunks[i]:chunks[i + 1] - 1 ].pivot(index='cell', columns='gene', values='count') for i in range(0, len(chunks) - 1)])
 
-save_mtx(infile, args.dir)
+df_new.fillna(0, inplace=True)
+
+save_mtx(df_new, args.dir)

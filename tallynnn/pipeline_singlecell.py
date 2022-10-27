@@ -303,7 +303,7 @@ def convert_tomtx(infile, outfile):
 
     statement = '''python %(PYTHON_ROOT)s/save_mtx.py --data=%(infile)s --dir=mtx.dir/'''
 
-    P.run(statement)
+    P.run(statement, job_memory="250G")
 
 
 @merge(identify_bcumi, "merge_uncorrected.fastq.gz")
@@ -438,7 +438,7 @@ def convert_tomtx_collapsed(infile, outfile):
 
     statement = '''python %(PYTHON_ROOT)s/save_mtx.py --data=%(infile)s --dir=mtx_collapsed.dir/'''
 
-    P.run(statement)
+    P.run(statement, job_memory="250G")
 
 
 
@@ -463,10 +463,78 @@ def convert_tomtx_directional(infile, outfile):
 
     statement = '''python %(PYTHON_ROOT)s/save_mtx.py --data=%(infile)s --dir=mtx_collapsed_directional.dir/'''
 
+    P.run(statement, job_memory="250G")
+
+
+###########################################################################
+# Correct the UMIs using ILP
+###########################################################################
+
+# Need to input the bam file without collapsing trimers - minimap with fastq before collapsing then
+# running ILP
+
+
+@merge(correct_reads, "merge_trimer.fastq.gz")
+def merge_trimer_bcumi(infiles, outfile):
+    '''Merge the fastq reads with uncollapsed trime reads '''
+
+    infile = []
+
+    for i in infiles:
+        infile.append(str(i))
+
+    infile_join = " ".join(infile)
+
+
+
+    statement = '''cat %(infile_join)s > %(outfile)s'''
+
     P.run(statement)
 
 
-@follows(convert_tomtx_directional, convert_tomtx_collapsed, convert_tomtx)
+@transform(merge_trimer_bcumi,
+           regex("merge_trimer.fastq.gz"),
+           r"final_trimer.sam")
+def run_minimap2_trimer(infile, outfile):
+    '''Run minimap2 using fastq files with trimer UMIs'''  
+
+    cdna = PARAMS['minimap2_fasta_cdna']
+    options = PARAMS['minimap2_options']
+
+    statement = '''minimap2  %(options)s %(cdna)s  %(infile)s > %(outfile)s 2> %(outfile)s.log'''
+
+    P.run(statement)
+
+
+@transform(run_minimap2_trimer,
+           regex("final_trimer.sam"),
+           r"final_sorted_trimer.bam")
+def run_samtools_trimer(infile, outfile):
+    '''convert sam to bam and sort -F 272'''
+
+    statement = '''samtools view -bS %(infile)s > final_trimer.bam &&
+                   samtools sort final_trimer.bam -o final_sorted_trimer.bam &&
+                   samtools index final_sorted_trimer.bam'''
+
+    P.run(statement)
+
+
+@transform(run_samtools_trimer,
+           regex("final_sorted_trimer.bam"),
+           r"final_XT_trimer.bam")
+def add_xt_tag_trimer(infile, outfile):
+    '''Add trancript name to XT tag in bam file so umi-tools counts can be  perfromed'''
+
+    PYTHON_ROOT = os.path.join(os.path.dirname(__file__), "python/")
+
+    statement = '''python %(PYTHON_ROOT)s/xt_tag_nano.py --infile=%(infile)s --outfile=%(outfile)s &&
+                   samtools index %(outfile)s'''
+
+    P.run(statement)
+
+
+
+@follows(convert_tomtx_directional, convert_tomtx_collapsed, convert_tomtx, add_xt_tag_trimer)
 def full():
     pass
 
