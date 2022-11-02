@@ -400,7 +400,29 @@ def merge_featurecounts(outfile):
     df.to_csv(outfile, sep="\t", compression="gzip")
 
 
-@follows(merge_count, merge_count_unique, merge_count_gene, merge_count_gene_unique, merge_featurecounts, count_trans_mclumi, count_gene_mclumi)
+
+########
+### Correct using greedy algorithm
+#########
+
+
+@follows(mkdir('counts_trans_greedy.dir'))
+@transform(xt_tag,
+           regex("mapped_files.dir/(\S+)_XT.bam"),
+           r"counts_trans_greedy.dir/\1.counts_greedy.txt")
+def count_trans_greedy(infile, outfile):
+    '''Use greedy to collapse UMIs'''
+
+    PYTHON_ROOT = os.path.join(os.path.dirname(__file__), "python/")
+    
+    statement = '''python %(PYTHON_ROOT)s/greedy_bulk.py count -i %(infile)s
+                   -t XT -o %(outfile)s'''
+
+    P.run(statement)
+
+
+
+@follows(merge_count, merge_count_unique, merge_count_gene, merge_count_gene_unique, merge_featurecounts, count_trans_mclumi, count_gene_mclumi, count_trans_greedy)
 def full():
     pass
 
