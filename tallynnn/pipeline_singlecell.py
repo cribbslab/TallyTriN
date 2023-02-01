@@ -30,9 +30,20 @@ Pipeline single-cell
 Overview
 ==================
 
-This workflow processes scCOLOR-seq-homotrimerUMI nanopore fastq files. The aim of this pipeline
-is to generate both a gene level and transcript level market matrix counts
-matrix (.mtx).
+The code is a python script that processes single-cell sequencing data from
+scCOLOR-seq-homotrimerUMI nanopore fastq files and generates a gene level and
+transcript level market matrix counts matrix. The code uses the CGAT-core
+library for pipeline management and the Ruffus library for task management.
+
+The code first reads the pipeline configuration from pipeline.yml file,
+which can be found in the same directory as the script, in a parent 
+directory, or in a directory specified in the data parameter. The pipeline 
+then splits the input fastq file into smaller pieces, performs quality control 
+on the split files, and generates gene-level and transcript-level counts 
+matrices in market matrix format. The final outputs are saved in the mtx.dir/ 
+and mtx_gene.dir/ directories, respectively. The results can be imported 
+into R using the read_count_output() function within the library(BUSpaRse) 
+package.
 
 Usage
 =====
