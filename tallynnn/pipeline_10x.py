@@ -178,9 +178,12 @@ def identify_bcumi(infile, outfile):
     name = outfile.replace("polyA_umi.dir/", "")
     name = name.replace(".fastq.gz", "")
 
+    cmimode = PARAMS['cmi_mode']
+
     PYTHON_ROOT = os.path.join(os.path.dirname(__file__), "python/")
 
-    statement = '''python %(PYTHON_ROOT)s/10x_identify_barcode.py --outfile=%(outfile)s --infile=%(infile)s --whitelist=polyA_umi.dir/%(name)s.whitelist.txt'''
+    statement = '''python %(PYTHON_ROOT)s/10x_identify_barcode.py --outfile=%(outfile)s --infile=%(infile)s --whitelist=polyA_umi.dir/%(name)s.whitelist.txt
+                   --cmimode=%(cmimode)s'''
 
     P.run(statement)
 
@@ -200,18 +203,19 @@ def merge_whitelist(infiles, outfile):
 
     whitelist_files = " ".join(whitelists)
 
-    statement = '''cat %(whitelist_files)s | sort | uniq > %(outfile)s'''
+    statement = '''cat %(whitelist_files)s  > %(outfile)s'''
 
     P.run(statement)
 
 
 
+@follows(merge_whitelist)
 @follows(mkdir("correct_reads.dir"))
 @transform(identify_bcumi,
            regex("polyA_umi.dir/(\S+).fastq.gz"),
            r"correct_reads.dir/\1.fastq.gz")
 def correct_reads(infile, outfile):
-    '''Correct the barcodes using majority vote'''
+    '''Align the barcodes to the closest barcode'''
 
     infile = infile
     cells = PARAMS['cells']
@@ -219,7 +223,7 @@ def correct_reads(infile, outfile):
     PYTHON_ROOT = os.path.join(os.path.dirname(__file__), "python/")
 
 
-    statement = '''python %(PYTHON_ROOT)s/correct_10xbarcode.py --infile=%(infile)s --outfile=%(outfile)s --cells=%(cells)s'''
+    statement = '''python %(PYTHON_ROOT)s/correct_10xbarcode.py --infile=%(infile)s --outfile=%(outfile)s --cells=%(cells)s --whitelist=whitelist.txt'''
 
     P.run(statement)
 

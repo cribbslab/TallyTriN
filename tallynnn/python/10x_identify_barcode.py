@@ -27,6 +27,8 @@ parser.add_argument("--infile", default=None, type=str,
                     help='nanopore infile fastq  file')
 parser.add_argument("--outfile", default=None, type=str,
                     help='name for output fastq files')
+parser.add_argument("--cmimode", default=None, type=str,
+                    help='Run the script in cmi mode for accuracy evaluation')
 
 args = parser.parse_args()
 
@@ -38,7 +40,6 @@ print(args)
 # ########################################################################### #
 
 log =  iotools.open_file(args.outfile  + ".log","w")
-
 
 # generate set of barcodes for whitelist
 barcodes = []
@@ -69,7 +70,11 @@ with pysam.FastxFile(args.infile) as fh:
 
             if length_umibarcode >= 28:
                 y+=1
-                umi = record.sequence[end_b:end_b+12]
+                if args.cmimode == '1':
+                    umi = record.sequence[begin_a:end_a]
+                    umi = umi[:15]
+                else:
+                    umi = record.sequence[end_b:end_b+12]
                 barcode = record.sequence[end_b+12:end_b+28]
                 barcodes.append(barcode)
                 seq_new = record.sequence[:begin_b]
