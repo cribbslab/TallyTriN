@@ -50,14 +50,14 @@ with pysam.FastxFile(args.infile) as fh:
     
     for record in fh:
         y +=1
-        seq = record.sequence[0:100]
+        seq = record.sequence[0:200]
         m=regex.findall("(TTTTTTTTTTTTTTT){e<=0}", str(seq))
         if m:
             n +=1
             sequence = reverse_complement_table(str(record.sequence))
             outfile.write("@%s\n%s\n+\n%s\n" % (record.name, sequence, record.quality))
         else:
-            seq = record.sequence[-100:]
+            seq = record.sequence[-200:]
             m=regex.findall("(AAAAAAAAAAAAAA){e<=0}", str(seq))
             if m:
                 n +=1
