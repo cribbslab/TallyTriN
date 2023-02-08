@@ -75,12 +75,20 @@ with pysam.FastxFile(args.infile) as fh:
                     umi = umi[:15]
                 else:
                     umi = record.sequence[end_b:end_b+12]
-                barcode = record.sequence[end_b+12:end_b+28]
-                barcodes.append(barcode)
-                seq_new = record.sequence[:begin_b]
-                quality_new = record.quality[:begin_b]
+                if len(umi) == 15 and args.cmimode == '1':
+                    barcode = record.sequence[end_b+12:end_b+28]
+                    barcodes.append(barcode)
+                    seq_new = record.sequence[:begin_b]
+                    quality_new = record.quality[:begin_b]
 
-                outfile.write("@%s\n%s\n+\n%s\n" % (record.name + "_" + barcode + "_" + umi, seq_new, quality_new))
+                    outfile.write("@%s\n%s\n+\n%s\n" % (record.name + "_" + barcode + "_" + umi, seq_new, quality_new))
+                else:
+                    barcode = record.sequence[end_b+12:end_b+28]
+                    barcodes.append(barcode)
+                    seq_new = record.sequence[:begin_b]
+                    quality_new = record.quality[:begin_b]
+
+                    outfile.write("@%s\n%s\n+\n%s\n" % (record.name + "_" + barcode + "_" + umi, seq_new, quality_new))
                 
 outfile.close()
 
