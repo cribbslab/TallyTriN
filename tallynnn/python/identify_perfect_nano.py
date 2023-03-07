@@ -1,4 +1,5 @@
 import sys
+import re
 import regex
 import cgatcore.iotools as iotools
 import pysam
@@ -27,6 +28,12 @@ parser.add_argument("--infile", default=None, type=str,
                     help='nanopore infile fastq  file')
 parser.add_argument("--outfile", default=None, type=str,
                     help='name for output fastq files')
+parser.add_argument("--smarter", default=None, type=str,
+                    help='specify if smarter UMI sequence is used')
+parser.add_argument("--trimer", default=None, type=str,
+                    help='specify if the trimer UMI or normal UMI should be used')
+
+
 
 args = parser.parse_args()
 
@@ -45,6 +52,18 @@ log =  iotools.open_file(args.outfile  + ".log","w")
 # generate set of barcodes for whitelist
 barcodes = []
 
+def poly_a_length(input_string):
+    ''' find ployA tail and then calculate length and return the end A string index)'''
+
+    poly_a_pattern = re.compile(r"A+")
+
+    poly_a_matches = re.findall(poly_a_pattern, input_string)
+
+    longest_poly_a = max(poly_a_matches, key=len)
+    longest_poly_a_length = len(longest_poly_a)
+    last_a_index = input_string.index(longest_poly_a) + longest_poly_a_length
+
+    return last_a_index
 
 
 def most_common(lst):
@@ -54,36 +73,72 @@ outfile = open(args.outfile, "w")
 
 n = 0
 y = 0
-with pysam.FastxFile(args.infile) as fh:
+
+
+if smarter:
+
+    with pysam.FastxFile(args.infile) as fh:
     
-    for record in fh:
-        n += 1
+        for record in fh:
+            n += 1
 
-        seq = record.sequence
-        first = 0
-        for a, b in zip(Bio.pairwise2.align.localms(seq,"GTACTCTGCGTT", 2, -1, -1, -1), Bio.pairwise2.align.localms(seq,"AAAAAAAAA", 2, -1, -1, -1)):
-            first +=1
-            if first == 1:
-                al1_a, al2_a, score_a, begin_a, end_a = a 
-                al1_a, al2_b, score_b, begin_b, end_b = b 
-            else:
-                first = 0
-                break
-            length_umibarcode = len(seq[end_b:begin_a])
+            seq = record.sequence
+            first = 0
+            for a, b in zip(Bio.pairwise2.align.localms(seq,"GTACTCTGCGTT", 2, -1, -1, -1), Bio.pairwise2.align.localms(seq,"AAAAAAAAA", 2, -1, -1, -1)):
+                first +=1
+                if first == 1:
+                    al1_a, al2_a, score_a, begin_a, end_a = a 
+                    al1_a, al2_b, score_b, begin_b, end_b = b 
+                else:
+                    first = 0
+                    break
+                    length_umibarcode = len(seq[end_b:begin_a])
 
-            if length_umibarcode > 48:
+                if length_umibarcode > 48:
                 
-                barcode = seq[begin_a -30:begin_a]
-                barcodes.append(barcode)
-                umi = seq[end_b:end_b + 21]
-                seq_new = seq[:begin_b]
-                quality_new = record.quality[:begin_b]
-                y += 1
-                outfile.write("@%s\n%s\n+\n%s\n" % (record.name + "_" + barcode + "_" + umi, seq_new, quality_new))
-            else:
-                pass
+                    barcode = seq[begin_a -30:begin_a]
+                    barcodes.append(barcode)
+                    umi = seq[end_b:end_b + 21]
+                    seq_new = seq[:begin_b]
+                    quality_new = record.quality[:begin_b]
+                    y += 1
+                    outfile.write("@%s\n%s\n+\n%s\n" % (record.name + "_" + barcode + "_" + umi, seq_new, quality_new))
+                else:
+                    pass
                 
-outfile.close()
+    outfile.close()
+
+else:
+    with pysam.FastxFile(args.infile) as fh:
+    
+        for record in fh:
+            n += 1
+
+            seq = record.sequence
+            first = 0
+            for a, b in zip(Bio.pairwise2.align.localms(seq,"GTACTCTGCGTT", 2, -1, -1, -1), Bio.pairwise2.align.localms(seq,"AAAAAAAAA", 2, -1, -1, -1)):
+                first +=1
+                if first == 1:
+                    al1_a, al2_a, score_a, begin_a, end_a = a 
+                    al1_a, al2_b, score_b, begin_b, end_b = b 
+                else:
+                    first = 0
+                    break
+                    length_umibarcode = len(seq[end_b:begin_a])
+
+                if length_umibarcode > 48:
+                
+                    barcode = seq[begin_a -30:begin_a]
+                    barcodes.append(barcode)
+                    umi = seq[end_b:end_b + 21]
+                    seq_new = seq[:begin_b]
+                    quality_new = record.quality[:begin_b]
+                    y += 1
+                    outfile.write("@%s\n%s\n+\n%s\n" % (record.name + "_" + barcode + "_" + umi, seq_new, quality_new))
+                else:
+                    pass
+                
+    outfile.close()
 
                 
 # Write out a list of whitelist barcodes

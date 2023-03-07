@@ -52,3 +52,9 @@ featurecounts:
    gtf: /ifs/research-groups/botnar/proj034/analyses/nanopore_E3-Mix/data/Homo_sapiens.GRCh38.101.gtf
 database:
    url: sqlite:///./csvdb
+
+# Specify if the pipeline should eb ran using the CMI with a SMARTER primer sequence
+smarter: 1
+
+# Specify if you want to run the pipeline using trimer UMI on 5' end of the read
+trimer: 1

@@ -135,7 +135,7 @@ SEQUENCEFILES = tuple([os.path.join(DATADIR, suffix_name)
 
 
 @follows(mkdir("split_tmp.dir"))
-@split('data/*.fastq.gz', "split_tmp.dir/out*")
+@split('%s/*.fastq.gz' % (PARAMS['data']), "split_tmp.dir/out*")
 def split_fastq(infile, outfiles):
     '''
     Split the fastq file before identifying perfect barcodes
@@ -179,7 +179,10 @@ def identify_bcumi(infile, outfile):
 
     PYTHON_ROOT = os.path.join(os.path.dirname(__file__), "python/")
 
-    statement = '''python %(PYTHON_ROOT)s/identify_perfect_nano.py --outfile=%(outfile)s --infile=%(infile)s --whitelist=polyA_umi.dir/%(name)s.whitelist.txt'''
+    smarter = PARAMS['smarter']
+    trimer = PARAMS['trimer']
+
+    statement = '''python %(PYTHON_ROOT)s/identify_perfect_nano.py --outfile=%(outfile)s --infile=%(infile)s --whitelist=polyA_umi.dir/%(name)s.whitelist.txt --smarter=%(smarter)s --trimer=%(trimer)s'''
 
     P.run(statement)
 
