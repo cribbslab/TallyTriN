@@ -1,4 +1,5 @@
 import sys
+import re
 import regex
 import cgatcore.iotools as iotools
 import pysam
@@ -45,7 +46,15 @@ log =  iotools.open_file(args.outfile  + ".log","w")
 # generate set of barcodes for whitelist
 barcodes = []
 
+def find_substring(long_string, subset_str):
 
+    pattern = re.compile(subset_str)
+    match = pattern.search(long_string)
+
+    if match:
+        return match.start()
+    else:
+        return None
 
 def most_common(lst):
     return max(set(lst), key=lst.count)
@@ -61,7 +70,7 @@ with pysam.FastxFile(args.infile) as fh:
 
         seq = record.sequence
         first = 0
-        for a, b in zip(Bio.pairwise2.align.localms(seq,"GTACTCTGCGTT", 2, -1, -1, -1), Bio.pairwise2.align.localms(seq,"AAAAAAAAA", 2, -1, -1, -1)):
+        for a, b in zip(Bio.pairwise2.align.localms(seq,"GTACTCTGCG", 2, -1, -1, -1), Bio.pairwise2.align.localms(seq,"AAAAAAAAA", 2, -1, -1, -1)):
             first +=1
             if first == 1:
                 al1_a, al2_a, score_a, begin_a, end_a = a 
@@ -73,9 +82,16 @@ with pysam.FastxFile(args.infile) as fh:
 
             if length_umibarcode > 48:
                 
-                barcode = seq[begin_a -30:begin_a]
-                barcodes.append(barcode)
-                umi = seq[end_b:end_b + 21]
+                bc_start = find_substring(seq, "GTACTCTGCG")
+                if bc_start is not None:
+                    barcode = seq[bc_start-30:bc_start]
+                    print(barcode)
+                    barcodes.append(barcode)
+                    umi = seq[bc_start-48:bc_start-30]
+                    if umi is None:
+                        break
+                else:
+                    break
                 seq_new = seq[:begin_b]
                 quality_new = record.quality[:begin_b]
                 y += 1

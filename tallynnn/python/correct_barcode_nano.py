@@ -64,6 +64,7 @@ with pysam.FastxFile(args.infile) as fh:
             umi_collapse.append(most_common(trimer))
         
         barcode_collapse = "".join(barcode_collapse)
+        barcode_collapse = barcode_collapse[:27]
         umi_collapse = "".join(umi_collapse)
         
         outf.write("@%s\n%s\n+\n%s\n" % (name + "_" + barcode_collapse + "_" + umi_collapse, record.sequence, record.quality))

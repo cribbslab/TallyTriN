@@ -63,7 +63,9 @@ with pysam.FastxFile(args.infile) as fh:
         barcode_collapse = "".join(barcode_collapse)
         umi_collapse = "".join(umi_collapse)
 
-        outf.write("@%s\n%s\n+\n%s\n" % (name + "_" + barcode_collapse + "_" + umi_collapse, record.sequence, record.quality))
+        if len(barcode_collapse) == 10 and len(umi_collapse) == 6:
+
+            outf.write("@%s\n%s\n+\n%s\n" % (name + "_" + barcode_collapse + "_" + umi_collapse, record.sequence, record.quality))
             
 
 outf.close()

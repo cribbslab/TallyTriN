@@ -478,7 +478,7 @@ def convert_tomtx_directional(infile, outfile):
 
 
 ###########################################################################
-# Correct the UMIs using ILP
+# Correct the UMIs using greedy
 ###########################################################################
 
 # Need to input the bam file without collapsing trimers - minimap with fastq before collapsing then
@@ -545,7 +545,20 @@ def add_xt_tag_trimer(infile, outfile):
 
 
 
-@follows(convert_tomtx_directional, convert_tomtx_collapsed, convert_tomtx, add_xt_tag_trimer)
+@transform(add_xt_tag_trimer,
+           regex("final_XT_trimer.bam"),
+           r"greedy.csv")
+def run_greedy(infile, outfile):
+    '''Run greedy algorithm to collapse the UMIs'''
+
+    PYTHON_ROOT = os.path.join(os.path.dirname(__file__), "python/")
+
+    statement = '''python %(PYTHON_ROOT)s/greedy_sc.py count -i %(infile)s -t XT-o %(outfile)s'''
+
+    P.run(statement)
+
+
+@follows(convert_tomtx_directional, convert_tomtx_collapsed, convert_tomtx, run_greedy)
 def full():
     pass
 
