@@ -27,6 +27,9 @@ parser.add_argument("--data", default=None, type=str,
                     help='counts data from umi_tools')
 parser.add_argument("--dir", default=None, type=str,
                     help='dir for output mtx')
+parser.add_argument("--filter", default=2, type=int,
+                    help='filter threshold for counts')
+
 args = parser.parse_args()
 
 L.info("args:")
@@ -84,7 +87,7 @@ def save_mtx(data, destination, cell_names=None, gene_names=None):
 
 
 infile = pd.read_table(args.data, sep="\t", header=0)
-infile = infile[infile['count'] >= 2]
+infile = infile[infile['count'] >= args.filter]
 
 infile = infile.pivot(index='cell', columns='gene', values='count')
 infile.fillna(0, inplace=True)

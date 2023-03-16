@@ -447,7 +447,7 @@ def convert_tomtx_collapsed(infile, outfile):
     ''' '''
     PYTHON_ROOT = os.path.join(os.path.dirname(__file__), "python/")
 
-    statement = '''python %(PYTHON_ROOT)s/save_mtx.py --data=%(infile)s --dir=mtx_collapsed.dir/'''
+    statement = '''python %(PYTHON_ROOT)s/save_mtx.py --data=%(infile)s --dir=mtx_collapsed.dir/ --filter=3'''
 
     P.run(statement, job_memory="250G")
 
@@ -472,7 +472,7 @@ def convert_tomtx_directional(infile, outfile):
     ''' '''
     PYTHON_ROOT = os.path.join(os.path.dirname(__file__), "python/")
 
-    statement = '''python %(PYTHON_ROOT)s/save_mtx.py --data=%(infile)s --dir=mtx_collapsed_directional.dir/'''
+    statement = '''python %(PYTHON_ROOT)s/save_mtx.py --data=%(infile)s --dir=mtx_collapsed_directional.dir/ --filter=3'''
 
     P.run(statement, job_memory="250G")
 
@@ -553,12 +553,25 @@ def run_greedy(infile, outfile):
 
     PYTHON_ROOT = os.path.join(os.path.dirname(__file__), "python/")
 
-    statement = '''python %(PYTHON_ROOT)s/greedy_sc.py count -i %(infile)s -t XT-o %(outfile)s'''
+    statement = '''python %(PYTHON_ROOT)s/greedy_sc.py count -i %(infile)s -t XT -o %(outfile)s'''
 
     P.run(statement)
 
 
-@follows(convert_tomtx_directional, convert_tomtx_collapsed, convert_tomtx, run_greedy)
+@follows(mkdir("mtx_greedy.dir"))
+@transform(run_greedy,
+           regex("greedy.csv"),
+           r"mtx_greedy.dir/genes.mtx")
+def convert_tomtx_greedy(infile, outfile):
+    ''' '''
+    PYTHON_ROOT = os.path.join(os.path.dirname(__file__), "python/")
+
+    statement = '''python %(PYTHON_ROOT)s/save_mtx.py --data=%(infile)s --dir=mtx_greedy.dir/'''
+
+    P.run(statement, job_memory="250G")
+
+
+@follows(convert_tomtx_directional, convert_tomtx_collapsed, convert_tomtx, convert_tomtx_greedy)
 def full():
     pass
 
