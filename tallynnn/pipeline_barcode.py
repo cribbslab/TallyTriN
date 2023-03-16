@@ -66,9 +66,9 @@ FASTQTARGET = tuple([os.path.join("data.dir/", suffix_name)
 
 
 @follows(mkdir("split_tmp.dir"))
-@subdivide('data.dir/*.fastq.gz',
+@transform('data.dir/*.fastq.gz',
            regex('data.dir/(\S+).fastq.gz'),
-           r"split_tmp.dir/\1.*")
+           r"split_tmp.dir/\1.aa")
 def split_fastq(infile, outfile):
     '''
     Split the fastq file before identifying perfect barcodes
@@ -84,8 +84,9 @@ def split_fastq(infile, outfile):
     P.run(statement)
 
 
+@follows(split_fastq)
 @follows(mkdir("polyA_correct.dir"))
-@transform(split_fastq,
+@transform('split_tmp.dir/*',
            regex("split_tmp.dir/(\S+)"),
            r"polyA_correct.dir/\1_correct_polya.fastq")
 def correct_polyA(infile, outfile):
@@ -95,13 +96,13 @@ def correct_polyA(infile, outfile):
 
     PYTHON_ROOT = os.path.join(os.path.dirname(__file__), "python/")
 
-    statement = '''python %(PYTHON_ROOT)s/complement_polyA_singlecell.py --infile=%(infile)s --outname=%(outfile)s'''
+    statement = '''python %(PYTHON_ROOT)s/complement_polyA.py --infile=%(infile)s --outname=%(outfile)s'''
 
     P.run(statement)
 
 
 @follows(mkdir("seperate_samples.dir"))
-@subdivide(correct_polyA,
+@transform('polyA_correct.dir/*',
            regex("polyA_correct.dir/(\S+)_correct_polya.fastq"),
            r"seperate_samples.dir/\1.fastq.gz")
 def seperate_by_barcode(infile, outfile):
@@ -109,18 +110,18 @@ def seperate_by_barcode(infile, outfile):
     Identify barcode and save to different samples
     '''
 
-    name = outfile.replace("polyA_umi.dir/", "")
+    name = outfile.replace("seperate_samples.dir/", "")
     name = name.replace(".fastq.gz", "")
 
     PYTHON_ROOT = os.path.join(os.path.dirname(__file__), "python/")
 
-    statement = '''python %(PYTHON_ROOT)s/barcode_identify.py --outfile=%(outfile)s --infile=%(infile)s'''
+    statement = '''python %(PYTHON_ROOT)s/identify_index.py --infile=%(infile)s --name=%(name)s'''
 
     P.run(statement)
 
 
 
-@follows()
+@follows(seperate_by_barcode)
 def full():
     pass
 
