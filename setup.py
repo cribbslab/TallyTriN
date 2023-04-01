@@ -17,7 +17,7 @@ IS_OSX = sys.platform == 'darwin'
 ########################################################################
 ########################################################################
 # collect version
-print(sys.path.insert(0, "tallynnn"))
+print(sys.path.insert(0, "tallytrin"))
 import version
 
 version = version.__version__
@@ -32,7 +32,7 @@ if major < 3:
     raise SystemExit("""Requires Python 3 or later.""")
 
 tallynn_packages = find_packages()
-tallynn_package_dirs = {'tallynnn': 'tallynnn'}
+tallynn_package_dirs = {'tallytrin': 'tallytrin'}
 
 ##########################################################
 ##########################################################
@@ -54,13 +54,13 @@ setup(
     # package information
     name='tallynnn',
     version=version,
-    description='tallynnn : long-read bulk and single-cell  UMI correction methods',
+    description='tallytrin : A collection of bulk and single cell UMI correction workflows',
     author='Adam Cribbs',
     author_email='adam.cribbs@ndorms.ox.ac.uk',
     license="MIT",
     platforms=["any"],
     keywords="computational genomics",
-    long_description='''tallynnn : long-read bulk and single-cell UMI correction methods''',
+    long_description='''tallytrin : A collection of bulk and single cell UMI correction workflows''',
     classifiers=[_f for _f in classifiers.split("\n") if _f],
     url="",
     # package contents
@@ -68,7 +68,7 @@ setup(
     package_dir=tallynn_package_dirs,
     include_package_data=True,
     entry_points={
-        "console_scripts": ["tallynnn = tallynnn.entry:main"]
+        "console_scripts": ["tallytrin = tallytrin.entry:main"]
     },
     # other options
     zip_safe=False,
