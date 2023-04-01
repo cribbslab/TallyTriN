@@ -22,7 +22,7 @@ import sys
 import re
 import glob
 import imp
-import tallynnn
+import tallytrin
 
 
 def printListInColumns(l, ncolumns):
