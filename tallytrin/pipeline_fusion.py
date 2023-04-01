@@ -1,6 +1,7 @@
-"""===========================
-Pipeline count
-===========================
+"""
+===============
+Pipeline fusion
+===============
 
 Overview
 ========
@@ -9,6 +10,9 @@ This is a Python script that serves as a pipeline to annotate fusion transcripts
 in mapped BAM files from a bulk nanopore experiment. The script relies on Ruffus,
 a Python library for managing computational pipelines, and the CGAT-core library.
 
+
+Pipeline tasks
+==============
 
 The pipeline performs the following steps:
 
