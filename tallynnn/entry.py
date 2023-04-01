@@ -1,20 +1,20 @@
 '''
-aattggcc.py - Single Cell analysis workflows for nanopore seq
-============================================================
+TallyTriN.py - collection of bulk and single-cell workflows 
+===========================================================
 
 :Tags: Single-cell
 
 To use a specific workflow, type::
 
-    tallynnn <workflow> [workflow options] [workflow arguments]
+    tallytrin <workflow> [workflow options] [workflow arguments]
 
 For this message and a list of available keywords type::
 
-    tallynnn --help
+    tallytrin --help
 
 To get help for a specify workflow, type::
 
-    tallynnn <workflow> --help
+    tallytrin <workflow> --help
 '''
 
 import os
@@ -61,7 +61,7 @@ def main(argv=None):
 
     # paths to look for pipelines:
     #print(pipelines.__file__)
-    path = os.path.abspath(os.path.dirname(tallynnn.__file__))
+    path = os.path.abspath(os.path.dirname(tallytrin.__file__))
     relpath = os.path.abspath("../src")
 
     paths = [path, relpath]
@@ -82,7 +82,7 @@ def main(argv=None):
     command = re.sub("-", "_", command)
     pipeline = "pipeline_{}".format(command)
 
-    # remove 'cellhub' from sys.argv
+    # remove 'tallytrin' from sys.argv
     del sys.argv[0]
 
     (file, pathname, description) = imp.find_module(pipeline, paths)
