@@ -98,7 +98,6 @@ def make_sabam(infile, outfile):
     from the input BAM file.
     '''
 
-    E.warn(infile)
     bamfile = pysam.AlignmentFile(infile, "rb")
     split = pysam.AlignmentFile(outfile, "wb", template=bamfile)
 
@@ -165,7 +164,7 @@ def gene_annotate(infiles, outfile):
                    samtools sort %(outfile_tmp)s -o %(outfile)s &&
                    rm -rf %(outfile_tmp)s'''
 
-    P.run(statement)
+    P.run(statement, job_options="-t 2:00:00")
 
 
 @transform(gene_annotate,
