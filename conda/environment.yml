@@ -13,3 +13,4 @@ dependencies:
   - pandas
   - python
   - tabix
+  - regex
