@@ -142,7 +142,7 @@ def fusion_annotate(infiles, outfile):
 
     statement = '''python  %(PYTHON_ROOT)s/fusion_annotate.py --infile=%(infile)s --outfile=%(outfile)s --bedfile=%(bed)s'''
 
-    P.run(statement)
+    P.run(statement, job_options="-t 2:00:00")
 
 
 @transform(fusion_annotate,
@@ -180,7 +180,7 @@ def generate_bedout(infile, outfiles):
 
     statement = '''python %(PYTHON_ROOT)s/bed_fusion.py --infile=%(infile)s --bed1=%(outfile1)s --bed2=%(outfile2)s'''
 
-    P.run(statement)
+    P.run(statement, job_options="-t 2:00:00")
 
 
 @transform(generate_bedout,
@@ -197,7 +197,7 @@ def generate_counts(infiles, outfile):
 
     statement = '''python %(PYTHON_ROOT)s/generate_counts.py --bed1=%(bed1)s --bed2=%(bed2)s --outfile=%(outfile)s'''
 
-    P.run(statement)
+    P.run(statement, job_options="-t 2:00:00")
 
 
 @follows(generate_counts)
