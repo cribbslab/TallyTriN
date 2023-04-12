@@ -105,14 +105,14 @@ def correct_polyA(infile, outfile):
 @follows(mkdir("seperate_samples.dir"))
 @transform('polyA_correct.dir/*',
            regex("polyA_correct.dir/(\S+)_correct_polya.fastq"),
-           r"seperate_samples.dir/\1.fastq.gz")
+           r"seperate_samples.dir/\1.fastq")
 def seperate_by_barcode(infile, outfile):
     '''
     Identify barcode and save to different samples
     '''
 
     name = outfile.replace("seperate_samples.dir/", "")
-    name = name.replace(".fastq.gz", "")
+    name = name.replace(".fastq", "")
 
     PYTHON_ROOT = os.path.join(os.path.dirname(__file__), "python/")
 

@@ -7,6 +7,7 @@ import argparse
 from collections import Counter
 import collections
 import os.path
+import gzip
 
 # ########################################################################### #
 # ###################### Set up the logging ################################# #
@@ -120,7 +121,7 @@ with pysam.FastxFile(args.infile) as fh:
         
         seq_nano = record.sequence
 
-        m=regex.finditer("(AAGCAGTGGT){e<=0}", str(seq_nano))
+        m=regex.finditer("(AAGCAGTGGT){e<=1}", str(seq_nano))
         
         
         for i in m:
@@ -128,65 +129,66 @@ with pysam.FastxFile(args.infile) as fh:
             barcode = remove_point_mutations(barcode)[0]
             barcode = barcode[::3]
             if barcode == 'ATGC':
-                fname = name + '' + "Sample1.fastq.gz"
+                fname = name + '' + "Sample1.fastq"
             elif barcode == 'TCAG':
-                fname = name + '' + "Sample2.fastq.gz"
+                fname = name + '' + "Sample2.fastq"
             elif barcode == 'GACT':
-                fname = name + '' + "Sample3.fastq.gz"
+                fname = name + '' + "Sample3.fastq"
             elif barcode == 'CGTA':
-                fname = name + '' + "Sample4.fastq.gz"
+                fname = name + '' + "Sample4.fastq"
             elif barcode == 'ACGA':
-                fname = name + '' + "Sample5.fastq.gz"
+                fname = name + '' + "Sample5.fastq"
             elif barcode == 'TGAT':
-                fname = name + '' + "Sample6.fastq.gz"
+                fname = name + '' + "Sample6.fastq"
             elif barcode == 'GTCG':
-                fname = name + '' + "Sample7.fastq.gz"
+                fname = name + '' + "Sample7.fastq"
             elif barcode == 'CATC':
-                fname = name + '' + "Sample8.fastq.gz"
+                fname = name + '' + "Sample8.fastq"
             elif barcode == 'AGAG':
-                fname = name + '' + "Sample9.fastq.gz"
+                fname = name + '' + "Sample9.fastq"
             elif barcode == 'TATA':
-                fname = name + '' + "Sample10.fastq.gz"
+                fname = name + '' + "Sample10.fastq"
             elif barcode == 'GCGC':
-                fname = name + '' + "Sample11.fastq.gz"
+                fname = name + '' + "Sample11.fastq"
             elif barcode == 'CTCT':
-                fname = name + '' + "Sample12.fastq.gz"
+                fname = name + '' + "Sample12.fastq"
             else:
-                fname = name + '' + "Unidentified.fastq.gz"
+                fname = name + '' + "Unidentified.fastq"
             
-            if fname == name + '' + 'Unidentified.fastq.gz':
-                m=regex.finditer("(ACCACTGCTT){e<=0}", str(seq_nano))
+            if fname == name + '' + 'Unidentified.fastq':
+                m=regex.finditer("(ACCACTGCTT){e<=1}", str(seq_nano))
                 for i in m:
                     barcode = seq_nano[int(i.end()):int(i.end()+12)]
                     barcode = remove_point_mutations(barcode)[0]
                     barcode = barcode[::3]
                     if barcode == 'GCAT':
-                        fname = name + '' + "Sample1.fastq.gz"
+                        fname = name + '' + "Sample1.fastq"
                     elif barcode == 'CTGA':
-                        fname = name + '' + "Sample2.fastq.gz"
+                        fname = name + '' + "Sample2.fastq"
                     elif barcode == 'AGTC':
-                        fname = name + '' + "Sample3.fastq.gz"
+                        fname = name + '' + "Sample3.fastq"
                     elif barcode == 'TACG':
-                        fname = name + '' + "Sample4.fastq.gz"
+                        fname = name + '' + "Sample4.fastq"
                     elif barcode == 'TCGT':
-                        fname = name + '' + "Sample5.fastq.gz"
+                        fname = name + '' + "Sample5.fastq"
                     elif barcode == 'ATCA':
-                        fname = name + '' + "Sample6.fastq.gz"
+                        fname = name + '' + "Sample6.fastq"
                     elif barcode == 'CGAC':
-                        fname = name + '' + "Sample7.fastq.gz"
+                        fname = name + '' + "Sample7.fastq"
                     elif barcode == 'GATG':
-                        fname = name + '' + "Sample8.fastq.gz"
+                        fname = name + '' + "Sample8.fastq"
                     elif barcode == 'CTCT':
-                        fname = name + '' + "Sample9.fastq.gz"
+                        fname = name + '' + "Sample9.fastq"
                     elif barcode == 'TATA':
-                        fname = name + '' + "Sample10.fastq.gz"
+                        fname = name + '' + "Sample10.fastq"
                     elif barcode == 'GCGC':
-                        fname = name + '' + "Sample11.fastq.gz"
+                        fname = name + '' + "Sample11.fastq"
                     elif barcode == 'CTCT':
-                        fname = name + '' + "Sample12.fastq.gz"
+                        fname = name + '' + "Sample12.fastq"
                     else:
-                        fname = name + '' + "Unidentified.fastq.gz"
+                        fname = name + '' + "Unidentified.fastq"
                 if os.path.exists('seperate_samples.dir/' + fname):
+
                     with open('seperate_samples.dir/'+ fname, "a") as myfile:
                         myfile.write("@%s\n%s\n+\n%s\n" % (record.name, record.sequence, record.quality))
                 else:
