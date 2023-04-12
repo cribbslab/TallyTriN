@@ -101,6 +101,7 @@ def correct_polyA(infile, outfile):
     P.run(statement)
 
 
+@follows(correct_polyA)
 @follows(mkdir("seperate_samples.dir"))
 @transform('polyA_correct.dir/*',
            regex("polyA_correct.dir/(\S+)_correct_polya.fastq"),
