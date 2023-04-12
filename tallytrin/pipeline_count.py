@@ -174,7 +174,11 @@ def polya_umi(infile, outfile):
 
     PYTHON_ROOT = os.path.join(os.path.dirname(__file__), "python/")
 
-    if not PARAMS['correct']:
+    if PARAMS['no_umi']:
+
+        statement = '''cp %(infile)s %(outfile)s'''
+
+    elif not PARAMS['correct'] and not PARAMS['no_umi']:
         statement = """python %(PYTHON_ROOT)s/polya_umi_nocorrect.py --infile=%(infile)s --outname=%(outfile)s """
 
     else:
@@ -193,6 +197,7 @@ def tso_umi(infile, outfile):
     '''
 
     PYTHON_ROOT = os.path.join(os.path.dirname(__file__), "python/")
+
 
     if PARAMS['tso_present']:
 
@@ -241,6 +246,7 @@ def samtools(infile, outfile):
     P.run(statement)
 
 
+@active_if(PARAMS['correct'])
 @transform(samtools,
            regex("mapped_files.dir/(\S+)_final_sorted.bam"),
            r"mapped_files.dir/\1_XT.bam")
@@ -257,6 +263,7 @@ def xt_tag(infile, outfile):
     P.run(statement)
 
 
+@active_if(PARAMS['correct'])
 @follows(mkdir('counts_trans.dir'))
 @transform(xt_tag,
            regex("mapped_files.dir/(\S+)_XT.bam"),
@@ -269,6 +276,7 @@ def count_trans(infile, outfile):
     P.run(statement)
 
 
+@active_if(PARAMS['correct'])
 @follows(mkdir('counts_trans_mclumi.dir'))
 @transform(xt_tag,
            regex("mapped_files.dir/(\S+)_XT.bam"),
@@ -287,6 +295,7 @@ def count_trans_mclumi(infile, outfile):
     P.run(statement, job_memory=PARAMS['mclumi_memory'])
 
 
+@active_if(PARAMS['correct'])
 @transform(xt_tag,
            regex("mapped_files.dir/(\S+)_XT.bam"),
            r"counts_trans.dir/\1.counts_unique.tsv.gz")
@@ -302,6 +311,7 @@ def count_trans_unique(infile, outfile):
     P.run(statement)
 
 
+@active_if(PARAMS['correct'])
 @transform(xt_tag,
            regex("mapped_files.dir/(\S+)_XT.bam"),
            r"counts_trans.dir/\1.counts_noumis.tsv.gz")
@@ -319,6 +329,7 @@ def count_trans_noumis(infile, outfile):
     P.run(statement)
 
 
+@active_if(PARAMS['correct'])
 @merge(count_trans, "counts_trans.dir/counts.tsv.gz")
 def merge_count(infiles, outfile):
     '''
@@ -332,6 +343,7 @@ def merge_count(infiles, outfile):
     df.to_csv(outfile, sep="\t", compression="gzip")
 
 
+@active_if(PARAMS['correct'])
 @merge(count_trans_unique, "counts_trans.dir/counts_unique.tsv.gz")
 def merge_count_unique(infiles, outfile):
     '''
@@ -345,6 +357,7 @@ def merge_count_unique(infiles, outfile):
     df.to_csv(outfile, sep="\t", compression="gzip")
 
 
+@active_if(PARAMS['correct'])
 @merge(count_trans_noumis, "counts_trans.dir/counts_noumis.tsv.gz")
 def merge_trans_noumi(infiles, outfile):
     '''
@@ -363,6 +376,7 @@ def merge_trans_noumi(infiles, outfile):
 ## Gene level analysis ######
 #############################
 
+@active_if(PARAMS['correct'])
 @transform(tso_umi,
            regex("processed_fastq.dir/(\S+)_polya_tso_UMI.fastq.gz"),
            r"mapped_files.dir/\1_gene.sam")
@@ -384,6 +398,7 @@ def mapping_gene(infile, outfile):
     P.run(statement, job_memory="60G")
 
 
+@active_if(PARAMS['correct'])
 @transform(mapping_gene,
            regex("mapped_files.dir/(\S+)_gene.sam"),
            r"mapped_files.dir/\1_gene_sorted.bam")
@@ -403,6 +418,7 @@ def samtools_sort(infile, outfile):
     P.run(statement)
 
 
+@active_if(PARAMS['correct'])
 @transform(samtools_sort,
            regex("mapped_files.dir/(\S+)_gene_sorted.bam"),
            r"mapped_files.dir/\1_featurecounts_gene_sorted.bam")
@@ -420,6 +436,7 @@ def featurecounts(infile, outfile):
     P.run(statement)
 
 
+@active_if(PARAMS['correct'])
 @follows(mkdir('counts_genes.dir'))
 @transform(featurecounts,
            regex("mapped_files.dir/(\S+)_featurecounts_gene_sorted.bam"),
@@ -436,6 +453,7 @@ def count_gene(infile, outfile):
     P.run(statement)
 
 
+@active_if(PARAMS['correct'])
 @follows(mkdir('counts_genes_mclumi.dir'))
 @transform(featurecounts,
            regex("mapped_files.dir/(\S+)_featurecounts_gene_sorted.bam"),
@@ -450,6 +468,7 @@ def count_gene_mclumi(infile, outfile):
     P.run(statement, job_memory=PARAMS['mclumi_memory'])
 
 
+@active_if(PARAMS['correct'])
 @merge(count_gene, "counts_genes.dir/counts_gene.tsv.gz")
 def merge_count_gene(infiles, outfile):
     '''merge counts from ech sample into one'''
@@ -459,6 +478,7 @@ def merge_count_gene(infiles, outfile):
     df.to_csv(outfile, sep="\t", compression="gzip")
 
 
+@active_if(PARAMS['correct'])
 @transform(featurecounts,
            regex("mapped_files.dir/(\S+)_featurecounts_gene_sorted.bam"),
            r"counts_genes.dir/\1.count_gene_unique.tsv.gz")
@@ -470,6 +490,7 @@ def count_gene_unique(infile, outfile):
     P.run(statement)
 
 
+@active_if(PARAMS['correct'])
 @merge(count_gene_unique, "counts_genes.dir/gene_counts_unique.tsv.gz")
 def merge_count_gene_unique(infiles, outfile):
     '''merge counts from ech sample into one'''
@@ -483,6 +504,7 @@ def merge_count_gene_unique(infiles, outfile):
 ### analyse without UMI sequences
 #########
 
+@active_if(PARAMS['correct'])
 @follows(featurecounts)
 @originate("counts_gene_noumis.tsv.gz")
 def merge_featurecounts(outfile):
@@ -502,6 +524,7 @@ def merge_featurecounts(outfile):
 #########
 
 
+@active_if(PARAMS['correct'])
 @follows(mkdir('counts_trans_greedy.dir'))
 @transform(xt_tag,
            regex("mapped_files.dir/(\S+)_XT.bam"),
@@ -517,8 +540,41 @@ def count_trans_greedy(infile, outfile):
     P.run(statement)
 
 
+########
+### Analyse with no UMI added to the read (ONTs workflow)
+########
 
-@follows(merge_count, merge_count_unique, merge_count_gene, merge_count_gene_unique, merge_featurecounts, count_trans_mclumi, count_gene_mclumi, count_trans_greedy)
+@active_if(PARAMS['no_umi'])
+@follows(mkdir('counts_trans.dir'))
+@transform(samtools,
+           regex("mapped_files.dir/(\S+)_final_sorted.bam"),
+           r"counts_trans.dir/\1_counts_noumi.tsv")
+def count_trans_noumi(infile, outfile):
+    '''Count the reads for every gene'''
+
+    PYTHON_ROOT = os.path.join(os.path.dirname(__file__), "python/")
+
+    statement = '''python  %(PYTHON_ROOT)s/trans_count.py --infile=%(infile)s --outfile=%(outfile)s'''
+
+    P.run(statement)
+
+
+@active_if(PARAMS['no_umi'])
+@follows(count_trans_noumi)
+@originate("counts_trans_noumis.tsv.gz")
+def merge_noumis(outfile):
+    ''' '''
+
+    infiles = glob.glob("counts_trans.dir/*_counts_noumi.tsv")
+    final_df = merge_featurecounts_data(infiles)
+    names = [x.replace("_counts_noumi.tsv", "") for x in infiles]
+    names = [x.replace("counts_trans.dir/", "") for x in names]
+    final_df.columns = names
+    df = final_df.fillna(0)
+    df.to_csv(outfile, sep="\t", compression="gzip")
+
+
+@follows(merge_count, merge_count_unique, merge_count_gene, merge_count_gene_unique, merge_featurecounts, count_trans_mclumi, count_gene_mclumi, count_trans_greedy, merge_noumis)
 def full():
     '''
     A placeholder function that serves as a checkpoint

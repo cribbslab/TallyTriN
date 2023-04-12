@@ -8,7 +8,7 @@ import pandas as pd
 import scipy.sparse as sparse
 import scipy.io as io
 import os
-
+import random
 
 # ########################################################################### #
 # ###################### Set up the logging ################################# #
@@ -41,6 +41,11 @@ print(args)
 outf =  iotools.open_file(args.outfile,"w")
 log =  iotools.open_file(args.outfile + ".log","w")
 
+
+def most_common(lst):
+    return max(set(lst), key=lst.count)
+
+
 with pysam.FastxFile(args.infile) as fh:
     
     for record in fh:
@@ -55,10 +60,12 @@ with pysam.FastxFile(args.infile) as fh:
 
         umi_collapse = []
         for trimer in barcode:
-            barcode_collapse.append(list(trimer)[0])
-            
+            barcode_collapse.append(most_common(trimer))
+
         for trimer in umi:
-            umi_collapse.append(list(trimer)[0])
+            single_trimer = random.choice(list(trimer))
+            umi_collapse.append(single_trimer)
+
         
         barcode_collapse = "".join(barcode_collapse)
         umi_collapse = "".join(umi_collapse)
