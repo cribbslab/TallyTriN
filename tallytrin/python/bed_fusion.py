@@ -46,7 +46,12 @@ bed2 = open(args.bed2, "w")
 for line in bamfile:
 
     umi1 = line.query_name.split("_")[1]
-    umi = line.query_name.split("_")[2]
+
+    try:
+        umi = line.query_name.split("_")[2]
+    except IndexError:
+        umi = line.query_name.split("_")[1]
+
     barcode_umi = umi1 + "_" + umi
     
     chrom1 = line.get_tag("Ta")
