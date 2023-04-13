@@ -54,7 +54,7 @@ for line in bamfile:
         for gtf in tabixfile.fetch(chrom, int(start), int(end)):
             gtf = gtf.split("\t")
             line.tags += [("XT", gtf[3])]
-            out_bam.write(line)
+    out_bam.write(line)
 
 out_bam.close()
 bamfile.close() 
