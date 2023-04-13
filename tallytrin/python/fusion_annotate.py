@@ -66,6 +66,6 @@ for line in bamfile:
                         line.tags += [("Tc", gtf[2])]
                         line.tags += [("Td", gtf[3])]
 
-                        out_bam.write(line)
+    out_bam.write(line)
 out_bam.close()
 bamfile.close()
