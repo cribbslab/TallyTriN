@@ -32,3 +32,6 @@ mclumi:
   editdistance: 9
 
   memory: 100G
+
+
+job_options: -t 48:00:00

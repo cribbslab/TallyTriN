@@ -38,3 +38,5 @@ correct: 1
 
 # Specify how many errors to remove
 errors: 1
+
+job_options: -t 48:00:00

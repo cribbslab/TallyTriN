@@ -5,4 +5,6 @@
 # Copyright statement
 copyright: cribbslab (2021)
 
-bed: coding_gene_region.bad
+bed: coding_gene_region.bed
+
+job_options: -t 48:00:00

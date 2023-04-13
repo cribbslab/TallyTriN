@@ -59,3 +59,5 @@ database:
 # run in CMI mode - this is where the PCR primer will be used as a UMI,
 # this is so that the accuracy of the data can be measured: True 1, False 0
 cmi_mode: 1
+
+job_options: -t 48:00:00
