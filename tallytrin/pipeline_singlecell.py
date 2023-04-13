@@ -117,7 +117,7 @@ SEQUENCEFILES = tuple([os.path.join(DATADIR, suffix_name)
 
 
 @follows(mkdir("split_tmp.dir"))
-@split('data/*.fastq.gz', "split_tmp.dir/out*")
+@split(DATADIR + '/*.fastq.gz', "split_tmp.dir/out*")
 def split_fastq(infile, outfiles):
     '''
     Splits the input FASTQ file into smaller pieces using the seqkit split

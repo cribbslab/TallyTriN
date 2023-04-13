@@ -121,8 +121,7 @@ def seperate_by_barcode(infile, outfile):
     P.run(statement)
 
 
-
-@follows(seperate_by_barcode)
+@follows(merge_samples)
 def full():
     pass
 
