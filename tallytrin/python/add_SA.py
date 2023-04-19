@@ -39,6 +39,3 @@ for line in bamfile:
 
 bamfile.close()
 split.close()
-
-
-log.close()
