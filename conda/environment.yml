@@ -18,3 +18,4 @@ dependencies:
   - umi_tools
   - click
   - minimap2
+  - flake8
