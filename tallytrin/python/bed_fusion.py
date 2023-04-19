@@ -54,16 +54,25 @@ for line in bamfile:
 
     barcode_umi = umi1 + "_" + umi
     
-    chrom1 = line.get_tag("Ta")
-    start1 = line.get_tag("Tb")
-    end1 = line.get_tag("Tc")
-    name1 = line.get_tag("Td")
-    
-    chrom2 = line.reference_name
-    start2 = line.reference_start
-    end2 = line.reference_end
-    name2 = line.get_tag("XT")
-    
+    if line.has_tag('Ta'):
 
-    bed1.write("%s\t%s\t%s\t%s\t%s\n" % (chrom1, start1, end1, name1, barcode_umi))
-    bed2.write("%s\t%s\t%s\t%s\t%s\n" % (chrom2, start2, end2, name2, barcode_umi))
+        chrom1 = line.get_tag("Ta")
+        start1 = line.get_tag("Tb")
+        end1 = line.get_tag("Tc")
+        name1 = line.get_tag("Td")
+    
+        chrom2 = line.reference_name
+        start2 = line.reference_start
+        end2 = line.reference_end
+
+        if line.has_tag('XT'):
+            name2 = line.get_tag("XT")
+        else:
+            name2 = 'None'
+
+        bed1.write("%s\t%s\t%s\t%s\t%s\n" % (chrom1, start1, end1, name1, barcode_umi))
+        bed2.write("%s\t%s\t%s\t%s\t%s\n" % (chrom2, start2, end2, name2, barcode_umi))
+
+    else:
+        pass
+

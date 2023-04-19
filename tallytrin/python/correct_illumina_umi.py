@@ -140,7 +140,7 @@ with pysam.FastxFile(args.read1) as fh, pysam.FastxFile(args.read2) as fh2:
             if error > int(args.errors):
                 pass
 
-            elif collapsed_trimer is "":
+            elif collapsed_trimer == "":
                 pass
 
             else:
