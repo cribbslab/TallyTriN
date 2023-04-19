@@ -15,4 +15,6 @@ dependencies:
   - tabix
   - regex
   - samtools
+  - umi_tools
+  - click
   - minimap2
