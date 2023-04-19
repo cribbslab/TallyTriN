@@ -87,6 +87,8 @@ with pysam.FastxFile(args.infile) as fh:
                     umi = seq[bc_start-18:bc_start-12]
                     if umi is None:
                         break
+                    elif len(umi) != 6:
+                        break
                 else:
                     break
                 seq_new = seq[:begin_b]
