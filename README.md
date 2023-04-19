@@ -30,6 +30,9 @@ a new environment and install mamba
 Next install the required software using the conda yml file 
 
   ```
+  # Clone the TallyTriN repo
+  git clone git@github.com:cribbslab/TallyTriN.git
+  # Use mamba to install environment
   mamba env update --file conda/environment.yml
   ```
 
@@ -44,9 +47,6 @@ repo to help you easily install.
 
 
 ```
-# Clone the TallyTriN repo
-git clone git@github.com:cribbslab/TallyTriN.git
-
 # Install TallyTriN code
 python setup.py install
 ```
