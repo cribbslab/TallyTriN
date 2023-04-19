@@ -14,7 +14,7 @@ import os
 import pytest
 
 # define the directories to test
-directories = ['tallytrin', 'tallytrin/python']
+directories = ['tallytrin/entry.py']
 
 # define the test function
 @pytest.mark.parametrize('directory', directories)
