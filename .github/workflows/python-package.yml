@@ -23,14 +23,14 @@ jobs:
     - name: Checkout code
       uses: actions/checkout@v2
 
-    - name: Set up Conda environment
-      uses: conda-incubator/setup-miniconda@v2
+    - name: Set up Mamba environment
+      uses: mamba-org/setup-miniforge@v2
       with:
+        python-version: '3.9'
         activate-environment: myenv
         environment-file: conda/environment.yml
     - name: Install tallytrin
-      run: |
-        python setup.py install
+      run: pip install -e .
     - name: Lint with flake8
       run: |
         # stop the build if there are Python syntax errors or undefined names
