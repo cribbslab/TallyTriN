@@ -75,7 +75,7 @@ def main(argv=None):
         print("{}\n".format(
             printListInColumns(
                 sorted([os.path.basename(x)[len("pipeline_"):-len(".py")] for x in pipelines]),
-                3)))
+                2)))
         return
 
     command = argv[1]
