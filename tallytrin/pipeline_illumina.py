@@ -147,7 +147,7 @@ def map_hisat2(infile, outfile):
 
     statement = """hisat2 -x %(hisat2_index)s -U %(infile)s -S %(outfile)s"""
 
-    P.run(statement)
+    P.run(statement, job_options='-t 24:00:00')
 
 
 @transform(map_hisat2,
@@ -180,7 +180,7 @@ def featurecounts(infile, outfile):
                    samtools sort %(infile)s.featureCounts.bam  -o %(outfile)s &&
                    samtools index %(outfile)s"""
 
-    P.run(statement)
+    P.run(statement, job_options='-t 24:00:00')
 
 
 @follows(mkdir("featurecounts.dir"))

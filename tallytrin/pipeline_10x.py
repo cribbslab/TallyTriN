@@ -155,7 +155,7 @@ def correct_polyA(infile, outfile):
 
     statement = '''python %(PYTHON_ROOT)s/complement_polyA_singlecell.py --infile=%(infile)s --outname=%(outfile)s'''
 
-    P.run(statement)
+    P.run(statement, job_options='-t 24:00:00')
 
 
 @follows(mkdir("polyA_umi.dir"))
@@ -179,7 +179,7 @@ def identify_bcumi(infile, outfile):
     statement = '''python %(PYTHON_ROOT)s/10x_identify_barcode.py --outfile=%(outfile)s --infile=%(infile)s --whitelist=polyA_umi.dir/%(name)s.whitelist.txt
                    --cmimode=%(cmimode)s'''
 
-    P.run(statement)
+    P.run(statement, job_options='-t 24:00:00')
 
 
 
@@ -226,7 +226,7 @@ def correct_reads(infile, outfile):
 
     statement = '''python %(PYTHON_ROOT)s/correct_10xbarcode.py --infile=%(infile)s --outfile=%(outfile)s --cells=%(cells)s --whitelist=whitelist.txt  --cmimode=%(cmimode)s'''
 
-    P.run(statement)
+    P.run(statement, job_options='-t 24:00:00')
 
 
 @merge(correct_reads, "merge_corrected.fastq.gz")
@@ -266,7 +266,7 @@ def mapping(infile, outfile):
 
     statement = '''minimap2  %(options)s %(cdna)s  %(infile)s > %(outfile)s 2> %(outfile)s.log'''
 
-    P.run(statement)
+    P.run(statement, job_options='-t 24:00:00')
 
 
 @transform(mapping,
@@ -280,7 +280,7 @@ def run_samtools(infile, outfile):
                    samtools sort final.bam -o final_sorted.bam &&
                    samtools index final_sorted.bam'''
 
-    P.run(statement)
+    P.run(statement, job_options='-t 24:00:00')
 
 
 @transform(run_samtools,
@@ -296,7 +296,7 @@ def add_xt_tag(infile, outfile):
     statement = '''python %(PYTHON_ROOT)s/xt_tag_nano.py --infile=%(infile)s --outfile=%(outfile)s &&
                    samtools index %(outfile)s'''
 
-    P.run(statement)
+    P.run(statement, job_options='-t 24:00:00')
 
 
 @transform(add_xt_tag,
@@ -309,7 +309,7 @@ def count(infile, outfile):
 
     statement = '''umi_tools count --method unique --per-gene --gene-tag=XT --per-cell  -I %(infile)s -S counts.tsv.gz'''
 
-    P.run(statement)
+    P.run(statement, job_options='-t 24:00:00')
 
 
 @follows(mkdir("mtx.dir"))
@@ -325,7 +325,7 @@ def convert_tomtx(infile, outfile):
 
     statement = '''python %(PYTHON_ROOT)s/save_mtx.py --data=%(infile)s --dir=mtx.dir/'''
 
-    P.run(statement, job_memory="250G")
+    P.run(statement, job_memory="100G", job_options='-t 24:00:00')
 
 
 @follows(convert_tomtx)

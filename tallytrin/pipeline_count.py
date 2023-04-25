@@ -161,7 +161,7 @@ def polya_correct(infile, outfile):
 
     statement = '''python %(PYTHON_ROOT)s/complement_polyA.py --infile=%(infile)s --outname=%(outfile)s'''
 
-    P.run(statement)
+    P.run(statement, job_options='-t 24:00:00')
 
 @transform(polya_correct,
          regex("processed_fastq.dir/(\S+)_polyA.fastq.gz"),
@@ -184,7 +184,7 @@ def polya_umi(infile, outfile):
     else:
         statement = '''python %(PYTHON_ROOT)s/polya_umi.py --infile=%(infile)s --outname=%(outfile)s --errors=%(error_removal)s'''
 
-    P.run(statement)
+    P.run(statement, job_options='-t 24:00:00')
 
 
 @transform(polya_umi,
@@ -210,7 +210,7 @@ def tso_umi(infile, outfile):
     else:
         statement = """cp %(infile)s %(outfile)s"""
 
-    P.run(statement)
+    P.run(statement, job_options='-t 24:00:00')
 
 
 @follows(mkdir("mapped_files.dir"))
@@ -225,7 +225,7 @@ def mapping_trans(infile, outfile):
 
     statement = '''minimap2 -ax map-ont -p 0.9 --end-bonus 10 -N 3 %(cdna_fasta)s %(infile)s  > %(outfile)s 2> %(outfile)s.log'''
 
-    P.run(statement)
+    P.run(statement, job_options='-t 24:00:00')
 
 
 @transform(mapping_trans,
@@ -243,7 +243,7 @@ def samtools(infile, outfile):
                    samtools sort %(name)s_final.bam -o %(name)s_final_sorted.bam && 
                    samtools index %(name)s_final_sorted.bam '''
 
-    P.run(statement)
+    P.run(statement, job_options='-t 24:00:00')
 
 
 @active_if(PARAMS['correct'])
@@ -260,7 +260,7 @@ def xt_tag(infile, outfile):
 
     statement = '''python %(PYTHON_ROOT)s/add_XT.py --infile=%(infile)s --outname=%(outfile)s && samtools index %(outfile)s'''
 
-    P.run(statement)
+    P.run(statement, job_options='-t 24:00:00')
 
 
 @active_if(PARAMS['correct'])
@@ -273,7 +273,7 @@ def count_trans(infile, outfile):
 
     statement = '''umi_tools count --per-gene --gene-tag=XT -I %(infile)s -S %(outfile)s'''
 
-    P.run(statement)
+    P.run(statement, job_options='-t 24:00:00')
 
 
 @active_if(PARAMS['correct'])
@@ -308,7 +308,7 @@ def count_trans_unique(infile, outfile):
 
     statement = '''umi_tools count --per-gene --method=unique --gene-tag=XT -I %(infile)s -S %(outfile)s'''
 
-    P.run(statement)
+    P.run(statement, job_options='-t 24:00:00')
 
 
 @active_if(PARAMS['correct'])
@@ -326,7 +326,7 @@ def count_trans_noumis(infile, outfile):
 
     statement = '''python %(PYTHON_ROOT)s/trans_count.py --infile=%(infile)s --outfile=%(outfile)s'''
 
-    P.run(statement)
+    P.run(statement, job_options='-t 24:00:00')
 
 
 @active_if(PARAMS['correct'])
@@ -394,7 +394,7 @@ def mapping_gene(infile, outfile):
     else:
         statement = '''minimap2 -ax splice  -k 14 --sam-hit-only --secondary=no --junc-bed %(junc_bed)s %(genome_fasta)s %(infile)s > %(outfile)s  2> %(outfile)s.log'''
 
-    P.run(statement, job_memory="60G")
+    P.run(statement, job_memory="60G", job_options='-t 24:00:00')
 
 
 @transform(mapping_gene,
@@ -413,7 +413,7 @@ def samtools_sort(infile, outfile):
                    samtools sort %(name)s_gene.bam -o %(name)s_gene_sorted.bam &&
                    samtools index %(name)s_gene_sorted.bam'''
 
-    P.run(statement)
+    P.run(statement, job_options='-t 24:00:00')
 
 
 @transform(samtools_sort,
@@ -430,7 +430,7 @@ def featurecounts(infile, outfile):
                    samtools sort %(infile)s.featureCounts.bam -o %(name)s_featurecounts_gene_sorted.bam &&
                    samtools index %(name)s_featurecounts_gene_sorted.bam'''
 
-    P.run(statement)
+    P.run(statement, job_options='-t 24:00:00')
 
 
 @active_if(PARAMS['correct'])
@@ -447,7 +447,7 @@ def count_gene(infile, outfile):
 
     statement = '''umi_tools count --per-gene --gene-tag=XT -I %(infile)s -S %(outfile)s'''
 
-    P.run(statement)
+    P.run(statement, job_options='-t 24:00:00')
 
 
 @active_if(PARAMS['correct'])
@@ -484,7 +484,7 @@ def count_gene_unique(infile, outfile):
 
     statement = '''umi_tools count --per-gene --gene-tag=XT --method=unique -I %(infile)s -S %(outfile)s'''
 
-    P.run(statement)
+    P.run(statement, job_options='-t 24:00:00')
 
 
 @active_if(PARAMS['correct'])
@@ -534,7 +534,7 @@ def count_trans_greedy(infile, outfile):
     statement = '''python %(PYTHON_ROOT)s/greedy_bulk.py count -i %(infile)s
                    -t XT -o %(outfile)s'''
 
-    P.run(statement)
+    P.run(statement, job_options='-t 24:00:00')
 
 
 ########
@@ -553,7 +553,7 @@ def count_trans_noumi(infile, outfile):
 
     statement = '''python  %(PYTHON_ROOT)s/trans_count.py --infile=%(infile)s --outfile=%(outfile)s'''
 
-    P.run(statement)
+    P.run(statement, job_options='-t 24:00:00')
 
 
 @active_if(PARAMS['no_umi'])

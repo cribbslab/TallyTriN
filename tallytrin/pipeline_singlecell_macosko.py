@@ -244,7 +244,7 @@ def mapping(infile, outfile):
 
     statement = '''minimap2  %(options)s %(cdna)s  %(infile)s > %(outfile)s 2> %(outfile)s.log'''
 
-    P.run(statement)
+    P.run(statement, job_options='-t 24:00:00')
 
 
 @transform(mapping,
@@ -257,7 +257,7 @@ def run_samtools(infile, outfile):
                    samtools sort final.bam -o final_sorted.bam &&
                    samtools index final_sorted.bam'''
 
-    P.run(statement)
+    P.run(statement, job_options='-t 24:00:00')
 
 
 @transform(run_samtools,
@@ -338,7 +338,7 @@ def mapping_trimer(infile, outfile):
 
     statement = '''minimap2  %(options)s %(cdna)s  %(infile)s > %(outfile)s 2> %(outfile)s.log'''
 
-    P.run(statement)
+    P.run(statement, job_options='-t 24:00:00')
 
 
 @follows(mkdir("collapse_reads.dir"))
@@ -388,7 +388,7 @@ def mapping_collapsed(infile, outfile):
 
     statement = '''minimap2  %(options)s %(cdna)s  %(infile)s > %(outfile)s 2> %(outfile)s.log'''
 
-    P.run(statement)
+    P.run(statement, job_options='-t 24:00:00')
 
 
 
@@ -402,7 +402,7 @@ def run_samtools_collapsed(infile, outfile):
                    samtools sort final_collapsed.bam -o final_sorted_collapsed.bam &&
                    samtools index final_sorted_collapsed.bam'''
 
-    P.run(statement)
+    P.run(statement, job_options='-t 24:00:00')
 
 
 @transform(run_samtools_collapsed,
@@ -505,7 +505,7 @@ def run_minimap2_trimer(infile, outfile):
 
     statement = '''minimap2  %(options)s %(cdna)s  %(infile)s > %(outfile)s 2> %(outfile)s.log'''
 
-    P.run(statement)
+    P.run(statement, job_options='-t 24:00:00')
 
 
 @transform(run_minimap2_trimer,
@@ -518,7 +518,7 @@ def run_samtools_trimer(infile, outfile):
                    samtools sort final_trimer.bam -o final_sorted_trimer.bam &&
                    samtools index final_sorted_trimer.bam'''
 
-    P.run(statement)
+    P.run(statement, job_options='-t 24:00:00')
 
 
 @transform(run_samtools_trimer,
