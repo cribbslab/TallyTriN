@@ -376,7 +376,6 @@ def merge_trans_noumi(infiles, outfile):
 ## Gene level analysis ######
 #############################
 
-@active_if(PARAMS['correct'])
 @transform(tso_umi,
            regex("processed_fastq.dir/(\S+)_polya_tso_UMI.fastq.gz"),
            r"mapped_files.dir/\1_gene.sam")
@@ -398,7 +397,6 @@ def mapping_gene(infile, outfile):
     P.run(statement, job_memory="60G")
 
 
-@active_if(PARAMS['correct'])
 @transform(mapping_gene,
            regex("mapped_files.dir/(\S+)_gene.sam"),
            r"mapped_files.dir/\1_gene_sorted.bam")
@@ -418,7 +416,6 @@ def samtools_sort(infile, outfile):
     P.run(statement)
 
 
-@active_if(PARAMS['correct'])
 @transform(samtools_sort,
            regex("mapped_files.dir/(\S+)_gene_sorted.bam"),
            r"mapped_files.dir/\1_featurecounts_gene_sorted.bam")
