@@ -23,7 +23,7 @@ parser.add_argument("--infile", default=None, type=str,
                     help='infile fastq  file')
 parser.add_argument("--outname", default=None, type=str,
                     help='name for output fastq files')
-parser.add_argument("--error", default=None, type=str,
+parser.add_argument("--errors", default=None, type=str,
                     help='Errors threshold for UMI')
 
 
