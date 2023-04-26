@@ -27,14 +27,14 @@ jobs:
       uses: mamba-org/provision-with-micromamba@v12
       with:
         python-version: '3.9'
-        activate-environment: myenv
         environment-file: conda/environment.yml
+        activate-environment: myenv
+        
     - name: Install tallytrin
       run: pip install -e .
     - name: Lint with flake8
       run: |
-        conda init bash
-        conda activate myenv
+        mamba activate myenv
         python -m pip install --upgrade pip
         python -m pip install flake8 pytest
         # stop the build if there are Python syntax errors or undefined names
@@ -43,7 +43,7 @@ jobs:
         flake8 . --count --exit-zero --max-complexity=10 --max-line-length=127 --statistics
     - name: Test with pytest
       run: |
-        conda activate myenv
+        mamba activate myenv
         pytest -v tests/test_import.py
         pytest -v tests/test_style.py
         pytest -v tests/test_pipeline_control.py
