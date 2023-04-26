@@ -11,39 +11,57 @@ on:
 
 jobs:
   build:
+    name: Ex1 (${{ matrix.python-version }}, ${{ matrix.os }})
+    runs-on: ${{ matrix.os }}
 
-    runs-on: ubuntu-latest
     strategy:
       fail-fast: false
       matrix:
-        python-version: ["3.8", "3.9", "3.10"]
+        os: ["ubuntu-latest"]
+        python-version: ["3.7", "3.8", "3.9", "3.10"]
 
+    defaults:
+      run:
+        shell: bash -l {0}
 
     steps:
-    - name: Checkout code
-      uses: actions/checkout@v2
-
-    - name: Set up Mamba environment
-      uses: mamba-org/provision-with-micromamba@v12
-      with:
-        python-version: '3.9'
-        environment-file: conda/environment.yml
-        activate-environment: myenv
+      - uses: actions/checkout@v3
+      - name: Cache conda
+        uses: actions/cache@v3
+        env:
+          CACHE_NUMBER: 0
+        with:
+          path: ~/conda_pkgs_dir
+          key:
+            ${{ runner.os }}-conda-${{ env.CACHE_NUMBER }}-${{
+            hashFiles('conda/environments/environment.yml') }}
+      - uses: conda-incubator/setup-miniconda@v2
+        with:
+          python-version: ${{ matrix.python-version }}
+          channels: conda-forge, bioconda, defaults
+          channel-priority: true
+          activate-environment: tallytrin
+          environment-file: conda/environments/environment.yml
+          miniforge-variant: Mambaforge
+      - name: Show conda
+        run: |
+          conda info
+          conda list
+          mamba list
         
-    - name: Install tallytrin
-      run: pip install -e .
-    - name: Lint with flake8
-      run: |
-        mamba activate myenv
-        python -m pip install --upgrade pip
-        python -m pip install flake8 pytest
-        # stop the build if there are Python syntax errors or undefined names
-        flake8 . --count --select=E9,F63,F7,F82 --show-source --statistics
-        # exit-zero treats all errors as warnings. The GitHub editor is 127 chars wide
-        flake8 . --count --exit-zero --max-complexity=10 --max-line-length=127 --statistics
-    - name: Test with pytest
-      run: |
-        mamba activate myenv
-        pytest -v tests/test_import.py
-        pytest -v tests/test_style.py
-        pytest -v tests/test_pipeline_control.py
+      - name: Install tallytrin
+        run: pip install -e .
+      - name: Lint with flake8
+        run: |
+          mamba activate myenv
+          python -m pip install --upgrade pip
+          python -m pip install flake8 pytest
+          # stop the build if there are Python syntax errors or undefined names
+          flake8 . --count --select=E9,F63,F7,F82 --show-source --statistics
+          # exit-zero treats all errors as warnings. The GitHub editor is 127 chars wide
+          flake8 . --count --exit-zero --max-complexity=10 --max-line-length=127 --statistics
+      - name: Test with pytest
+        run: |
+          pytest -v tests/test_import.py
+          pytest -v tests/test_style.py
+          pytest -v tests/test_pipeline_control.py
