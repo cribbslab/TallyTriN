@@ -19,3 +19,4 @@ dependencies:
   - click
   - minimap2
   - flake8
+  - cgat-apps
