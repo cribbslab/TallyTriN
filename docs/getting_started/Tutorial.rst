@@ -6,19 +6,18 @@ Running a pipeline - Tutorial
 =============================
 
 
-Before beginning this tutorial make sure you have the CGAT-core installed correctly,
+Before beginning this tutorial make sure you have the TallyTrin installed correctly,
 please see here (see :ref:`getting_started-Installation`) for installation instructions.
 
-As a tutorial example of how to run a CGAT workflow we will run the cgat-showcase pipeline. Therefore,
-you will also need to install the cgat-showcase (see `instructions <https://cgat-showcase.readthedocs.io/en/latest/getting_started/Tutorial.html>`_)
+As a tutorial example of how to run a TallyTrin workflow we will run the count pipeline.
 
-The aim of this pipeline is to perform pseaudoalignment using kallisto. The pipeline can be ran locally or
-dirtributed accross a cluster. This tutorial will explain the steps required to run this pipeline. Further documentation
-on cgat-showcase can be found `here <https://cgat-showcase.readthedocs.io/en/latest/>`_.
+This workflow is for generating a count matrix for
+downstream differential expression analysis using nanopore reads.
+The pipeline takes an input fastq file, processes it, and outputs 
+a count matrix with samples as columns and rows as either transcripts
+or genes. The pipeline makes use of multiple Python libraries and tools
+like Minimap2, Samtools, UMI-tools, and mclumi.
 
-The cgat-showcase highlights some of the functionality of cgat-core. However, we also have our utility
-pipelines contained in the cgat-flow repository which demonstrate our advanced pipelines for next-generation
-sequencing analysis (see `cgat-flow <https://github.com/cgat-developers/cgat-flow>`_).
 
 Tutorial start
 --------------
@@ -26,47 +25,71 @@ Tutorial start
 
 **1.** First download the tutorial data::
 
-   mkdir showcase
-   cd showcase
-   wget https://www.cgat.org/downloads/public/showcase/showcase_test_data.tar.gz
-   tar -zxvf showcase_test_data.tar.gz
+   mkdir count
+   cd count
+   wget https://datashare.molbiol.ox.ac.uk/public/project/cribbslab/acribbs/Trimer/test.fastq.gz
+   wget https://datashare.molbiol.ox.ac.uk/public/project/cribbslab/acribbs/Trimer/Homo_sapiens.GRCh38.cdna.all.fa
+   wget https://datashare.molbiol.ox.ac.uk/public/project/cribbslab/acribbs/Trimer/hg38.fa
+   wget https://datashare.molbiol.ox.ac.uk/public/project/cribbslab/acribbs/Trimer/hg38_geneset_all.bed
+   wget https://datashare.molbiol.ox.ac.uk/public/project/cribbslab/acribbs/Trimer/hg38_geneset_all.gtf
+
 
 **2.** Next we will generate a configuration yml file so the pipeline output can be modified::
 
-   cd showcase_test_data
-   cgatshowcase transdiffexpres config
+   conda activate tallytrin
 
-or you can alternatively call the workflow file directly::
+   # To show all available pipelines:
+   tallytrin -h
 
-   python /path/to/file/pipeline_transdiffexpres.py config
+   # Generate config
+   tallytrin count config
 
-This will generate a **pipeline.yml** file containing the configuration parameters than can be used to modify
-the output of the pipleine. However, for this tutorial you do not need to modify the parameters to run the 
-pipeline. In the :ref:`modify_config` section below I have detailed how you can modify the config file to
-change the output of the pipeline.
+**3.** Modify the config if required::
+ 
+At this stage you would normally modify the config, but in this case the defaults should be fine in 
+this case::
 
-**3.** Next we will run the pipleine::
+  # Config file for pipeline_count.py
 
-   cgatshowcase transdiffexpres make full -v5 --no-cluster
+  ## general options
+
+  # Copyright statement
+  copyright: cribbslab (2021)
+
+  cdna_fasta: Homo_sapiens.GRCh38.cdna.all.fa
+
+  genome_fasta: hg38.fa
+ 
+  junc_bed: hg38_geneset_all.bed
+
+  gtf: hg38_geneset_all.gtf
+
+  # Specify if the pipeline should run umi correction or not
+  correct: 1
+
+  # Specify if the pipeline should run with a trimer UMI on the tso
+  tso_present: 1
+
+  # Specify if a split prefix of index is needed for running minimap2 if the index is large
+  minimap2_splitprefix: 0
+
+  # Threshold to remove UMI errors
+  error_removal: 1
+
+  # mclumi options
+
+  mclumi:
+
+    editdistance: 9
+
+    memory: 100G
+
+
+  job_options: -t 48:00:00
+
+**4.** Next we will run the pipleine::
+
+   tallytrin count make full -v5 --no-cluster
 
 This ``--no-cluster`` will run the pipeline locally if you do not have access to a cluster. Alternatively if you have a
 cluster remove the ``--no-cluster`` option and the pipleine will distribute your jobs accross the cluster.
-
-.. note::
-
-   There are many commandline options available to run the pipeline. To see available options please run :code:`cgatshowcase --help`.
-
-**4.** Generate a report
-
-The final step is to generate a report to display the output of the pipeline. We have a preference for using MultiQC
-for generate bioinformatics tools (such as mappers and pseudoaligners) and Rmarkdown for generating custom reports.
-In order to generate these run the command::
-
-    cgatshowcase transdiffexprs make build_report -v 5 --no-cluster
-
-This will generate a MultiQC report in the folder `MultiQC_report.dir/` and an Rmarkdown report in `R_report.dir/`. 
-
-
-
-This completes the tutorial for running the transdiffexprs pipeline for cgat-showcase, hope you find it as useful as
-we do for writing workflows within python. 
