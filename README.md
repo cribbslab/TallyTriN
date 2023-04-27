@@ -6,6 +6,8 @@ Overview
 ========
 Long-read sequencing has become an increasingly popular tool for RNA sequencing that provides unprecedented insight into isoform, translocation and variant calling analysis.
 
+Further [documentation](https://tallytrin.readthedocs.io/en/latest/) and tutorial on how to run a workflow can be found at read the docs [here](https://tallytrin.readthedocs.io/en/latest/)
+
 TallyTriN is a collection of bulk and single-cell workflows that utilize Unique Molecular Identifiers (UMIs) synthesized using trimer blocks of nucleotides.
 
 Workflows
@@ -69,7 +71,7 @@ For example, to generate a configuration file run
    tallytrin count config
    ```
 
-To set up the configuration file, please refer to our [documentation]().
+To set up the configuration file, please refer to our [documentation](https://tallytrin.readthedocs.io/en/latest/).
 
 To run the pipeline with all tasks, run
 
