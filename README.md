@@ -21,7 +21,7 @@ Installation
 ============
 
 We reccomend installing [miniconda](https://docs.conda.io/en/latest/miniconda.html), then creating
-a new environment and install mamba
+a new environment and install mamba. This istallation typically takes 10 minutes.
 
   ```
   conda install mamba -c conda-forge
