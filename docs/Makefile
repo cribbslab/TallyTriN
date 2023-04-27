@@ -4,7 +4,7 @@
 # You can set these variables from the command line.
 SPHINXOPTS    =
 SPHINXBUILD   = sphinx-build
-SPHINXPROJ    = cgatcore
+SPHINXPROJ    = tallytrin
 SOURCEDIR     = .
 BUILDDIR      = _build
 
