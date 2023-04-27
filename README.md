@@ -46,10 +46,10 @@ Then, you will need to manually install TallyTriN and the fork of umi tools. The
 repo to help you easily install.
 
 
-```
-# Install TallyTriN code
-python setup.py install
-```
+  ```
+  # Install TallyTriN code
+  python setup.py install
+  ```
 
 Documentation
 =============
