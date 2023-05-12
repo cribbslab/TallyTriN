@@ -61,3 +61,7 @@ database:
 cmi_mode: 1
 
 job_options: -t 48:00:00
+
+# Specify the barcode length you would like for 10x,
+# the default is 16 but for testing purposes this can be reduced
+barcode: 16

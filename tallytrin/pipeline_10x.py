@@ -177,7 +177,7 @@ def identify_bcumi(infile, outfile):
     PYTHON_ROOT = os.path.join(os.path.dirname(__file__), "python/")
 
     statement = '''python %(PYTHON_ROOT)s/10x_identify_barcode.py --outfile=%(outfile)s --infile=%(infile)s --whitelist=polyA_umi.dir/%(name)s.whitelist.txt
-                   --cmimode=%(cmimode)s'''
+                   --cmimode=%(cmimode)s --barcode=%(barcode)s'''
 
     P.run(statement, job_options='-t 24:00:00')
 
@@ -266,7 +266,7 @@ def mapping(infile, outfile):
 
     statement = '''minimap2  %(options)s %(cdna)s  %(infile)s > %(outfile)s 2> %(outfile)s.log'''
 
-    P.run(statement, job_options='-t 24:00:00')
+    P.run(statement, job_options='-t 24:00:00', job_threads=4)
 
 
 @transform(mapping,
