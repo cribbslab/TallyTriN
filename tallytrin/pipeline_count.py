@@ -246,7 +246,6 @@ def samtools(infile, outfile):
     P.run(statement, job_options='-t 24:00:00')
 
 
-@active_if(PARAMS['correct'])
 @transform(samtools,
            regex("mapped_files.dir/(\S+)_final_sorted.bam"),
            r"mapped_files.dir/\1_XT.bam")
@@ -263,7 +262,6 @@ def xt_tag(infile, outfile):
     P.run(statement, job_options='-t 24:00:00')
 
 
-@active_if(PARAMS['correct'])
 @follows(mkdir('counts_trans.dir'))
 @transform(xt_tag,
            regex("mapped_files.dir/(\S+)_XT.bam"),
@@ -276,7 +274,6 @@ def count_trans(infile, outfile):
     P.run(statement, job_options='-t 24:00:00')
 
 
-@active_if(PARAMS['correct'])
 @follows(mkdir('counts_trans_mclumi.dir'))
 @transform(xt_tag,
            regex("mapped_files.dir/(\S+)_XT.bam"),
@@ -295,7 +292,6 @@ def count_trans_mclumi(infile, outfile):
     P.run(statement, job_memory=PARAMS['mclumi_memory'])
 
 
-@active_if(PARAMS['correct'])
 @transform(xt_tag,
            regex("mapped_files.dir/(\S+)_XT.bam"),
            r"counts_trans.dir/\1.counts_unique.tsv.gz")
@@ -311,7 +307,6 @@ def count_trans_unique(infile, outfile):
     P.run(statement, job_options='-t 24:00:00')
 
 
-@active_if(PARAMS['correct'])
 @transform(xt_tag,
            regex("mapped_files.dir/(\S+)_XT.bam"),
            r"counts_trans.dir/\1.counts_noumis.tsv.gz")
@@ -329,7 +324,6 @@ def count_trans_noumis(infile, outfile):
     P.run(statement, job_options='-t 24:00:00')
 
 
-@active_if(PARAMS['correct'])
 @merge(count_trans, "counts_trans.dir/counts.tsv.gz")
 def merge_count(infiles, outfile):
     '''
@@ -343,7 +337,6 @@ def merge_count(infiles, outfile):
     df.to_csv(outfile, sep="\t", compression="gzip")
 
 
-@active_if(PARAMS['correct'])
 @merge(count_trans_unique, "counts_trans.dir/counts_unique.tsv.gz")
 def merge_count_unique(infiles, outfile):
     '''
@@ -357,7 +350,6 @@ def merge_count_unique(infiles, outfile):
     df.to_csv(outfile, sep="\t", compression="gzip")
 
 
-@active_if(PARAMS['correct'])
 @merge(count_trans_noumis, "counts_trans.dir/counts_noumis.tsv.gz")
 def merge_trans_noumi(infiles, outfile):
     '''
@@ -433,7 +425,6 @@ def featurecounts(infile, outfile):
     P.run(statement, job_options='-t 24:00:00')
 
 
-@active_if(PARAMS['correct'])
 @follows(mkdir('counts_genes.dir'))
 @transform(featurecounts,
            regex("mapped_files.dir/(\S+)_featurecounts_gene_sorted.bam"),
@@ -450,7 +441,6 @@ def count_gene(infile, outfile):
     P.run(statement, job_options='-t 24:00:00')
 
 
-@active_if(PARAMS['correct'])
 @follows(mkdir('counts_genes_mclumi.dir'))
 @transform(featurecounts,
            regex("mapped_files.dir/(\S+)_featurecounts_gene_sorted.bam"),
@@ -465,7 +455,6 @@ def count_gene_mclumi(infile, outfile):
     P.run(statement, job_memory=PARAMS['mclumi_memory'])
 
 
-@active_if(PARAMS['correct'])
 @merge(count_gene, "counts_genes.dir/counts_gene.tsv.gz")
 def merge_count_gene(infiles, outfile):
     '''merge counts from ech sample into one'''
@@ -475,7 +464,6 @@ def merge_count_gene(infiles, outfile):
     df.to_csv(outfile, sep="\t", compression="gzip")
 
 
-@active_if(PARAMS['correct'])
 @transform(featurecounts,
            regex("mapped_files.dir/(\S+)_featurecounts_gene_sorted.bam"),
            r"counts_genes.dir/\1.count_gene_unique.tsv.gz")
@@ -487,7 +475,6 @@ def count_gene_unique(infile, outfile):
     P.run(statement, job_options='-t 24:00:00')
 
 
-@active_if(PARAMS['correct'])
 @merge(count_gene_unique, "counts_genes.dir/gene_counts_unique.tsv.gz")
 def merge_count_gene_unique(infiles, outfile):
     '''merge counts from ech sample into one'''
@@ -501,7 +488,6 @@ def merge_count_gene_unique(infiles, outfile):
 ### analyse without UMI sequences
 #########
 
-@active_if(PARAMS['correct'])
 @follows(featurecounts)
 @originate("counts_gene_noumis.tsv.gz")
 def merge_featurecounts(outfile):
@@ -521,7 +507,6 @@ def merge_featurecounts(outfile):
 #########
 
 
-@active_if(PARAMS['correct'])
 @follows(mkdir('counts_trans_greedy.dir'))
 @transform(xt_tag,
            regex("mapped_files.dir/(\S+)_XT.bam"),
@@ -534,7 +519,7 @@ def count_trans_greedy(infile, outfile):
     statement = '''python %(PYTHON_ROOT)s/greedy_bulk.py count -i %(infile)s
                    -t XT -o %(outfile)s'''
 
-    P.run(statement, job_options='-t 24:00:00')
+    P.run(statement, job_options='-t 36:00:00')
 
 
 ########

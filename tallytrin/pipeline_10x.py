@@ -263,10 +263,11 @@ def mapping(infile, outfile):
 
     cdna = PARAMS['minimap2_fasta_cdna']
     options = PARAMS['minimap2_options']
+    run_options = PARAMS['job_options']
 
     statement = '''minimap2  %(options)s %(cdna)s  %(infile)s > %(outfile)s 2> %(outfile)s.log'''
 
-    P.run(statement, job_options=%(job_options)s, job_threads=4)
+    P.run(statement, job_options=run_options, job_threads=4)
 
 
 @transform(mapping,
