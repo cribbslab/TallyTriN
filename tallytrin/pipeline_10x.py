@@ -308,7 +308,7 @@ def count(infile, outfile):
     unique method, per gene and per cell. The output is a compressed
     TSV file called "counts.tsv.gz".'''
 
-    statement = '''umi_tools count --method unique --per-gene --gene-tag=XT --per-cell  -I %(infile)s -S counts.tsv.gz'''
+    statement = '''umi_tools count --per-gene --gene-tag=XT --per-cell  -I %(infile)s -S counts.tsv.gz'''
 
     P.run(statement, job_options='-t 24:00:00')
 
