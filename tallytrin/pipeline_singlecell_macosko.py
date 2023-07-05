@@ -352,8 +352,13 @@ def collapse_reads(infile, outfile):
 
     PYTHON_ROOT = os.path.join(os.path.dirname(__file__), "python/")
 
+    if PARAMS['trimer_beads']:
 
-    statement = '''python %(PYTHON_ROOT)s/single_nucleotide_select.py --infile=%(infile)s --outfile=%(outfile)s'''
+        statement = '''python %(PYTHON_ROOT)s/single_nucleotide_select.py --infile=%(infile)s --outfile=%(outfile)s'''
+
+    else:
+        statement = '''cp %(infile)s %(outfile)s '''
+
 
     P.run(statement)
 

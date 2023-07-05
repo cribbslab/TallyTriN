@@ -26,6 +26,8 @@ release: 0.1
 
 data: data.dir
 
+# is the bead made of a trimer?
+trimer_beads: 0
 
 # Number of reads to split the fastq file by for parallelization
 # Needs to be a multiple of 4
