@@ -82,7 +82,7 @@ with pysam.FastxFile(args.infile) as fh:
                 
                 bc_start = find_substring(seq, "GTACTCTGCG")
                 if bc_start is not None:
-                    barcode = seq[bc_start-10:bc_start]
+                    barcode = seq[bc_start-12:bc_start]
                     barcodes.append(barcode)
                     umi = seq[bc_start-18:bc_start-12]
                     if umi is None:
