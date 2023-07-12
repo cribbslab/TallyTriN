@@ -199,16 +199,17 @@ def merge_whitelist(infiles, outfile):
 @follows(mkdir("correct_reads.dir"))
 @transform(identify_bcumi,
            regex("polyA_umi.dir/(\S+).fastq.gz"),
+           add_inputs(merge_whitelist),
            r"correct_reads.dir/\1.fastq.gz")
-def correct_reads(infile, outfile):
+def correct_reads(infiles, outfile):
     '''Correct the barcodes using majority vote'''
 
-    infile = infile
+    infile, whitelist_file = infiles
     cells = PARAMS['cells']
 
     PYTHON_ROOT = os.path.join(os.path.dirname(__file__), "python/")
 
-    statement = '''python %(PYTHON_ROOT)s/correct_10xbarcode.py --infile=%(infile)s --outfile=%(outfile)s --cells=%(cells)s --whitelist=whitelist.txt  --cmimode=0'''
+    statement = '''python %(PYTHON_ROOT)s/correct_10xbarcode.py --infile=%(infile)s --outfile=%(outfile)s --cells=%(cells)s --whitelist=%(whitelist_file)s  --cmimode=0'''
 
     P.run(statement, job_options='-t 24:00:00')
 
@@ -434,7 +435,7 @@ def add_xt_tag_collapsed(infile, outfile):
 def count_collapsed(infile, outfile):
     '''use umi_tools to count the reads - need to adapt umi tools to double oligo'''
 
-    statement = '''umi_tools count --method unique --per-gene --gene-tag=XT --per-cell  -I %(infile)s -S %(outfile)s'''
+    statement = '''umi_tools count --per-gene --gene-tag=XT --per-cell --dual-nucleotide -I %(infile)s -S %(outfile)s'''
 
     P.run(statement)
 
@@ -459,7 +460,7 @@ def convert_tomtx_collapsed(infile, outfile):
 def count_collapsed_direction(infile, outfile):
     '''use umi_tools to count the reads - need to adapt umi tools to double oligo'''
 
-    statement = '''umi_tools count  --per-gene --gene-tag=XT --per-cell  -I %(infile)s -S %(outfile)s'''
+    statement = '''umi_tools count --per-gene --gene-tag=XT --per-cell --dual-nucleotide -I %(infile)s -S %(outfile)s'''
 
     P.run(statement)
 
