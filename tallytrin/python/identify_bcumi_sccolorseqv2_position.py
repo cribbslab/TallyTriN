@@ -79,15 +79,11 @@ with pysam.FastxFile(args.infile) as fh:
             length_umibarcode = len(seq[end_a:begin_b])
             barcodeumi = seq[end_a:begin_b]
             if length_umibarcode > 18 and length_umibarcode < 50:
-                
-                if umi_start is not None:
-                    barcode = seq[end_a:end_a+10]
-                    barcodes.append(barcode)
-                    umi = seq[end_a+15:end_a+31]
+                barcode = seq[end_a:end_a+10]
+                barcodes.append(barcode)
+                umi = seq[end_a+15:end_a+31]
                     
-                    if umi is None:
-                        break
-                else:
+                if umi is None:
                     break
                 seq_new = seq[:begin_b]
                 quality_new = record.quality[:begin_b]

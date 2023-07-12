@@ -60,3 +60,6 @@ job_options: -t 48:00:00
 
 # determine if the umi is identified using positional information or the spacer
 umi_positional: 1
+
+# Expected number of cells in the experiment
+cells: 1000

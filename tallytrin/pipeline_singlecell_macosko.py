@@ -191,7 +191,7 @@ def merge_whitelist(infiles, outfile):
     P.run(statement)
 
 
-
+@follows(merge_whitelist)
 @follows(mkdir("correct_reads.dir"))
 @transform(identify_bcumi,
            regex("polyA_umi.dir/(\S+).fastq.gz"),
@@ -200,13 +200,14 @@ def correct_reads(infile, outfile):
     '''Correct the barcodes using majority vote'''
 
     infile = infile
+    cells = PARAMS['cells']
 
     PYTHON_ROOT = os.path.join(os.path.dirname(__file__), "python/")
 
 
-    statement = '''cp %(infile)s %(outfile)s'''
+    statement = '''python %(PYTHON_ROOT)s/correct_10xbarcode.py --infile=%(infile)s --outfile=%(outfile)s --cells=%(cells)s --whitelist=whitelist.txt  --cmimode=0'''
 
-    P.run(statement)
+    P.run(statement, job_options='-t 24:00:00')
 
 
 @merge(correct_reads, "merge_corrected.fastq.gz")
