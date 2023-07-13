@@ -88,10 +88,12 @@ with pysam.FastxFile(args.infile) as fh:
                     
                     if umi is None:
                         break
+                    if len(umi) != 16:
+                        break
                 else:
                     break
-                seq_new = seq[:begin_b]
-                quality_new = record.quality[:begin_b]
+                seq_new = seq[begin_b:]
+                quality_new = record.quality[begin_b:]
                 y += 1
                 outfile.write("@%s\n%s\n+\n%s\n" % (record.name + "_" + barcode + "_" + umi, seq_new, quality_new))
             else:

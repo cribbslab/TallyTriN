@@ -28,6 +28,8 @@ parser.add_argument("--infile", default=None, type=str,
                     help='nanopore infile fastq  file')
 parser.add_argument("--outfile", default=None, type=str,
                     help='name for output fastq files')
+parser.add_argument("--barcode", default=None, type=str,
+                    help='barcode length')
 
 args = parser.parse_args()
 
@@ -79,14 +81,17 @@ with pysam.FastxFile(args.infile) as fh:
             length_umibarcode = len(seq[end_a:begin_b])
             barcodeumi = seq[end_a:begin_b]
             if length_umibarcode > 18 and length_umibarcode < 50:
-                barcode = seq[end_a:end_a+10]
+                barcode = seq[end_a:end_a+int(args.barcode)]
                 barcodes.append(barcode)
-                umi = seq[end_a+15:end_a+31]
-                    
+                umi = seq[end_a+16:end_a+28]
+
                 if umi is None:
                     break
-                seq_new = seq[:begin_b]
-                quality_new = record.quality[:begin_b]
+                if len(umi) != 16:
+                    break
+
+                seq_new = seq[begin_b:]
+                quality_new = record.quality[begin_b:]
                 y += 1
                 outfile.write("@%s\n%s\n+\n%s\n" % (record.name + "_" + barcode + "_" + umi, seq_new, quality_new))
             else:

@@ -163,10 +163,11 @@ def identify_bcumi(infile, outfile):
 
     name = outfile.replace("polyA_umi.dir/", "")
     name = name.replace(".fastq.gz", "")
+    barcode_len = PARAMS['barcode_len']
 
     PYTHON_ROOT = os.path.join(os.path.dirname(__file__), "python/")
 
-    statement = '''python %(PYTHON_ROOT)s/identify_bcumi_macosko.py --outfile=%(outfile)s --infile=%(infile)s --whitelist=polyA_umi.dir/%(name)s.whitelist.txt'''
+    statement = '''python %(PYTHON_ROOT)s/identify_bcumi_macosko.py --outfile=%(outfile)s --infile=%(infile)s --whitelist=polyA_umi.dir/%(name)s.whitelist.txt --barcode_len=%(barcode_len)s'''
 
     P.run(statement)
 

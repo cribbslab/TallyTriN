@@ -28,6 +28,8 @@ parser.add_argument("--infile", default=None, type=str,
                     help='nanopore infile fastq  file')
 parser.add_argument("--outfile", default=None, type=str,
                     help='name for output fastq files')
+parser.add_argument("--barcode_len", default=None, type=str,
+                    help='length of cell barcode')
 
 args = parser.parse_args()
 
@@ -82,7 +84,7 @@ with pysam.FastxFile(args.infile) as fh:
                 
                 bc_start = find_substring(seq, "GTACTCTGCG")
                 if bc_start is not None:
-                    barcode = seq[bc_start-12:bc_start]
+                    barcode = seq[bc_start-int(args.barcode_len):bc_start]
                     barcodes.append(barcode)
                     umi = seq[bc_start-18:bc_start-12]
                     if umi is None:

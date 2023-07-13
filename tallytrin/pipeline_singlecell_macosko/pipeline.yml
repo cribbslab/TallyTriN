@@ -60,3 +60,6 @@ job_options: -t 48:00:00
 
 # Expected number of cells in the experiment
 cells: 1000
+
+# Length of cell barcode 
+barcode_len: 12
