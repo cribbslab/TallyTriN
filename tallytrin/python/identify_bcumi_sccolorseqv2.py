@@ -84,6 +84,10 @@ with pysam.FastxFile(args.infile) as fh:
                 if umi_start is not None:
                     barcode = seq[end_a:end_a+10]
                     barcodes.append(barcode)
+                if args.cmimode == '1':
+                    umi = seq[begin_a:end_a]
+                    umi = umi[:8]
+                else:
                     umi = barcodeumi[umi_start+3:umi_start+19]
                     
                     if umi is None:

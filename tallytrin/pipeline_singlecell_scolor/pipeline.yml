@@ -63,3 +63,9 @@ umi_positional: 1
 
 # Expected number of cells in the experiment
 cells: 1000
+
+# if the analysis is in cmi mode
+cmimode: 0
+
+# length of barcode
+barcode_len: 12

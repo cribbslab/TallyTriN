@@ -30,6 +30,8 @@ parser.add_argument("--outfile", default=None, type=str,
                     help='name for output fastq files')
 parser.add_argument("--barcode_len", default=None, type=str,
                     help='length of cell barcode')
+parser.add_argument("--cmimode", default=None, type=str,
+                    help='Run the script in cmi mode for accuracy evaluation')
 
 args = parser.parse_args()
 
@@ -86,10 +88,15 @@ with pysam.FastxFile(args.infile) as fh:
                 if bc_start is not None:
                     barcode = seq[bc_start-int(args.barcode_len):bc_start]
                     barcodes.append(barcode)
-                    umi = seq[bc_start-18:bc_start-12]
+                    if args.cmimode == '1':
+                        umi = seq[begin_a:end_a]
+                        umi = umi[:8]
+                    else:
+                        umi = seq[end_a+12:end_a+20]
+                    
                     if umi is None:
                         break
-                    elif len(umi) != 6:
+                    elif len(umi) != 8:
                         break
                 else:
                     break

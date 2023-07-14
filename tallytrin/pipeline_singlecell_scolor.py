@@ -163,14 +163,16 @@ def identify_bcumi(infile, outfile):
 
     name = outfile.replace("polyA_umi.dir/", "")
     name = name.replace(".fastq.gz", "")
+    cmimode = PARAMS['cmimode']
+    barcode = PARAMS['barcode_len']
 
     PYTHON_ROOT = os.path.join(os.path.dirname(__file__), "python/")
 
     if PARAMS['umi_positional']:
-        statement = '''python %(PYTHON_ROOT)s/identify_bcumi_sccolorseqv2_position.py --outfile=%(outfile)s --infile=%(infile)s --whitelist=polyA_umi.dir/%(name)s.whitelist.txt'''
+        statement = '''python %(PYTHON_ROOT)s/identify_bcumi_sccolorseqv2_position.py --outfile=%(outfile)s --infile=%(infile)s --whitelist=polyA_umi.dir/%(name)s.whitelist.txt --cmimode=%(cmimode)s '''
     else:
 
-        statement = '''python %(PYTHON_ROOT)s/identify_bcumi_sccolorseqv2.py --outfile=%(outfile)s --infile=%(infile)s --whitelist=polyA_umi.dir/%(name)s.whitelist.txt'''
+        statement = '''python %(PYTHON_ROOT)s/identify_bcumi_sccolorseqv2.py --outfile=%(outfile)s --infile=%(infile)s --whitelist=polyA_umi.dir/%(name)s.whitelist.txt --cmimode=%(cmimode)s'''
 
     P.run(statement)
 
