@@ -87,7 +87,7 @@ with pysam.FastxFile(args.infile) as fh:
                     umi = seq[begin_a:end_a]
                     umi = umi[:8]
                 else:
-                    umi = seq[end_a+12:end_a+28]
+                    umi = seq[end_a+16:end_a+32]
 
                 if umi is None:
                     break
