@@ -92,8 +92,8 @@ with pysam.FastxFile(args.infile) as fh:
                         umi = seq[begin_a:end_a]
                         umi = umi[:8]
                     else:
-                        umi = seq[end_a+12:end_a+20]
-                    
+                        umi = seq[begin_a-20:begin_a-12]
+
                     if umi is None:
                         break
                     elif len(umi) != 8:

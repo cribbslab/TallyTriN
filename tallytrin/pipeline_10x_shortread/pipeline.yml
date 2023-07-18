@@ -26,26 +26,14 @@ release: 0.1
 
 data: data.dir
 
-
-# Number of reads to split the fastq file by for parallelization
-# Needs to be a multiple of 4
-split: 1000000
-
 # Specify number of cells to expect
 cells: 2000
 
-# To speed up the gene analysis you can strip sequence by specifying 1
-strip-seq: 1
-
-# minimap2 mapping options
-minimap2:
+# STAR mapping options
+star:
    options: -ax map-ont -p 0.9 --end-bonus 10 -N 3 
 
-   fasta_cdna: /t1-data/project/cribbslab/shared/resources/annotations/hg38-mm10.cdna.all.fa.gz
-
    fasta_genome: /t1-data/project/cribbslab/shared/resources/annotations/Human_mouse/hg38-mm10_HM.fa
-
-   junc_bed: --junc-bed /t1-data/project/cribbslab/shared/resources/annotations/Human_mouse/hg38-mm10_coding_gene_sorted.bed
 
    gene_options: ''
 
@@ -54,11 +42,6 @@ featurecounts:
    gtf: /t1-data/project/cribbslab/shared/resources/annotations/Human_mouse/hg38-mm10_HM_geneset_all.gtf
 database:
    url: sqlite:///./csvdb
-
-
-# run in CMI mode - this is where the PCR primer will be used as a UMI,
-# this is so that the accuracy of the data can be measured: True 1, False 0
-cmi_mode: 1
 
 job_options: -t 48:00:00
 

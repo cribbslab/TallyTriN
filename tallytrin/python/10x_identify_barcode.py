@@ -71,13 +71,13 @@ with pysam.FastxFile(args.infile) as fh:
                 break
             length_umibarcode = len(record.sequence[end_b:begin_a])
 
-            if length_umibarcode >= 28:
+            if length_umibarcode >= 20:
                 y+=1
                 if args.cmimode == '1':
                     umi = record.sequence[begin_a:end_a]
                     umi = umi[:15]
                 else:
-                    umi = record.sequence[begin_a-28:begin_a-16]
+                    umi = record.sequence[begin_a-27:begin_a-16]
                 if len(umi) == 15 and args.cmimode == '1':
                     barcode = record.sequence[begin_a-16:begin_a][:int(args.barcode)]
                     barcodes.append(barcode)
