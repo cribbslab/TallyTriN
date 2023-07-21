@@ -172,7 +172,7 @@ def identify_bcumi(infile, outfile):
     name = outfile.replace("polyA_umi.dir/", "")
     name = name.replace(".fastq.gz", "")
 
-    cmimode = PARAMS['cmi_mode'8
+    cmimode = PARAMS['cmi_mode']
 
     PYTHON_ROOT = os.path.join(os.path.dirname(__file__), "python/")
 
