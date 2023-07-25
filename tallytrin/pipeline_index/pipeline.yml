@@ -8,3 +8,5 @@ copyright: cribbslab (2021)
 split: 400000
 
 job_options: -t 48:00:00
+
+primer: AAGCAGTGGTAT

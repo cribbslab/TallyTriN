@@ -110,13 +110,14 @@ def seperate_by_barcode(infile, outfile):
     '''
     Identify barcode and save to different samples
     '''
-
+    primer = PARAMS['primer']
     name = outfile.replace("seperate_samples.dir/", "")
     name = name.replace(".fastq", "")
 
     PYTHON_ROOT = os.path.join(os.path.dirname(__file__), "python/")
 
-    statement = '''python %(PYTHON_ROOT)s/identify_index.py --infile=%(infile)s --name=%(name)s'''
+    statement = '''python %(PYTHON_ROOT)s/identify_index.py --infile=%(infile)s --name=%(name)s
+                   --primer=%(primer)s'''
 
     P.run(statement)
 
