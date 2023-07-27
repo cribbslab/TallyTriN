@@ -32,6 +32,8 @@ parser.add_argument("--cmimode", default=None, type=str,
                     help='Run the script in cmi mode for accuracy evaluation')
 parser.add_argument("--barcode", default='16', type=int,
                     help='Length of barcode required')
+parser.add_argument("--umi", default='12', type=int,
+                    help='Length of umi required')
 
 args = parser.parse_args()
 
@@ -77,7 +79,10 @@ with pysam.FastxFile(args.infile) as fh:
                     umi = record.sequence[begin_a:end_a]
                     umi = umi[:15]
                 else:
-                    umi = record.sequence[begin_a-27:begin_a-16]
+                    umi_start = int(16 + args.umi)
+                    print(umi_start)
+                    umi = record.sequence[begin_a-umi_start:begin_a-16]
+                    print(umi)
                 if len(umi) == 15 and args.cmimode == '1':
                     barcode = record.sequence[begin_a-16:begin_a][:int(args.barcode)]
                     barcodes.append(barcode)

@@ -65,3 +65,12 @@ job_options: -t 48:00:00
 # Specify the barcode length you would like for 10x,
 # the default is 16 but for testing purposes this can be reduced
 barcode: 16
+
+# Specify the length of UMI
+umi_length: 12
+
+# Specify the amount of memory required for generating mtx format
+mtx_memory: 200G
+
+# specify min number of counts to make mtx files
+mtx_mincounts: 3

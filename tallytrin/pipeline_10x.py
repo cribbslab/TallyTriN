@@ -177,7 +177,7 @@ def identify_bcumi(infile, outfile):
     PYTHON_ROOT = os.path.join(os.path.dirname(__file__), "python/")
 
     statement = '''python %(PYTHON_ROOT)s/10x_identify_barcode.py --outfile=%(outfile)s --infile=%(infile)s --whitelist=polyA_umi.dir/%(name)s.whitelist.txt
-                   --cmimode=%(cmimode)s --barcode=%(barcode)s'''
+                   --cmimode=%(cmimode)s --barcode=%(barcode)s  --umi=%(umi_length)s'''
 
     P.run(statement, job_options='-t 24:00:00')
 
@@ -323,10 +323,11 @@ def convert_tomtx(infile, outfile):
     The output is stored in the "mtx.dir" directory.
     '''
     PYTHON_ROOT = os.path.join(os.path.dirname(__file__), "python/")
+    filter = PARAMS['mtx_mincounts']
 
-    statement = '''python %(PYTHON_ROOT)s/save_mtx.py --data=%(infile)s --dir=mtx.dir/'''
+    statement = '''python %(PYTHON_ROOT)s/save_mtx.py --data=%(infile)s --dir=mtx.dir/ --filter=%(filter)s'''
 
-    P.run(statement, job_memory="100G", job_options='-t 24:00:00')
+    P.run(statement, job_memory=PARAMS['mtx_memory'], job_options='-t 24:00:00')
 
 
 @follows(convert_tomtx)

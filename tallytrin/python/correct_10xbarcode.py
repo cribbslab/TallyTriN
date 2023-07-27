@@ -48,7 +48,7 @@ barcodes = iotools.open_file(args.whitelist)
 barcodes_new = []
 
 for line in barcodes:
-    bc = line.strip()[2:12]
+    bc = line.strip()
     barcodes_new.append(bc)
 
 lists = Counter(barcodes_new).most_common(int(args.cells))
