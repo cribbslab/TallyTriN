@@ -57,6 +57,8 @@ barcode_lists = []
 for key, count in lists:
     barcode_lists.append(key)
 
+def is_only_Ts(input_string):
+    return all(char == 'T' for char in input_string)
 
 def closest_match(input_string, string_list):
     closest_match = None
@@ -91,7 +93,8 @@ with pysam.FastxFile(args.infile) as fh:
         else:
             pass    
 
-        outf.write("@%s\n%s\n+\n%s\n" % (name + "_" + barcode + "_" + umi, record.sequence, record.quality))
+        if not is_only_Ts(umi):
+            outf.write("@%s\n%s\n+\n%s\n" % (name + "_" + barcode + "_" + umi, record.sequence, record.quality))
             
 
 outf.close()
