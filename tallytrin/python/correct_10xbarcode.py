@@ -79,11 +79,6 @@ with pysam.FastxFile(args.infile) as fh:
         barcode = record.name.split("_")[1]
         umi = record.name.split("_")[2]
 
-        if args.cmimode:
-            umi = umi[:10]
-        else:
-            pass
-
         match = closest_match(barcode, barcodes)
         
         if match:
