@@ -1,0 +1,319 @@
+---
+title: "Untitled"
+output: html_document
+date: "2023-05-11"
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE)
+
+library(Seurat)
+library(harmony)
+library(ggplot2)
+library(cowplot)
+library(biomaRt)
+theme_set(theme_cowplot())
+pos <- readRDS("Positional.rds")
+spacer <- readRDS("Spacer.rds")
+
+pos@meta.data$orig.ident <- "pos"
+spacer@meta.data$orig.ident <- "spacer"
+```
+
+```{r setup}
+knitr::opts_chunk$set(echo = TRUE)
+
+library(jsonlite)
+library(tidyverse)
+
+theme_Publication <- function(base_size=12, base_family="Arial") {
+      library(grid)
+      library(ggthemes)
+      (theme_bw(base_size=base_size, base_family=base_family)
+       + theme(plot.title = element_text(face = "bold",
+                                         size = rel(1.2), hjust = 0.5),
+               text = element_text(),
+               panel.background = element_rect(colour = NA),
+               plot.background = element_rect(colour = NA),
+               panel.border = element_rect(colour = NA),
+               axis.title = element_text(face = "bold",size = rel(1)),
+               axis.title.y = element_text(angle=90,vjust =2),
+               axis.title.x = element_text(),
+               axis.text = element_text(), 
+               axis.line = element_line(colour="black"),
+               axis.ticks = element_line(),
+               panel.grid.major = element_line(colour="#f0f0f0"),
+               panel.grid.minor = element_blank(),
+               legend.key = element_rect(colour = NA),
+               legend.position = "bottom",
+               legend.direction = "horizontal",
+               legend.key.size= unit(0.2, "cm"),
+               legend.margin = unit(0, "cm"),
+               legend.title = element_text(face="italic"),
+               plot.margin=unit(c(10,5,5,5),"mm"),
+               strip.background=element_rect(colour="#f0f0f0",fill="#f0f0f0"),
+               strip.text = element_text(face="bold")
+          ))
+      
+}
+
+scale_fill_Publication <- function(...){
+      library(scales)
+      discrete_scale("fill","Publication",manual_pal(values = c("#386cb0","#fdb462","#7fc97f","#ef3b2c","#662506","#a6cee3","#fb9a99","#984ea3","#ffff33")), ...)
+
+}
+
+scale_colour_Publication <- function(...){
+      library(scales)
+      discrete_scale("colour","Publication",manual_pal(values = c("#386cb0","#fdb462","#7fc97f","#ef3b2c","#662506","#a6cee3","#fb9a99","#984ea3","#ffff33")), ...)
+
+}
+```
+
+```{r}
+meta.pos <- pos@meta.data
+meta.spacer <- spacer@meta.data
+
+meta.pos$sample <- ''
+
+meta.spacer$sample <- '' 
+
+meta <- rbind(meta.pos, meta.spacer)
+library(plyr)
+mu <- ddply(meta, "orig.ident", summarise, grp.mean=mean(nCount_RNA))
+
+
+meta %>% 
+  ggplot(aes(fill=orig.ident, x=nCount_RNA)) + 
+  geom_density() + 
+  scale_x_log10() + 
+  ylab("log10 cell density") +
+  geom_vline(data=mu, aes(xintercept=grp.mean, color=orig.ident),
+             linetype="dashed")
+
+
+
+```
+
+```{r}
+
+# Filter out low quality reads using selected thresholds - these will change with experiment
+keep <-
+  meta %>%
+  tibble::rownames_to_column("cells") %>% 
+  dplyr::filter(nCount_RNA > 1200) 
+
+
+mu <- ddply(keep, "orig.ident", summarise, grp.mean=mean(nCount_RNA))
+
+keep %>% 
+  ggplot(aes(fill=orig.ident, x=nCount_RNA)) + 
+  geom_density() + 
+  scale_x_log10() + 
+  ylab("log10 cell density") +
+  geom_vline(data=mu, aes(xintercept=grp.mean, color=orig.ident),
+             linetype="dashed")
+
+keep %>% dplyr::group_by(orig.ident) %>% 
+  dplyr::summarize(mean = mean(nCount_RNA), n =dplyr::n())
+
+
+
+
+mu <- ddply(keep, "orig.ident", summarise, grp.mean=mean(nFeature_RNA))
+
+keep %>% 
+  ggplot(aes(fill=orig.ident, x=nFeature_RNA)) + 
+  geom_density() + 
+  scale_x_log10() + 
+  ylab("log10 cell density") +
+  geom_vline(data=mu, aes(xintercept=grp.mean, color=orig.ident),
+             linetype="dashed")
+
+keep %>% dplyr::group_by(orig.ident) %>% 
+  dplyr::summarize(mean = mean(nCount_RNA), n =dplyr::n())
+
+```
+
+```{r}
+pbmc.combined <- merge(pos, y = spacer, add.cell.ids = c("pos", "spacer"), project = "PBMCiso")
+
+
+
+pbmc.combined <- NormalizeData(pbmc.combined) %>% FindVariableFeatures() %>% ScaleData() %>% RunPCA(verbose = FALSE)
+```
+
+```{r}
+p1 <- DimPlot(object = pbmc.combined, reduction = "pca", pt.size = .1, group.by = "orig.ident")
+p2 <- VlnPlot(object = pbmc.combined, features = "PC_1", group.by = "orig.ident", pt.size = .1)
+p1
+p2
+```
+
+
+```{r}
+pbmc.combined <- RunHarmony(pbmc.combined, "orig.ident")
+harmony_embeddings <- Embeddings(pbmc.combined, 'harmony')
+harmony_embeddings[1:5, 1:5]
+```
+
+
+```{r}
+p1 <- DimPlot(object = pbmc.combined, reduction = "harmony", pt.size = .1, group.by = "orig.ident")
+p2 <- VlnPlot(object = pbmc.combined, features = "harmony_1", group.by = "orig.ident", pt.size = .1)
+p1
+p2
+```
+
+
+```{r}
+pbmc <- pbmc.combined %>% 
+    RunUMAP(reduction = "harmony", dims = 1:10) %>% 
+    FindNeighbors(reduction = "harmony", dims = 1:10) %>% 
+    FindClusters(resolution = 0.5) %>% 
+    identity()
+```
+
+```{r}
+DimPlot(pbmc, reduction = "umap", group.by = "orig.ident", pt.size = .1, split.by = 'orig.ident')
+DimPlot(pbmc, reduction = "umap", label = TRUE, pt.size = .1)
+
+pbmc.markers <- FindAllMarkers(pbmc, only.pos = TRUE, min.pct = 0.25, logfc.threshold = 0.25)
+
+
+
+DimPlot(pbmc, reduction = "umap", group.by = "orig.ident", pt.size = .1, split.by = 'orig.ident')
+```
+
+
+# Instgrate using seurat
+
+```{r}
+features <- SelectIntegrationFeatures(object.list = c(pos, spacer))
+immune.anchors <- FindIntegrationAnchors(object.list = c(pos, spacer), anchor.features = features)
+immune.combined <- IntegrateData(anchorset = immune.anchors)
+
+DefaultAssay(immune.combined) <- "integrated"
+
+# Run the standard workflow for visualization and clustering
+immune.combined <- ScaleData(immune.combined, verbose = FALSE)
+immune.combined <- RunPCA(immune.combined, npcs = 30, verbose = FALSE)
+immune.combined <- RunUMAP(immune.combined, reduction = "pca", dims = 1:30)
+immune.combined <- FindNeighbors(immune.combined, reduction = "pca", dims = 1:30)
+immune.combined <- FindClusters(immune.combined, resolution = 0.1)
+
+
+
+p1 <- DimPlot(immune.combined, reduction = "umap", group.by = "orig.ident")
+p2 <- DimPlot(immune.combined, reduction = "umap", label = TRUE, repel = TRUE)
+p1 + p2
+
+DimPlot(immune.combined, reduction = "umap", group.by = "orig.ident", pt.size = .1, split.by = 'orig.ident')
+```
+
+
+# Identify genes acorss conditions
+
+```{r}
+Idents(immune.combined) <- immune.combined@meta.data$seurat_clusters
+
+
+t.cells <- subset(immune.combined, idents = "1")
+Idents(t.cells) <- t.cells@meta.data$orig.ident
+avg.t.cells <- as.data.frame(log1p(AverageExpression(t.cells, verbose = FALSE)$RNA))
+avg.t.cells$gene <- rownames(avg.t.cells)
+
+p1 <- ggplot(avg.t.cells, aes(pos, spacer)) + geom_point() + ggtitle("Mouse cells")
+p1
+
+
+
+t.cells <- subset(immune.combined, idents = "0")
+Idents(t.cells) <- t.cells@meta.data$orig.ident
+avg.t.cells <- as.data.frame(log1p(AverageExpression(t.cells, verbose = FALSE)$RNA))
+avg.t.cells$gene <- rownames(avg.t.cells)
+
+p1 <- ggplot(avg.t.cells, aes(pos, spacer)) + geom_point() + ggtitle("Human cells")
+p1
+
+
+immune.combined$celltype.stim <- paste(Idents(immune.combined), immune.combined$orig.ident, sep = "_")
+
+Idents(immune.combined) <- "celltype.stim"
+human.diff <- FindMarkers(immune.combined, ident.1 = "0_pos", ident.2 = "0_spacer", verbose = FALSE, assay='RNA')
+mouse.diff <- FindMarkers(immune.combined, ident.1 = "1_pos", ident.2 = "1_spacer", verbose = FALSE, assay='RNA')
+
+VlnPlot(immune.combined, features = c("ENSMUST00000073868.9"), group.by  = 'orig.ident', pt.size=0.2, add.noise=F, assay='RNA')
+FeaturePlot(immune.combined, features = c("ENSMUST00000074680.8"), split.by = "orig.ident", max.cutoff = 3,
+    cols = c("grey", "red"), order =T)
+
+
+
+
+```
+
+
+```{r}
+# useMart keeps not working every so often (issue https://github.com/grimbough/biomaRt/issues/31)
+ensembl <- try(useMart("ensembl", dataset = "hsapiens_gene_ensembl"))
+if(class(ensembl) == "try-error"){
+  httr::set_config(httr::config(ssl_verifypeer = FALSE))
+  ensembl <- useMart("ensembl", dataset = "hsapiens_gene_ensembl")
+}
+
+mapping <- getBM(attributes = c("ensembl_transcript_id_version", "ensembl_gene_id", "hgnc_symbol"), mart = ensembl)
+
+
+
+
+immune.combined$celltype.pos <- paste(Idents(immune.combined), immune.combined$orig.ident, sep = "_")
+immune.combined$celltype <- Idents(immune.combined)
+Idents(immune.combined) <- "celltype.pos"
+memorycd4.response <- FindMarkers(immune.combined, ident.1 = "Memory CD4+_pos", ident.2 = "Memory CD4+_spacer", verbose = FALSE, min.pct = 0.25, logfc.threshold = 0.25)
+memorycd4.response %>%  tibble::rownames_to_column("gene") -> memorycd4.response.markers
+memorycd4.markers.gene <- merge(memorycd4.response.markers, mapping, by.x="gene", by.y="ensembl_transcript_id_version")
+
+Idents(immune.combined) <- immune.combined@meta.data$cells
+memorycd4 <- subset(immune.combined, subset = cells == "Memory CD4+")
+
+
+
+memorycd4 <- memorycd4 %>% ScaleData(verbose = FALSE) %>%  RunPCA(npcs = 30, verbose = FALSE) %>% 
+  RunUMAP(reduction = "pca", dims = 1:30) %>% 
+  FindNeighbors(reduction = "pca", dims = 1:30) %>% 
+  FindClusters(resolution = 0.5)
+
+FeaturePlot(memorycd4, features = c("ENST00000632480.1", "ENST00000622783.2"), split.by = "orig.ident", max.cutoff = 3,
+    cols = c("grey", "red"), order =T)
+
+```
+
+
+
+```{r}
+
+DimPlot(immune.combined, reduction = "umap", group.by = "cells", pt.size = .1, split.by = 'orig.ident')
+
+Idents(immune.combined) <- immune.combined@meta.data$cells
+memory = subset(immune.combined, idents='Memory CD4+')
+Idents(immune.combined) <- immune.combined@meta.data$orig.ident
+
+immune.combined$orig.ident <- factor(x = immune.combined$orig.ident, levels = c('spacer', 'pos'))
+VlnPlot(immune.combined, features = c("ENST00000514217.5", "ENST00000511982.1", "ENST00000511031.1", "ENST00000508941.5", 'ENST00000506850.5', 'ENST00000303115.8'), group.by  = 'orig.ident', pt.size=0.2, add.noise=F)
+
+
+memorycd4.response <- FindMarkers(immune.combined, ident.1 = "pos", ident.2 = "spacer", verbose = FALSE, min.pct = 0.25, logfc.threshold = 0.25)
+memorycd4.response %>%  tibble::rownames_to_column("gene") -> memorycd4.response.markers
+
+memorycd4.markers.gene <- merge(memorycd4.response.markers, mapping, by.x="gene", by.y="ensembl_transcript_id_version")
+
+VlnPlot(immune.combined, features = c("ENST00000379236.4", "ENST00000245912.7", "ENST00000599359.1"), group.by  = 'orig.ident', pt.size=0.2, add.noise=T)
+
+
+```
+
+
+
+
+
+

@@ -1,0 +1,767 @@
+---
+title: "Untitled"
+output: html_document
+---
+
+```{r}
+library(BUSpaRse)
+library(DropletUtils)
+library(Seurat)
+library(ggplot2)
+library("ggsci")
+library("gridExtra")
+library(clustifyr)
+```
+
+
+```{r setup}
+knitr::opts_chunk$set(echo = TRUE)
+
+library(jsonlite)
+library(tidyverse)
+
+theme_Publication <- function(base_size=12, base_family="Arial") {
+      library(grid)
+      library(ggthemes)
+      (theme_bw(base_size=base_size, base_family=base_family)
+       + theme(plot.title = element_text(face = "bold",
+                                         size = rel(1.2), hjust = 0.5),
+               text = element_text(),
+               panel.background = element_rect(colour = NA),
+               plot.background = element_rect(colour = NA),
+               panel.border = element_rect(colour = NA),
+               axis.title = element_text(face = "bold",size = rel(1)),
+               axis.title.y = element_text(angle=90,vjust =2),
+               axis.title.x = element_text(),
+               axis.text = element_text(), 
+               axis.line = element_line(colour="black"),
+               axis.ticks = element_line(),
+               panel.grid.major = element_line(colour="#f0f0f0"),
+               panel.grid.minor = element_blank(),
+               legend.key = element_rect(colour = NA),
+               legend.position = "bottom",
+               legend.direction = "horizontal",
+               legend.key.size= unit(0.2, "cm"),
+               legend.margin = unit(0, "cm"),
+               legend.title = element_text(face="italic"),
+               plot.margin=unit(c(10,5,5,5),"mm"),
+               strip.background=element_rect(colour="#f0f0f0",fill="#f0f0f0"),
+               strip.text = element_text(face="bold")
+          ))
+      
+}
+
+scale_fill_Publication <- function(...){
+      library(scales)
+      discrete_scale("fill","Publication",manual_pal(values = c("#386cb0","#fdb462","#7fc97f","#ef3b2c","#662506","#a6cee3","#fb9a99","#984ea3","#ffff33")), ...)
+
+}
+
+scale_colour_Publication <- function(...){
+      library(scales)
+      discrete_scale("colour","Publication",manual_pal(values = c("#386cb0","#fdb462","#7fc97f","#ef3b2c","#662506","#a6cee3","#fb9a99","#984ea3","#ffff33")), ...)
+
+}
+```
+
+
+# Barnyard plot positional
+
+```{r}
+sample_files <- str_replace(Sys.glob("positional/mtx.dir/"), "positional/mtx.dir/", "")
+
+for (i in sample_files){
+  name <- paste("positional/mtx.dir/",i, sep="")
+  res_mat <- read_count_output(name,
+                             name = "genes", tcc = FALSE)
+  
+  counts <- Matrix::colSums(res_mat)
+  summary(counts)
+  so <- CreateSeuratObject(res_mat, min.cells=100) %>% 
+    NormalizeData(verbose=FALSE) %>% 
+    ScaleData(verbose=FALSE) %>% 
+    FindVariableFeatures(verbose=FALSE)
+  
+  metadata <- as.data.frame(so@meta.data)
+  assign(paste("so", i, sep = "."), so)
+  assign(paste("counts", i, sep = "."), counts)
+  assign(paste("res_mat", i, sep = "."), res_mat)
+  assign(paste("metadata", i, sep = "."), metadata)
+  rm(so)
+  rm(counts)
+  rm(metadata)
+  rm(res_mat)
+}
+
+
+```
+
+```{r}
+for (i in sample_files){
+  counts <- get(gsub("SAMPLE_FILE",i , "counts.SAMPLE_FILE"))
+  metadata <- get(gsub("SAMPLE_FILE",i , "metadata.SAMPLE_FILE"))
+  # Add number of UMIs for each gene per cell to metadata
+  metadata$nUMI <- counts
+  # Add number of genes detected per cell to metadata
+  metadata$nGene <- counts > 0
+  # Add number of UMIs per gene for each cell to metadata
+  metadata$log10GenesPerUMI <- log10(metadata$nGene) / log10(metadata$nUMI)
+  # Add sample name associated with each cell to metadata 
+  metadata$sample <- gsub("SAMPLE_FILE",i ,"SAMPLE_FILE")
+  
+  assign(paste("metadata", i, sep = "."), metadata)
+  rm(counts)
+  rm(metadata)
+}
+```
+
+
+```{r}
+for (i in sample_files){
+  counts <- get(gsub("SAMPLE_FILE",i , "res_mat.SAMPLE_FILE"))
+  metadata <- get(gsub("SAMPLE_FILE",i , "metadata.SAMPLE_FILE"))
+# Keep cells with nUMI greater than 100
+idx <- which(metadata$nUMI > 100)
+
+# Extract the counts for those cells
+counts_c <- counts[, idx]
+
+# Extract the metadata for those cells
+metadata_c <- metadata[idx,]
+assign(paste("metadata_c", i, sep = "."), metadata)
+}
+```
+
+
+```{r}
+for (i in sample_files){
+  counts <- get(gsub("SAMPLE_FILE",i , "res_mat.SAMPLE_FILE"))
+  metadata <- get(gsub("SAMPLE_FILE",i , "metadata.SAMPLE_FILE"))
+# Save data to single cell experiment variable
+se <- SingleCellExperiment(assays=list(counts=counts), 
+                           colData = metadata)
+                           
+# Create .RData object to load at any time
+#saveRDS(se, gsub("SAMPLE_FILE",i ,"SAMPLE_FILE_raw_se.rds"))
+assign(paste("se", i, sep = "."), se)
+}
+```
+
+
+```{r}
+for (i in sample_files){
+  se <- get(gsub("SAMPLE_FILE",i , "se.SAMPLE_FILE"))
+# Create a data frame containing the metrics for visualizations
+metrics <- colData(se) %>%
+  as.data.frame
+assign(paste("metrics", i, sep = "."), metrics)
+}
+```
+
+
+```{r, results='asis', echo = FALSE}
+for (i in sample_files){
+  metrics <- get(gsub("SAMPLE_FILE",i , "metrics.SAMPLE_FILE"))
+# Visualize the number of cell counts per cell
+cat("## ",i,"\n")
+plt <- metrics %>% 
+  ggplot(aes(x=sample, fill=sample)) + 
+  geom_bar() + 
+  ggtitle("Number of Cells")
+print(plt)
+cat('\n\n')
+}
+```
+
+
+```{r, results='asis', echo = FALSE}
+for (i in sample_files){
+  metrics <- get(gsub("SAMPLE_FILE",i , "metrics.SAMPLE_FILE"))
+# Visualize the number UMIs/transcripts per cell
+cat("## ",i,"\n")
+plt <- metrics %>% 
+        ggplot(aes(color=sample, x=nUMI, fill= sample)) + 
+        geom_density() + 
+        scale_x_log10() + 
+        ylab("log10 cell density") +
+        geom_vline(xintercept = 100)
+plot(plt)
+cat('\n\n')
+}
+```
+
+```{r}
+for (i in sample_files){
+  metrics <- get(gsub("SAMPLE_FILE",i , "metrics.SAMPLE_FILE"))
+  se <- get(gsub("SAMPLE_FILE",i , "se.SAMPLE_FILE"))
+
+# Filter out low quality reads using selected thresholds - these will change with experiment
+keep <-
+  metrics %>%
+  tibble::rownames_to_column("cells") %>% 
+  dplyr::filter(nUMI > 500 , 
+                nGene == TRUE) %>% 
+  pull(cells)
+
+# Subset the cells to only include those that meet the thresholds specified
+se_c <- se[ ,keep]
+
+# Save subset to new metrics variable
+metrics_clean <- colData(se_c) %>%
+ as.data.frame()
+
+# Save cleaned single-cell experimnet as .RData to load at any time
+#saveRDS(se_c, file = gsub("SAMPLE_FILE",i,"SAMPLE_FILE_se_filtered.rds"))
+#saveRDS(metrics_clean, gsub("SAMPLE_FILE",i ,"SALMPLE_FILE_metrics_clean_mouse1.rds"))
+assign(paste("metrics_clean", i, sep = "."), metrics_clean)
+}
+```
+
+# UMI counts {.tabset .tabset-fade}
+
+The filtering using a threshold of 500 has removed the cells with low numbers of UMIs from the analysis.
+
+```{r, results='asis', echo = FALSE}
+for (i in sample_files){
+  metrics_clean <- get(gsub("SAMPLE_FILE",i , "metrics_clean.SAMPLE_FILE"))
+## Cell counts
+
+cat("## ",i,"\n")
+# UMI counts
+plt <- metrics_clean %>% 
+  ggplot(aes(fill=sample, x=nUMI)) + 
+  geom_density() + 
+  scale_x_log10() + 
+  ylab("log10 cell density") +
+  geom_vline(xintercept = 500)
+print(plt)
+cat('\n\n')
+}
+```
+
+# Cell counts {.tabset .tabset-fade}
+
+After filtering, we should not have more cells than we sequenced. Generally we aim to have about the number we sequenced or a bit less. With 2,700 cells sequenced, we would expect to return around this number of cells. We have about 2,480 returned after filtering, which is pretty good.
+
+```{r, results='asis', echo = FALSE}
+for (i in sample_files){
+  metrics_clean <- get(gsub("SAMPLE_FILE",i , "metrics_clean.SAMPLE_FILE"))
+## Cell counts
+cat("## ",i,"\n")
+plt <- metrics_clean %>% 
+  ggplot(aes(x=sample, fill = sample)) + 
+  geom_bar() + 
+  ggtitle("NCells")
+print(plt)
+cat('\n\n')
+}
+```  
+
+
+
+# Analysis of the data in Seurat
+
+
+```{r}
+for (i in sample_files){
+  res_mat <- get(gsub("SAMPLE_FILE",i , "res_mat.SAMPLE_FILE"))
+    
+  so <- CreateSeuratObject(res_mat, min.cells=100) %>% 
+  NormalizeData(verbose = FALSE) %>% 
+  ScaleData(verbose = FALSE) %>% 
+  FindVariableFeatures(verbose = FALSE)
+
+
+  so <- subset(so, subset= nCount_RNA > 500)
+  print(VlnPlot(so, c("nCount_RNA","nFeature_RNA")))
+  
+  assign(paste("so", i, sep = "."), so)
+}
+
+postscript("vln_mixed_nCount_RNA.eps")
+VlnPlot(so,"nCount_RNA") + theme_Publication() 
+dev.off()
+
+postscript("vln_mixed_nFeature_RNA.eps")
+VlnPlot(so,"nFeature_RNA") + theme_Publication() 
+dev.off()
+
+```
+
+
+```{r}
+for (i in sample_files){
+  so <- get(gsub("SAMPLE_FILE",i , "so.SAMPLE_FILE"))
+  
+  print(ggplot(so@meta.data, aes(nCount_RNA, nFeature_RNA)) +
+  geom_point(alpha = 0.7, size = 0.5) +
+  labs(x = "Total UMI counts per cell", y = "Number of genes detected") + theme_Publication())
+  
+  
+  #postscript("Num_genes_detected_mixed.eps")
+  ggplot(so@meta.data, aes(nCount_RNA, nFeature_RNA)) +
+  geom_point(alpha = 0.7, size = 0.5) +
+  labs(x = "Total UMI counts per cell", y = "Number of genes detected") + theme_Publication()
+  #dev.off()
+}
+```
+
+
+# PCA plot 
+
+```{r}
+for (i in sample_files){
+  so <- get(gsub("SAMPLE_FILE",i , "so.SAMPLE_FILE"))
+  
+  
+  
+  so <- FindVariableFeatures(so, selection.method = "vst", nfeatures = 1500)
+  so <- RunPCA(so, verbose = FALSE, features = VariableFeatures(object = so))
+  
+  # Identify the 10 most highly variable genes
+  top10 <- head(VariableFeatures(so), 10)
+
+# plot variable features with and without labels
+  plot1 <- VariableFeaturePlot(so)
+  plot2 <- LabelPoints(plot = plot1, points = top10, repel = TRUE)
+  plot2
+  
+  all.genes <- rownames(so)
+  so <- ScaleData(so, features = all.genes)
+  
+  
+  so <- RunPCA(so, verbose = FALSE, npcs = 20)
+  
+  
+  print(ElbowPlot(so, ndims = 5))
+  print(DimPlot(so, reduction = "pca", pt.size = 0.5))
+
+  #postscript("tsne_mixed.eps")
+  so <- RunTSNE(so, dims = 1:5, check_duplicates = FALSE)
+  print(DimPlot(so, reduction = "tsne", pt.size = 0.5))
+  #dev.off()
+  
+  so <- RunUMAP(so, dims=1:10)
+    #postscript("umap_mixed.eps")
+
+  print(DimPlot(so, reduction = "umap", pt.size = 0.5))
+  #dev.off()
+}
+
+so <- FindNeighbors(so, dims = 1:10)
+so <- FindClusters(so, resolution = 0.5)
+
+saveRDS(so, file="Positional.rds")
+
+#postscript("tsne_mixed_clustering.eps")
+DimPlot(so, reduction = "umap", pt.size = 0.5) + theme_Publication() + scale_color_npg()
+#dev.off()
+```
+
+```{r}
+
+
+  
+  
+#res_mat <- read_count_output("mtx_collapsed_directional.dir/",
+#                             name = "genes", tcc = FALSE)
+
+res_mat <- so@assays$RNA@counts
+bc_rank <- barcodeRanks(res_mat)
+
+tot_counts <- Matrix::colSums(res_mat)
+  
+  p<-qplot(bc_rank$total, bc_rank$rank, geom = "line") +
+  geom_vline(xintercept = metadata(bc_rank)$knee, color = "blue", linetype = 2) +
+  geom_vline(xintercept = metadata(bc_rank)$inflection, color = "green", linetype = 2) +
+  annotate("text", y = 1000, x = 1.5 * c(metadata(bc_rank)$knee, metadata(bc_rank)$inflection),
+           label = c("knee", "inflection"), color = c("blue", "green")) +
+  scale_x_log10() +
+  scale_y_log10() +
+  labs(y = "Barcode rank", x = "Total UMI count") + theme_Publication()
+
+  
+  print(p)
+  res_mat <- res_mat[, tot_counts > 500]
+  
+  gene_species <- ifelse(str_detect(rownames(res_mat), "^ENSMUST"), "mouse", "human")
+  mouse_inds <- gene_species == "mouse"
+  human_inds <- gene_species == "human"
+# mark cells as mouse or human
+  cell_species <- tibble(n_mouse_umi = Matrix::colSums(res_mat[mouse_inds,]),
+                       n_human_umi = Matrix::colSums(res_mat[human_inds,]),
+                       tot_umi = Matrix::colSums(res_mat),
+                       prop_mouse = n_mouse_umi / tot_umi,
+                       prop_human = n_human_umi / tot_umi)
+
+  cell_species <- cell_species %>% 
+  mutate(species = case_when(
+    prop_mouse > 0.9 ~ "mouse",
+    prop_human > 0.9 ~ "human",
+    TRUE ~ "mixed"
+  ))
+  
+  write.csv(cell_species, "cell_species_positional.csv")
+  
+  print(ggplot(cell_species, aes(n_human_umi, n_mouse_umi, color = species)) +
+  geom_point(size = 0.5) + theme_Publication())
+
+  
+df <- data.frame(table(unlist(strsplit(tolower(cell_species$species), " "))))
+write.csv(df, "df_mousehuman_positional.csv")
+postscript("barplot_trimer_positional.eps", height=5, width=5)
+ggplot(df, aes(x=Var1, y=Freq, fill=Var1)) + geom_bar(stat="identity") + theme_Publication() + scale_fill_Publication() 
+dev.off()
+```
+
+
+
+
+# Barnyard plot spacer
+
+```{r}
+sample_files <- str_replace(Sys.glob("spacer/mtx.dir/"), "spacer/mtx.dir/", "")
+
+for (i in sample_files){
+  name <- paste("spacer/mtx.dir/",i, sep="")
+  res_mat <- read_count_output(name,
+                             name = "genes", tcc = FALSE)
+  
+  counts <- Matrix::colSums(res_mat)
+  summary(counts)
+  so <- CreateSeuratObject(res_mat, min.cells=100) %>% 
+    NormalizeData(verbose=FALSE) %>% 
+    ScaleData(verbose=FALSE) %>% 
+    FindVariableFeatures(verbose=FALSE)
+  
+  metadata <- as.data.frame(so@meta.data)
+  assign(paste("so", i, sep = "."), so)
+  assign(paste("counts", i, sep = "."), counts)
+  assign(paste("res_mat", i, sep = "."), res_mat)
+  assign(paste("metadata", i, sep = "."), metadata)
+  rm(so)
+  rm(counts)
+  rm(metadata)
+  rm(res_mat)
+}
+
+
+```
+
+```{r}
+for (i in sample_files){
+  counts <- get(gsub("SAMPLE_FILE",i , "counts.SAMPLE_FILE"))
+  metadata <- get(gsub("SAMPLE_FILE",i , "metadata.SAMPLE_FILE"))
+  # Add number of UMIs for each gene per cell to metadata
+  metadata$nUMI <- counts
+  # Add number of genes detected per cell to metadata
+  metadata$nGene <- counts > 0
+  # Add number of UMIs per gene for each cell to metadata
+  metadata$log10GenesPerUMI <- log10(metadata$nGene) / log10(metadata$nUMI)
+  # Add sample name associated with each cell to metadata 
+  metadata$sample <- gsub("SAMPLE_FILE",i ,"SAMPLE_FILE")
+  
+  assign(paste("metadata", i, sep = "."), metadata)
+  rm(counts)
+  rm(metadata)
+}
+```
+
+
+```{r}
+for (i in sample_files){
+  counts <- get(gsub("SAMPLE_FILE",i , "res_mat.SAMPLE_FILE"))
+  metadata <- get(gsub("SAMPLE_FILE",i , "metadata.SAMPLE_FILE"))
+# Keep cells with nUMI greater than 100
+idx <- which(metadata$nUMI > 100)
+
+# Extract the counts for those cells
+counts_c <- counts[, idx]
+
+# Extract the metadata for those cells
+metadata_c <- metadata[idx,]
+assign(paste("metadata_c", i, sep = "."), metadata)
+}
+```
+
+
+```{r}
+for (i in sample_files){
+  counts <- get(gsub("SAMPLE_FILE",i , "res_mat.SAMPLE_FILE"))
+  metadata <- get(gsub("SAMPLE_FILE",i , "metadata.SAMPLE_FILE"))
+# Save data to single cell experiment variable
+se <- SingleCellExperiment(assays=list(counts=counts), 
+                           colData = metadata)
+                           
+# Create .RData object to load at any time
+#saveRDS(se, gsub("SAMPLE_FILE",i ,"SAMPLE_FILE_raw_se.rds"))
+assign(paste("se", i, sep = "."), se)
+}
+```
+
+
+```{r}
+for (i in sample_files){
+  se <- get(gsub("SAMPLE_FILE",i , "se.SAMPLE_FILE"))
+# Create a data frame containing the metrics for visualizations
+metrics <- colData(se) %>%
+  as.data.frame
+assign(paste("metrics", i, sep = "."), metrics)
+}
+```
+
+
+```{r, results='asis', echo = FALSE}
+for (i in sample_files){
+  metrics <- get(gsub("SAMPLE_FILE",i , "metrics.SAMPLE_FILE"))
+# Visualize the number of cell counts per cell
+cat("## ",i,"\n")
+plt <- metrics %>% 
+  ggplot(aes(x=sample, fill=sample)) + 
+  geom_bar() + 
+  ggtitle("Number of Cells")
+print(plt)
+cat('\n\n')
+}
+```
+
+
+```{r, results='asis', echo = FALSE}
+for (i in sample_files){
+  metrics <- get(gsub("SAMPLE_FILE",i , "metrics.SAMPLE_FILE"))
+# Visualize the number UMIs/transcripts per cell
+cat("## ",i,"\n")
+plt <- metrics %>% 
+        ggplot(aes(color=sample, x=nUMI, fill= sample)) + 
+        geom_density() + 
+        scale_x_log10() + 
+        ylab("log10 cell density") +
+        geom_vline(xintercept = 100)
+plot(plt)
+cat('\n\n')
+}
+```
+
+```{r}
+for (i in sample_files){
+  metrics <- get(gsub("SAMPLE_FILE",i , "metrics.SAMPLE_FILE"))
+  se <- get(gsub("SAMPLE_FILE",i , "se.SAMPLE_FILE"))
+
+# Filter out low quality reads using selected thresholds - these will change with experiment
+keep <-
+  metrics %>%
+  tibble::rownames_to_column("cells") %>% 
+  dplyr::filter(nUMI > 500 , 
+                nGene == TRUE) %>% 
+  pull(cells)
+
+# Subset the cells to only include those that meet the thresholds specified
+se_c <- se[ ,keep]
+
+# Save subset to new metrics variable
+metrics_clean <- colData(se_c) %>%
+ as.data.frame()
+
+# Save cleaned single-cell experimnet as .RData to load at any time
+#saveRDS(se_c, file = gsub("SAMPLE_FILE",i,"SAMPLE_FILE_se_filtered.rds"))
+#saveRDS(metrics_clean, gsub("SAMPLE_FILE",i ,"SALMPLE_FILE_metrics_clean_mouse1.rds"))
+assign(paste("metrics_clean", i, sep = "."), metrics_clean)
+}
+```
+
+# UMI counts {.tabset .tabset-fade}
+
+The filtering using a threshold of 500 has removed the cells with low numbers of UMIs from the analysis.
+
+```{r, results='asis', echo = FALSE}
+for (i in sample_files){
+  metrics_clean <- get(gsub("SAMPLE_FILE",i , "metrics_clean.SAMPLE_FILE"))
+## Cell counts
+
+cat("## ",i,"\n")
+# UMI counts
+plt <- metrics_clean %>% 
+  ggplot(aes(fill=sample, x=nUMI)) + 
+  geom_density() + 
+  scale_x_log10() + 
+  ylab("log10 cell density") +
+  geom_vline(xintercept = 500)
+print(plt)
+cat('\n\n')
+}
+```
+
+# Cell counts {.tabset .tabset-fade}
+
+After filtering, we should not have more cells than we sequenced. Generally we aim to have about the number we sequenced or a bit less. With 2,700 cells sequenced, we would expect to return around this number of cells. We have about 2,480 returned after filtering, which is pretty good.
+
+```{r, results='asis', echo = FALSE}
+for (i in sample_files){
+  metrics_clean <- get(gsub("SAMPLE_FILE",i , "metrics_clean.SAMPLE_FILE"))
+## Cell counts
+cat("## ",i,"\n")
+plt <- metrics_clean %>% 
+  ggplot(aes(x=sample, fill = sample)) + 
+  geom_bar() + 
+  ggtitle("NCells")
+print(plt)
+cat('\n\n')
+}
+```  
+
+
+
+# Analysis of the data in Seurat
+
+
+```{r}
+for (i in sample_files){
+  res_mat <- get(gsub("SAMPLE_FILE",i , "res_mat.SAMPLE_FILE"))
+    
+  so <- CreateSeuratObject(res_mat, min.cells=50) %>% 
+  NormalizeData(verbose = FALSE) %>% 
+  ScaleData(verbose = FALSE) %>% 
+  FindVariableFeatures(verbose = FALSE)
+
+
+  so <- subset(so, subset= nCount_RNA > 500)
+  print(VlnPlot(so, c("nCount_RNA","nFeature_RNA")))
+  
+  assign(paste("so", i, sep = "."), so)
+}
+
+postscript("vln_mixed_nCount_RNA.eps")
+VlnPlot(so,"nCount_RNA") + theme_Publication() 
+dev.off()
+
+postscript("vln_mixed_nFeature_RNA.eps")
+VlnPlot(so,"nFeature_RNA") + theme_Publication() 
+dev.off()
+
+```
+
+
+```{r}
+for (i in sample_files){
+  so <- get(gsub("SAMPLE_FILE",i , "so.SAMPLE_FILE"))
+  
+  print(ggplot(so@meta.data, aes(nCount_RNA, nFeature_RNA)) +
+  geom_point(alpha = 0.7, size = 0.5) +
+  labs(x = "Total UMI counts per cell", y = "Number of genes detected") + theme_Publication())
+  
+  
+  #postscript("Num_genes_detected_mixed.eps")
+  ggplot(so@meta.data, aes(nCount_RNA, nFeature_RNA)) +
+  geom_point(alpha = 0.7, size = 0.5) +
+  labs(x = "Total UMI counts per cell", y = "Number of genes detected") + theme_Publication()
+  #dev.off()
+}
+```
+
+
+# PCA plot 
+
+```{r}
+for (i in sample_files){
+  so <- get(gsub("SAMPLE_FILE",i , "so.SAMPLE_FILE"))
+  
+  
+  
+  so <- FindVariableFeatures(so, selection.method = "vst", nfeatures = 1500)
+  so <- RunPCA(so, verbose = FALSE, features = VariableFeatures(object = so))
+  
+  # Identify the 10 most highly variable genes
+  top10 <- head(VariableFeatures(so), 10)
+
+# plot variable features with and without labels
+  plot1 <- VariableFeaturePlot(so)
+  plot2 <- LabelPoints(plot = plot1, points = top10, repel = TRUE)
+  plot2
+  
+  all.genes <- rownames(so)
+  so <- ScaleData(so, features = all.genes)
+  
+  
+  so <- RunPCA(so, verbose = FALSE, npcs = 20)
+  
+  
+  print(ElbowPlot(so, ndims = 5))
+  print(DimPlot(so, reduction = "pca", pt.size = 0.5))
+
+  #postscript("tsne_mixed.eps")
+  so <- RunTSNE(so, dims = 1:5, check_duplicates = FALSE)
+  print(DimPlot(so, reduction = "tsne", pt.size = 0.5))
+  #dev.off()
+  
+  so <- RunUMAP(so, dims=1:10)
+    #postscript("umap_mixed.eps")
+
+  print(DimPlot(so, reduction = "umap", pt.size = 0.5))
+  #dev.off()
+}
+
+so <- FindNeighbors(so, dims = 1:10)
+so <- FindClusters(so, resolution = 0.5)
+
+saveRDS(so, file="Spacer.rds")
+#postscript("tsne_mixed_clustering.eps")
+DimPlot(so, reduction = "umap", pt.size = 0.5) + theme_Publication() + scale_color_npg()
+#dev.off()
+```
+
+```{r}
+
+
+  
+  
+#res_mat <- read_count_output("mtx_collapsed_directional.dir/",
+#                             name = "genes", tcc = FALSE)
+
+res_mat <- so@assays$RNA@counts
+bc_rank <- barcodeRanks(res_mat)
+
+tot_counts <- Matrix::colSums(res_mat)
+  
+  p<-qplot(bc_rank$total, bc_rank$rank, geom = "line") +
+  geom_vline(xintercept = metadata(bc_rank)$knee, color = "blue", linetype = 2) +
+  geom_vline(xintercept = metadata(bc_rank)$inflection, color = "green", linetype = 2) +
+  annotate("text", y = 1000, x = 1.5 * c(metadata(bc_rank)$knee, metadata(bc_rank)$inflection),
+           label = c("knee", "inflection"), color = c("blue", "green")) +
+  scale_x_log10() +
+  scale_y_log10() +
+  labs(y = "Barcode rank", x = "Total UMI count") + theme_Publication()
+
+  
+  print(p)
+  res_mat <- res_mat[, tot_counts > 500]
+  
+  gene_species <- ifelse(str_detect(rownames(res_mat), "^ENSMUST"), "mouse", "human")
+  mouse_inds <- gene_species == "mouse"
+  human_inds <- gene_species == "human"
+# mark cells as mouse or human
+  cell_species <- tibble(n_mouse_umi = Matrix::colSums(res_mat[mouse_inds,]),
+                       n_human_umi = Matrix::colSums(res_mat[human_inds,]),
+                       tot_umi = Matrix::colSums(res_mat),
+                       prop_mouse = n_mouse_umi / tot_umi,
+                       prop_human = n_human_umi / tot_umi)
+
+  cell_species <- cell_species %>% 
+  mutate(species = case_when(
+    prop_mouse > 0.9 ~ "mouse",
+    prop_human > 0.9 ~ "human",
+    TRUE ~ "mixed"
+  ))
+  
+  write.csv(cell_species, "cell_species_spacer.csv")
+  print(ggplot(cell_species, aes(n_human_umi, n_mouse_umi, color = species)) +
+  geom_point(size = 0.5) + theme_Publication())
+
+  
+df <- data.frame(table(unlist(strsplit(tolower(cell_species$species), " "))))
+write.csv(df, "df_mousehuman_spacer.csv")
+postscript("barplot_trimer_spacer.eps", height=5, width=5)
+ggplot(df, aes(x=Var1, y=Freq, fill=Var1)) + geom_bar(stat="identity") + theme_Publication() + scale_fill_Publication() 
+dev.off()
+
+
+```
