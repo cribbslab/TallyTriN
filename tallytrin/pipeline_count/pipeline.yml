@@ -13,6 +13,9 @@ junc_bed: hg38_geneset_all.bed
 
 gtf: hg38_geneset_all.gtf
 
+# Specify if polya correction is to be skipped or not
+polya_skip: 0
+
 # Specify if the pipeline should run umi correction or not
 correct: 1
 

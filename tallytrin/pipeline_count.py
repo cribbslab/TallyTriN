@@ -159,7 +159,12 @@ def polya_correct(infile, outfile):
 
     PYTHON_ROOT = os.path.join(os.path.dirname(__file__), "python/")
 
-    statement = '''python %(PYTHON_ROOT)s/complement_polyA.py --infile=%(infile)s --outname=%(outfile)s'''
+    if PARAMS['polya_skip']:
+
+        statement = '''cp %(infile)s %(outfile)s'''
+
+    else:
+        statement = '''python %(PYTHON_ROOT)s/complement_polyA.py --infile=%(infile)s --outname=%(outfile)s'''
 
     P.run(statement, job_options='-t 24:00:00')
 
