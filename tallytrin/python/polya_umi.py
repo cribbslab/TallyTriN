@@ -107,15 +107,14 @@ with pysam.FastxFile(args.infile) as fh:
     
     for record in fh:
         n += 1
-        seq_nano = record.sequence
+        seq_nano = record.sequence[-200:]
         
-        m=regex.finditer("(GTACTCTGCGTTGATACCACTGCTT){e<=0}", str(record.sequence))
+        m=regex.finditer("(GTACTCTGCGTTGATACCACTGCTT){e<=0}", seq_nano)
         
-        for i in m:
-            after_polya = seq_nano[i.start()-30:]
-            umi_polya = seq_nano[i.start()-30:i.start()]
 
-            new_umi = []
+        for i in m:
+
+            umi_polya = seq_nano[i.start()-30:i.start()]
 
             umi_polya, errors = remove_point_mutations(umi_polya)
             
@@ -124,16 +123,11 @@ with pysam.FastxFile(args.infile) as fh:
             else:
 
 
-                after_umi = seq_nano[:i.start()-30]
-
                 record_new = record.name + "_" + str(umi_polya)
-            
-                quality_afterumipolya = record.quality[:i.start()-30]
-                seq_afterumipolya = seq_nano[:i.start()-30]
             
                 if len(umi_polya) == 30:
                     y += 1
-                    outfile.write("@%s\n%s\n+\n%s\n" % (record_new, seq_afterumipolya, quality_afterumipolya))
+                    outfile.write("@%s\n%s\n+\n%s\n" % (record_new, record.sequence, record.quality))
                 else:
                     pass
 
