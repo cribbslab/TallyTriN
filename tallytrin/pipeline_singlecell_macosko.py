@@ -291,7 +291,7 @@ def count(infile, outfile):
     The counting is performed per gene and using a unique method.
     '''
 
-    statement = '''umi_tools count --method unique --per-gene --gene-tag=XT --per-cell  -I %(infile)s -S counts.tsv.gz'''
+    statement = '''umi_tools count --per-gene --gene-tag=XT --per-cell  -I %(infile)s -S counts.tsv.gz'''
 
     P.run(statement)
 
