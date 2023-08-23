@@ -224,7 +224,8 @@ def correct_reads(infile, outfile):
 
     cmimode = PARAMS['cmi_mode']
 
-    statement = '''python %(PYTHON_ROOT)s/correct_10xbarcode.py --infile=%(infile)s --outfile=%(outfile)s --cells=%(cells)s --whitelist=whitelist.txt  --cmimode=%(cmimode)s'''
+
+    statement = '''python %(PYTHON_ROOT)s/correct_10xbarcode.py --infile=%(infile)s --outfile=%(outfile)s --cells=%(cells)s --whitelist=whitelist.txt  --cmimode=%(cmimode)s  --umi=%(umi_length)s'''
 
     P.run(statement, job_options='-t 24:00:00')
 

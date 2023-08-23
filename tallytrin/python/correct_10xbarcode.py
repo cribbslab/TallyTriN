@@ -30,7 +30,8 @@ parser.add_argument("--cells", default=None, type=str,
                     help='The combined whitelist barcode file')
 parser.add_argument("--cmimode", default=None, type=str,
                     help='Specify if CMI mode is activated')
-
+parser.add_argument("--umi", default=None, type=str,
+                    help='UMI lengths')
 args = parser.parse_args()
 
 L.info("args:")
@@ -85,8 +86,8 @@ with pysam.FastxFile(args.infile) as fh:
             barcode = match
         else:
             pass    
-
-        outf.write("@%s\n%s\n+\n%s\n" % (name + "_" + barcode + "_" + umi, record.sequence, record.quality))
+        if len(umi) == args.umi:
+            outf.write("@%s\n%s\n+\n%s\n" % (name + "_" + barcode + "_" + umi, record.sequence, record.quality))
             
 
 outf.close()
