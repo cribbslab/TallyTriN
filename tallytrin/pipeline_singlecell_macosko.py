@@ -207,7 +207,7 @@ def correct_reads(infile, outfile):
     PYTHON_ROOT = os.path.join(os.path.dirname(__file__), "python/")
 
 
-    statement = '''python %(PYTHON_ROOT)s/correct_10xbarcode.py --infile=%(infile)s --outfile=%(outfile)s --cells=%(cells)s --whitelist=whitelist.txt  --cmimode=0'''
+    statement = '''python %(PYTHON_ROOT)s/correct_10xbarcode.py --infile=%(infile)s --outfile=%(outfile)s --cells=%(cells)s --whitelist=whitelist.txt  --cmimode=0 --umi=8'''
 
     P.run(statement, job_options='-t 24:00:00')
 

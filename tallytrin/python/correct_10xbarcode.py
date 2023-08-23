@@ -80,13 +80,15 @@ with pysam.FastxFile(args.infile) as fh:
         barcode = record.name.split("_")[1]
         umi = record.name.split("_")[2]
 
-        match = closest_match(barcode, barcodes)
+        match = closest_match(barcode, barcode_lists)
         
         if match:
             barcode = match
         else:
             pass    
-        if len(umi) == args.umi:
+
+        if len(umi) == int(args.umi):
+
             outf.write("@%s\n%s\n+\n%s\n" % (name + "_" + barcode + "_" + umi, record.sequence, record.quality))
             
 
