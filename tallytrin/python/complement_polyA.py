@@ -35,7 +35,6 @@ print(args)
 # ######################## Code                ############################## #
 # ########################################################################### #
 
-
 tab = str.maketrans("ACTG", "TGAC")
 
 def reverse_complement_table(seq):
@@ -53,16 +52,18 @@ with pysam.FastxFile(args.infile) as fh:
         if len(record.sequence) < 300:
             pass
         else:
-            seq = record.sequence[50:300]
-            m=regex.findall("(TTTTTTTTTTTTTTTTTTTT){e<=3}", str(seq))
+            seq = record.sequence[:300]
+            m=regex.findall("(TTTTTTTTTTTTTTT){e<=0}", str(seq))
             if m:
                 n +=1
+
                 sequence = reverse_complement_table(str(record.sequence))
                 quality = str(record.quality)[::-1]
+
                 outfile.write("@%s\n%s\n+\n%s\n" % (record.name, sequence, quality))
             else:
-                seq = record.sequence[-30:-200:]
-                m=regex.findall("(AAAAAAAAAAAAAAAAAAAA){e<=3}", str(seq))
+                seq = record.sequence[:-200:]
+                m=regex.findall("(AAAAAAAAAAAAAAA){e<=0}", str(seq))
                 if m:
                     n +=1
                     outfile.write("@%s\n%s\n+\n%s\n" % (record.name, record.sequence, record.quality))
