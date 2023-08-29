@@ -123,7 +123,7 @@ def separate_by_index(infile, outfile):
 
 
 @follows(separate_by_index)
-@originate("seperate_samples.dir/finished_cat.final")
+@originate("finished_cat.final")
 def merge_by_index(outfile):
     '''
     Identify barcode and save to different samples
@@ -137,10 +137,9 @@ def merge_by_index(outfile):
 
 
 @follows(merge_by_index)
-@follows(mkdir("read_count.dir"))
-@transform(merge_by_index,
-           regex("seperate_samples.dir/(\S+).fastq.gz"),
-           r"read_count.dir/\1.counts.txt")
+@transform('*.fastq.gz',
+           regex("(\S+).fastq.gz"),
+           r"\1.counts.txt")
 def read_count(infile, outfile):
     '''
     Countnumber of reads
