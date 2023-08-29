@@ -151,6 +151,20 @@ def read_count(infile, outfile):
 
 
 @follows(read_count)
+@originate("fileCounts.csv")
+def merge_counts(outfile):
+    '''
+    Merge counts for  different samples
+    '''
+
+    PYTHON_ROOT = os.path.join(os.path.dirname(__file__), "python/")
+    
+    statement = '''python %(PYTHON_ROOT)s/merge_counts.py '''
+
+    P.run(statement)
+
+
+@follows(merge_counts)
 def full():
     pass
 
