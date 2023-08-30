@@ -103,10 +103,10 @@ def correct_polyA(infile, outfile):
 
 @follows(correct_polyA)
 @follows(mkdir("seperate_samples.dir"))
-@transform('polyA_correct.dir/*',
+@transform('polyA_correct.dir/*.fastq',
            regex("polyA_correct.dir/(\S+)_correct_polya.fastq"),
            r"seperate_samples.dir/\1.fastq")
-def seperate_by_barcode(infile, outfile):
+def separate_by_index(infile, outfile):
     '''
     Identify barcode and save to different samples
     '''
@@ -117,12 +117,54 @@ def seperate_by_barcode(infile, outfile):
     PYTHON_ROOT = os.path.join(os.path.dirname(__file__), "python/")
 
     statement = '''python %(PYTHON_ROOT)s/identify_index.py --infile=%(infile)s --name=%(name)s
-                   --primer=%(primer)s'''
+                   --primer=%(primer)s && touch %(outfile)s'''
 
     P.run(statement)
 
 
-@follows(seperate_by_barcode)
+@follows(separate_by_index)
+@originate("finished_cat.final")
+def merge_by_index(outfile):
+    '''
+    Identify barcode and save to different samples
+    '''
+
+    BASH_ROOT = os.path.join(os.path.dirname(__file__), "bash/")
+
+    statement = '''bash %(BASH_ROOT)s/cat_files.sh && touch %(outfile)s'''
+
+    P.run(statement)
+
+
+@follows(merge_by_index)
+@transform('*.fastq.gz',
+           regex("(\S+).fastq.gz"),
+           r"\1.counts.txt")
+def read_count(infile, outfile):
+    '''
+    Countnumber of reads
+    '''
+    
+    statement = '''cat %(infile)s | wc -l > %(outfile)s'''
+
+    P.run(statement)
+
+
+@follows(read_count)
+@originate("fileCounts.csv")
+def merge_counts(outfile):
+    '''
+    Merge counts for  different samples
+    '''
+
+    PYTHON_ROOT = os.path.join(os.path.dirname(__file__), "python/")
+    
+    statement = '''python %(PYTHON_ROOT)s/merge_counts.py '''
+
+    P.run(statement)
+
+
+@follows(merge_counts)
 def full():
     pass
 
