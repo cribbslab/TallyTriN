@@ -28,6 +28,8 @@ parser.add_argument("--infile", default=None, type=str,
                     help='nanopore infile fastq  file')
 parser.add_argument("--outfile", default=None, type=str,
                     help='name for output fastq files')
+parser.add_argument("--cmimode", default=0, type=str,
+                    help='rum in CMI mode or not')
 
 args = parser.parse_args()
 
@@ -81,21 +83,23 @@ with pysam.FastxFile(args.infile) as fh:
             if length_umibarcode > 18 and length_umibarcode < 50:
                 
                 umi_start = find_substring(barcodeumi, "AGC")
+
                 if umi_start is not None:
                     barcode = seq[end_a:end_a+10]
                     barcodes.append(barcode)
-                if args.cmimode == '1':
-                    umi = seq[begin_a:end_a]
-                    umi = umi[:8]
-                else:
                     umi = barcodeumi[umi_start+3:umi_start+19]
-                    
                     if umi is None:
                         break
                     if len(umi) != 16:
                         break
+                if args.cmimode == '1':
+                    umi = seq[begin_a:end_a]
+                    umi = umi[:8]
                 else:
                     break
+                    
+                    
+
                 seq_new = seq[begin_b:]
                 quality_new = record.quality[begin_b:]
                 y += 1
