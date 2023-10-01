@@ -10,7 +10,7 @@ downstream differential expression analysis using nanopore reads.
 The pipeline takes an input fastq file, processes it, and outputs 
 a count matrix with samples as columns and rows as either transcripts
 or genes. The pipeline makes use of multiple Python libraries and tools
-like Minimap2, Samtools, UMI-tools, and mclumi.
+like Minimap2, Samtools, UMI-tools.
 
 Pipeline tasks
 ==============
@@ -22,12 +22,12 @@ The pipeline consists of the following steps:
 * Mapping reads to transcripts using Minimap2.
 * Processing and sorting BAM files using Samtools.
 * Adding XT tags to SAM files.
-* Generating counts tables for transcripts using UMI-tools and mclumi.
+* Generating counts tables for transcripts using UMI-tools.
 * Merging counts tables for transcripts.
 * Mapping reads to genes using Minimap2.
 * Sorting BAM files using Samtools.
 * Running featureCounts on BAM files.
-* Generating counts tables for genes using UMI-tools and mclumi.
+* Generating counts tables for genes using UMI-tools.
 * Merging counts tables for genes.
 
 Usage
@@ -279,30 +279,12 @@ def count_trans(infile, outfile):
     P.run(statement, job_options='-t 24:00:00')
 
 
-@follows(mkdir('counts_trans_mclumi.dir'))
-@transform(xt_tag,
-           regex("mapped_files.dir/(\S+)_XT.bam"),
-           r"counts_trans_mclumi.dir/\1.counts_mclumi.txt")
-def count_trans_mclumi(infile, outfile):
-    '''
-    This function uses umi-tools to collapse UMIs and generate a counts
-    table for transcripts. It takes an input BAM file and writes the
-    output to the specified outfile.
-    '''
-
-    output_bam = infile.replace("_XT.bam", "_mclumi_XT.bam")
-
-    statement = '''mclumi dedup_gene -m mcl_ed -gt XT -gist XS -ed %(mclumi_editdistance)s -ibam %(infile)s -obam %(output_bam)s -odsum %(outfile)s'''
-
-    P.run(statement, job_memory=PARAMS['mclumi_memory'])
-
-
 @transform(xt_tag,
            regex("mapped_files.dir/(\S+)_XT.bam"),
            r"counts_trans.dir/\1.counts_unique.tsv.gz")
 def count_trans_unique(infile, outfile):
     '''
-    This function uses mclumi to collapse UMIs and generate a
+    This function uses umitools to collapse UMIs and generate a
     counts table for transcripts. It takes an input BAM file
     and writes the output to the specified outfile.
     '''
@@ -446,20 +428,6 @@ def count_gene(infile, outfile):
     P.run(statement, job_options='-t 24:00:00')
 
 
-@follows(mkdir('counts_genes_mclumi.dir'))
-@transform(featurecounts,
-           regex("mapped_files.dir/(\S+)_featurecounts_gene_sorted.bam"),
-           r"counts_genes_mclumi.dir/\1.counts_gene.txt")
-def count_gene_mclumi(infile, outfile):
-    '''Use mclumi to count genes'''
-
-    output_bam = infile.replace("featurecounts_gene_sorted.bam", "_mclumi_featurecounts_gene_sorted.bam")
-
-    statement = '''mclumi dedup_gene -m mcl_ed -gt XT -gist XS -ed %(mclumi_editdistance)s -ibam %(infile)s -obam %(output_bam)s -odsum %(outfile)s'''
-
-    P.run(statement, job_memory=PARAMS['mclumi_memory'])
-
-
 @merge(count_gene, "counts_genes.dir/counts_gene.tsv.gz")
 def merge_count_gene(infiles, outfile):
     '''merge counts from ech sample into one'''
@@ -561,7 +529,7 @@ def merge_noumis(outfile):
     df.to_csv(outfile, sep="\t", compression="gzip")
 
 
-@follows(merge_count, merge_count_unique, merge_count_gene, merge_count_gene_unique, merge_featurecounts, count_trans_mclumi, count_gene_mclumi, count_trans_greedy, merge_noumis)
+@follows(merge_count, merge_count_unique, merge_count_gene, merge_count_gene_unique, merge_featurecounts, count_trans_greedy, merge_noumis)
 def full():
     '''
     A placeholder function that serves as a checkpoint
