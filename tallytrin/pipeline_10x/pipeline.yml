@@ -39,7 +39,7 @@ strip-seq: 1
 
 # minimap2 mapping options
 minimap2:
-   options: -ax splice:hq -uf
+   options: map-ont -p 0.9 --end-bonus 10 -N 3
 
    fasta_cdna: /t1-data/project/cribbslab/shared/resources/annotations/hg38-mm10.cdna.all.fa.gz
 
