@@ -1,57 +1,116 @@
 import sys
-import logging
-import argparse
+import regex
 import cgatcore.iotools as iotools
 import pysam
+import logging
+import argparse
+import Bio
+import Bio.pairwise2
+from Bio.pairwise2 import format_alignment
+
+# ########################################################################### #
+# ###################### Set up the logging ################################# #
+# ########################################################################### #
 
 logging.basicConfig(stream=sys.stdout, level=logging.DEBUG)
-L = logging.getLogger("10x_identify_barcode.py")
+L = logging.getLogger("identify_perfect_nano.py")
 
-def parse_arguments() -> argparse.Namespace:
-    parser = argparse.ArgumentParser()
-    parser.add_argument("--whitelist", default=None, type=str, help='Name of whitelist file')
-    parser.add_argument("--cmimode", default=0, type=str, help='Run CMI for accuracy evaluation')
-    parser.add_argument("--infile", default=None, type=str, help='Nanopore infile FASTQ file')
-    parser.add_argument("--outfile", default=None, type=str, help='Name for output FASTQ files')
-    parser.add_argument("--barcode", default=16, type=int, help='Length of barcode required')
-    parser.add_argument("--umi", default=12, type=int, help='Length of UMI required')
-    return parser.parse_args()
 
-def main():
-    args = parse_arguments()
-    L.info("Arguments:")
-    L.info(args)
-  
-    log = iotools.open_file(f"{args.outfile}.log", "w")
-    barcodes = []
-    n, y = 0, 0
+# ########################################################################### #
+# ######################## Parse the arguments ############################## #
+# ########################################################################### #
 
-    with pysam.FastxFile(args.infile) as fh, open(args.outfile, "w") as outfile:
-        for record in fh:
-            n += 1
-            seq = record.sequence
-            position = seq.find("AGATCGGAAGAGCGT")
-      
-            if position != -1:
-                umi_start = position - (args.barcode + args.umi)
-                umi_end = position - args.barcode
-                umi = seq[umi_start:umi_end]
-                barcode = seq[position - args.barcode:position]
+parser = argparse.ArgumentParser()
+parser.add_argument("--whitelist", default=None, type=str,
+                    help='name of whitelist file')
+parser.add_argument("--infile", default=None, type=str,
+                    help='nanopore infile fastq  file')
+parser.add_argument("--outfile", default=None, type=str,
+                    help='name for output fastq files')
+parser.add_argument("--cmimode", default=None, type=str,
+                    help='Run the script in cmi mode for accuracy evaluation')
+parser.add_argument("--barcode", default='16', type=int,
+                    help='Length of barcode required')
+parser.add_argument("--umi", default='12', type=int,
+                    help='Length of umi required')
 
-                if len(umi) == args.umi and len(barcode) == args.barcode:
-                    y += 1
+args = parser.parse_args()
+
+L.info("args:")
+print(args)
+
+# ########################################################################### #
+# ######################## Code                ############################## #
+# ########################################################################### #
+
+log =  iotools.open_file(args.outfile  + ".log","w")
+
+# generate set of barcodes for whitelist
+barcodes = []
+
+outfile = open(args.outfile, "w")
+
+n = 0
+y = 0
+
+with pysam.FastxFile(args.infile) as fh:
+    
+    for record in fh:
+        n+=1
+
+        first = 0
+
+        seq = record.sequence
+
+        for a, b in zip(Bio.pairwise2.align.localms(seq,"AGATCGGAAGAGCGT", 2, -1, -0.5, -0.1), Bio.pairwise2.align.localms(seq,"AAAAAAAAA", 2, -1, -0.5, -0.1)):
+            first +=1
+            if first == 1:
+                al1_a, al2_a, score_a, begin_a, end_a = a 
+                al1_a, al2_b, score_b, begin_b, end_b = b 
+            else:
+                first = 0
+                break
+            length_umibarcode = len(record.sequence[end_b:begin_a])
+
+            if length_umibarcode >= 20:
+                y+=1
+                if args.cmimode == '1':
+                    umi = record.sequence[begin_a:end_a]
+                    umi = umi[:15]
+                else:
+                    umi_start = int(16 + args.umi)
+                    print(umi_start)
+                    umi = record.sequence[begin_a-umi_start:begin_a-16]
+                    print(umi)
+                if len(umi) == 15 and args.cmimode == '1':
+                    barcode = record.sequence[begin_a-16:begin_a][:int(args.barcode)]
                     barcodes.append(barcode)
-                    new_seq = seq[:position - (args.barcode + args.umi)]
-                    new_quality = record.quality[:position - (args.barcode + args.umi)]
-                    outfile.write(f"@{record.name}_{barcode}_{umi}\n{new_seq}\n+\n{new_quality}\n")
+                    seq_new = record.sequence[:begin_b]
+                    quality_new = record.quality[:begin_b]
 
-    with open(args.whitelist, "w") as out_barcodes:
-        for barcode in set(barcodes):
-            out_barcodes.write(f"{barcode}\n")
+                    outfile.write("@%s\n%s\n+\n%s\n" % (record.name + "_" + barcode + "_" + umi, seq_new, quality_new))
+                else:
+                    barcode = record.sequence[begin_a-16:begin_a][:int(args.barcode)]
+                    barcodes.append(barcode)
+                    seq_new = record.sequence[:begin_b]
+                    quality_new = record.quality[:begin_b]
 
-    log.write(f"The number of total reads: {n}\n")
-    log.write(f"The number of reads that have a correct barcode and UMI: {y}\n")
-    log.write(f"The percentage of total recovered reads is: {((y / n) * 100):.2f}\n")
+                    outfile.write("@%s\n%s\n+\n%s\n" % (record.name + "_" + barcode + "_" + umi, seq_new, quality_new))
+                
+outfile.close()
 
-if __name__ == "__main__":
-    main()
+                
+# Write out a list of whitelist barcodes
+out_barcodes = open(args.whitelist,"w")
+
+for i in set(barcodes):
+    out_barcodes.write("%s\n" % (i))
+out_barcodes.close()
+        
+
+log.write("The number of total reads: %s\n" %(n))
+log.write("The number of total reads that have a correct barcode and UMI: %s\n" %(y))
+log.write("The number of total recovered percent is: %s\n" %((y/n)*100))
+
+log.close()
+
