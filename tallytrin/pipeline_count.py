@@ -228,7 +228,7 @@ def mapping_trans(infile, outfile):
     writes the output to the specified outfile.
     '''
 
-    statement = '''minimap2 map-ont -p 0.9 --end-bonus 10 -N 3 %(cdna_fasta)s %(infile)s  > %(outfile)s 2> %(outfile)s.log'''
+    statement = '''minimap2 -ax splice:hq -uf %(cdna_fasta)s %(infile)s  > %(outfile)s 2> %(outfile)s.log'''
 
     P.run(statement, job_options='-t 24:00:00')
 
