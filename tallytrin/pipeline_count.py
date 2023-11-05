@@ -230,7 +230,7 @@ def mapping_trans(infile, outfile):
 
     statement = '''minimap2 -ax map-ont -p 0.9 --end-bonus 10 -N 3 %(cdna_fasta)s %(infile)s  > %(outfile)s 2> %(outfile)s.log'''
 
-    P.run(statement, job_options='-t 24:00:00')
+    P.run(statement, job_options='-t 48:00:00')
 
 
 @transform(mapping_trans,
@@ -373,7 +373,7 @@ def mapping_gene(infile, outfile):
     else:
         statement = '''minimap2 -ax splice  -k 14 --sam-hit-only --secondary=no --junc-bed %(junc_bed)s %(genome_fasta)s %(infile)s > %(outfile)s  2> %(outfile)s.log'''
 
-    P.run(statement, job_memory="60G", job_options='-t 48:00:00')
+    P.run(statement, job_memory="60G", job_options='-t 72:00:00')
 
 
 @transform(mapping_gene,
