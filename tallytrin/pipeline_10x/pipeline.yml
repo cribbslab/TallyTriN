@@ -52,6 +52,7 @@ minimap2:
 featurecounts:
 
    gtf: /t1-data/project/cribbslab/shared/resources/annotations/Human_mouse/hg38-mm10_HM_geneset_all.gtf
+   threads: 5
 database:
    url: sqlite:///./csvdb
 
@@ -74,3 +75,5 @@ mtx_memory: 200G
 
 # specify min number of counts to make mtx files
 mtx_mincounts: 3
+
+mtx_filter: 3

@@ -81,7 +81,7 @@ import os
 import re
 import sqlite3
 import glob
-
+from pathlib import Path
 import cgatcore.pipeline as P
 import cgatcore.experiment as E
 import cgatcore.database as database
@@ -153,7 +153,7 @@ def correct_polyA(infile, outfile):
 
     PYTHON_ROOT = os.path.join(os.path.dirname(__file__), "python/")
 
-    statement = '''python %(PYTHON_ROOT)s/complement_polyA_singlecell.py --infile=%(infile)s --outname=%(outfile)s'''
+    statement = '''python %(PYTHON_ROOT)s/complement_polyA_singlecell.py --infile=%(infile)s --outname=%(outfile)s && truncate -s 0 %(infile)s'''
 
     P.run(statement, job_options='-t 24:00:00')
 
@@ -177,7 +177,7 @@ def identify_bcumi(infile, outfile):
     PYTHON_ROOT = os.path.join(os.path.dirname(__file__), "python/")
 
     statement = '''python %(PYTHON_ROOT)s/10x_identify_barcode.py --outfile=%(outfile)s --infile=%(infile)s --whitelist=polyA_umi.dir/%(name)s.whitelist.txt
-                   --cmimode=%(cmimode)s --barcode=%(barcode)s  --umi=%(umi_length)s'''
+                   --cmimode=%(cmimode)s --barcode=%(barcode)s  --umi=%(umi_length)s && truncate -s 0  %(infile)s'''
 
     P.run(statement, job_options='-t 24:00:00')
 
@@ -225,7 +225,8 @@ def correct_reads(infile, outfile):
     cmimode = PARAMS['cmi_mode']
 
 
-    statement = '''python %(PYTHON_ROOT)s/correct_10xbarcode.py --infile=%(infile)s --outfile=%(outfile)s --cells=%(cells)s --whitelist=whitelist.txt  --cmimode=%(cmimode)s  --umi=%(umi_length)s'''
+    statement = '''python %(PYTHON_ROOT)s/correct_10xbarcode.py --infile=%(infile)s --outfile=%(outfile)s --cells=%(cells)s --whitelist=whitelist.txt  --cmimode=%(cmimode)s  --umi=%(umi_length)s &&
+                   truncate -s 0  %(infile)s'''
 
     P.run(statement, job_options='-t 24:00:00')
 
@@ -331,7 +332,157 @@ def convert_tomtx(infile, outfile):
     P.run(statement, job_memory=PARAMS['mtx_memory'], job_options='-t 24:00:00')
 
 
-@follows(convert_tomtx)
+###############################
+# Gene level analysis 
+###############################
+
+@follows(mkdir("mapped_genome.dir"))
+@transform(merge_correct_reads,
+           regex("merge_corrected.fastq.gz"),
+           r"mapped_genome.dir/merge_corrected.sam")
+def minimap2_genome(infile, outfile):
+    """
+    Maps   reads  against  a  genome  with  minimap2.  Aligns  reads  in  input
+    `.fastq.gz` files to output `.sam` files.
+
+    The following should be specified in `pipeline.yml`:
+        - genome_fasta:
+            - The path to the .fasta reference genome file to use in mapping.
+        - max_threads:
+            - The number of threads minimap2 should use.
+    """
+    fasta_file = PARAMS["minimap2_fasta_genome"]
+    threads = '10'
+
+    statement = f"""minimap2 -ax splice -uf
+                    -t {threads}
+                    {fasta_file} {infile} > {outfile}  2> %(outfile)s.log"""
+
+    P.run(statement, job_options="-t 72:00:00", job_memory="100G", job_threads=int(threads))
+
+
+@follows(mkdir("qc_reports.dir/fastqc_reports"))
+@transform(minimap2_genome,
+           regex("mapped_genome\.dir/(.*)\.sam"),
+           r"qc_reports.dir/fastqc_reports/\1_fastqc.html")
+def mapped_genome_fastqc(infile, outfile):
+    """
+    Uses fastQC to check fastqc. This should ideally be
+    used with `multiqc_all` to generate a single QC report from all QC programs
+    used in the pipeline.
+    """
+    path = os.path.dirname(outfile)
+    statement = f"""fastqc -o {path} {infile}"""
+
+    P.run(statement)
+
+
+@transform(minimap2_genome,
+           regex("mapped_genome\.dir/(.*)\.sam"),
+           r"mapped_genome.dir/\1_sorted.bam")
+def gene_samtools(infile, outfile):
+    """
+    Uses `samtools` to convert the mapped SAM files to BAM format. Additionally
+    then sorts and indexes these.
+    """
+
+    statement = f"""samtools view -b {infile} |
+                    samtools sort - -o {outfile} &&
+                    samtools index {outfile}"""
+
+    P.run(statement)
+
+
+@transform(gene_samtools,
+           regex("mapped_genome.dir/(.*)_sorted.bam"),
+           r"mapped_genome.dir/stripped.bam.featureCounts.bam")
+def gene_add_XT(infile, outfile):
+    """
+    We use featurecounts to add the XT tag to each read. The BAM files are then
+    subsequently re‐indexed.
+    """
+
+    geneset = PARAMS['featurecounts_gtf']
+    feature_threads = PARAMS['featurecounts_threads']
+    
+    statement = """samtools view -h %(infile)s | awk -v OFS="\\t" '{if($0 ~ /^@/){print $0} else {print $1, $2, $3, $4, $5, $6, $7, $8, $9, "*", "*"}}' | samtools view -bS > mapped_genome.dir/stripped.bam  &&
+featureCounts -a %(geneset)s -o mapped_genome.dir/gene_assigned -R BAM mapped_genome.dir/stripped.bam -T %(feature_threads)s --maxMOp 200"""
+
+    P.run(statement)
+
+
+@transform(gene_add_XT,
+           regex('mapped_genome.dir/(.*).bam.featureCounts.bam'),
+           r'mapped_genome.dir/\1_XT_sorted.bam')
+def sort_index_gene(infile, outfile):
+    '''
+    '''
+
+    statement = '''samtools sort %(infile)s -o %(outfile)s &&
+                   samtools index %(outfile)s'''
+
+    P.run(statement)
+
+
+@follows(mkdir("gene_counts.dir/umi_tools"))
+@transform(sort_index_gene,
+           regex("mapped_genome.dir/(.*)_XT_sorted.bam"),
+           r"gene_counts.dir/umi_tools/\1.tsv.gz")
+def gene_count_umi(infile, outfile):
+    """
+    Counts   the  number  of  reads  per  gene. Takes in a `.bam` file and adds
+    the read counts to the same file.
+    """
+
+    statement = f"""umi_tools count
+                    --per-gene
+                    --gene-tag=XT
+                    --per-cell
+                    -I {infile}
+                    -S {outfile}"""
+
+    P.run(statement)
+
+
+@transform(gene_count_umi,
+           regex("gene_counts\.dir/umi_tools/stripped.tsv"),
+           r"gene_counts.dir/umi_tools/stripped/genes.mtx")
+def gene_save_umitools_mtx(infile, outfile):
+    """
+    Converts the csv generated counts table to mtx format.
+
+    The following should be specified in the `pipeline.yml` file:
+        - gene_mtx_filter:
+            - The minimum number of times a read was count to not filter it.
+    """
+
+    filter = PARAMS["mtx_filter"]
+    PYTHON_ROOT = os.path.join(os.path.dirname(__file__), "python/")
+    outdir = os.path.dirname(outfile)
+
+    statement = f"""python {PYTHON_ROOT}/save_mtx.py
+                    --data {infile}
+                    --dir {outdir}
+                    --filter {filter}"""
+
+    P.run(statement, job_memory='100G')
+
+
+@follows(mkdir("qc_reports.dir"), mapped_genome_fastqc)
+@originate("qc_reports.dir/all_multiqc_report.html")
+def multiqc_all(outfile):
+    """
+    Generates a MultiQC report from all the reports produced in the pipeline.
+    """
+
+    statement = f"""multiqc .
+                    --filename {Path(outfile).name}
+                    --outdir {Path(outfile).parent}"""
+
+    P.run(statement)
+
+
+@follows(convert_tomtx, gene_save_umitools_mtx, multiqc_all)
 def full():
     '''
     A placeholder function that serves as a checkpoint
