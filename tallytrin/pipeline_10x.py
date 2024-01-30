@@ -362,9 +362,9 @@ def minimap2_genome(infile, outfile):
 
 
 @follows(mkdir("qc_reports.dir/fastqc_reports"))
-@transform(minimap2_genome,
-           regex("mapped_genome\.dir/(.*)\.sam"),
-           r"qc_reports.dir/fastqc_reports/\1_fastqc.html")
+@transform(merge_correct_reads,
+           regex("merge_corrected.fastq.gz"),
+           r"qc_reports.dir/fastqc_reports/merge_fastqc.html")
 def mapped_genome_fastqc(infile, outfile):
     """
     Uses fastQC to check fastqc. This should ideally be
