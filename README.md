@@ -50,7 +50,7 @@ repo to help you easily install.
 
   ```
   # Install TallyTriN code
-  python setup.py install
+  pip install -e .
   ```
 
 Documentation
