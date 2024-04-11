@@ -153,7 +153,7 @@ def correct_polyA(infile, outfile):
 
     PYTHON_ROOT = os.path.join(os.path.dirname(__file__), "python/")
 
-    statement = '''python %(PYTHON_ROOT)s/complement_polyA_singlecell.py --infile=%(infile)s --outname=%(outfile)s && truncate -s 0 %(infile)s'''
+    statement = '''python %(PYTHON_ROOT)s/complement_polyA_singlecell.py --infile=%(infile)s --outname=%(outfile)s'''
 
     P.run(statement, job_options='-t 24:00:00')
 
@@ -177,7 +177,7 @@ def identify_bcumi(infile, outfile):
     PYTHON_ROOT = os.path.join(os.path.dirname(__file__), "python/")
 
     statement = '''python %(PYTHON_ROOT)s/10x_identify_barcode.py --outfile=%(outfile)s --infile=%(infile)s --whitelist=polyA_umi.dir/%(name)s.whitelist.txt
-                   --cmimode=%(cmimode)s --barcode=%(barcode)s  --umi=%(umi_length)s && truncate -s 0  %(infile)s'''
+                   --cmimode=%(cmimode)s --barcode=%(barcode)s  --umi=%(umi_length)s'''
 
     P.run(statement, job_options='-t 24:00:00')
 

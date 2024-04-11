@@ -53,50 +53,32 @@ outfile = open(args.outfile, "w")
 n = 0
 y = 0
 
+
+# Construct a regex pattern that matches the sequence with up to 2 mismatches in the specified middle part
+sequence_pattern = r"AGATCGGAAGAGCGT"
+
+
+
 with pysam.FastxFile(args.infile) as fh:
     
     for record in fh:
         n+=1
 
-        first = 0
-
         seq = record.sequence
 
-        for a, b in zip(Bio.pairwise2.align.localms(seq,"AGATCGGAAGAGCGT", 2, -1, -0.5, -0.1), Bio.pairwise2.align.localms(seq,"AAAAAAAAA", 2, -1, -0.5, -0.1)):
-            first +=1
-            if first == 1:
-                al1_a, al2_a, score_a, begin_a, end_a = a 
-                al1_a, al2_b, score_b, begin_b, end_b = b 
-            else:
-                first = 0
-                break
-            length_umibarcode = len(record.sequence[end_b:begin_a])
+        match = regex.search(sequence_pattern, seq)
+        if match:
+            y += 1
+            barcode = seq[match.start()-16:match.start()]
+            umi = seq[match.start() - 16 - args.umi:match.start() - 16]
+            barcodes.append(barcode)
 
-            if length_umibarcode >= 20:
-                y+=1
-                if args.cmimode == '1':
-                    umi = record.sequence[begin_a:end_a]
-                    umi = umi[:15]
-                else:
-                    umi_start = int(16 + args.umi)
-                    print(umi_start)
-                    umi = record.sequence[begin_a-umi_start:begin_a-16]
-                    print(umi)
-                if len(umi) == 15 and args.cmimode == '1':
-                    barcode = record.sequence[begin_a-16:begin_a][:int(args.barcode)]
-                    barcodes.append(barcode)
-                    seq_new = record.sequence[:begin_b]
-                    quality_new = record.quality[:begin_b]
+            seq_new = seq[:match.start()-28]
+            quality_new = record.quality[:match.start()-28]
 
-                    outfile.write("@%s\n%s\n+\n%s\n" % (record.name + "_" + barcode + "_" + umi, seq_new, quality_new))
-                else:
-                    barcode = record.sequence[begin_a-16:begin_a][:int(args.barcode)]
-                    barcodes.append(barcode)
-                    seq_new = record.sequence[:begin_b]
-                    quality_new = record.quality[:begin_b]
-
-                    outfile.write("@%s\n%s\n+\n%s\n" % (record.name + "_" + barcode + "_" + umi, seq_new, quality_new))
-                
+            outfile.write(f"@{record.name}_{barcode}_{umi}\n{seq_new}\n+\n{quality_new}\n")
+        
+       
 outfile.close()
 
                 
@@ -107,10 +89,6 @@ for i in set(barcodes):
     out_barcodes.write("%s\n" % (i))
 out_barcodes.close()
         
-
-log.write("The number of total reads: %s\n" %(n))
-log.write("The number of total reads that have a correct barcode and UMI: %s\n" %(y))
-log.write("The number of total recovered percent is: %s\n" %((y/n)*100))
 
 log.close()
 
