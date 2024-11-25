@@ -27,11 +27,15 @@ Tutorial start
 
    mkdir count
    cd count
-   wget https://datashare.molbiol.ox.ac.uk/public/project/cribbslab/acribbs/Trimer/test.fastq.gz
-   wget https://datashare.molbiol.ox.ac.uk/public/project/cribbslab/acribbs/Trimer/Homo_sapiens.GRCh38.cdna.all.fa
-   wget https://datashare.molbiol.ox.ac.uk/public/project/cribbslab/acribbs/Trimer/hg38.fa
-   wget https://datashare.molbiol.ox.ac.uk/public/project/cribbslab/acribbs/Trimer/hg38_geneset_all.bed
-   wget https://datashare.molbiol.ox.ac.uk/public/project/cribbslab/acribbs/Trimer/hg38_geneset_all.gtf
+   wget https://ftp.ensembl.org/pub/release-113/fasta/homo_sapiens/cdna/Homo_sapiens.GRCh38.cdna.all.fa.gz
+   wget https://datashare.molbiol.ox.ac.uk/public/project/cribbslab/acribbs/tallytrin_tutorial/hg38.fasta
+   wget https://datashare.molbiol.ox.ac.uk/public/project/cribbslab/acribbs/tallytrin_tutorial/geneset_all.bed
+   wget https://datashare.molbiol.ox.ac.uk/public/project/cribbslab/acribbs/tallytrin_tutorial/geneset_all.gtf.gz
+
+   gunzip geneset_all.gtf.gz
+   gunzip Homo_sapiens.GRCh38.cdna.all.fa.gz
+
+You will need to download the test data file from GEO using sra-toolkit (https://github.com/ncbi/sra-tools) here: https://www.ncbi.nlm.nih.gov/Traces/study/?acc=SRX18398120&o=acc_s%3Aa
 
 
 **2.** Next we will generate a configuration yml file so the pipeline output can be modified::
@@ -58,7 +62,7 @@ this case::
 
   cdna_fasta: Homo_sapiens.GRCh38.cdna.all.fa
 
-  genome_fasta: hg38.fa
+  genome_fasta: hg38.fasta
  
   junc_bed: hg38_geneset_all.bed
 
