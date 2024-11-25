@@ -1,6 +1,3 @@
-# This workflow will install Python dependencies, run tests and lint with a variety of Python versions
-# For more information see: https://docs.github.com/en/actions/automating-builds-and-tests/building-and-testing-python
-
 name: Python package
 
 on:
@@ -26,45 +23,57 @@ jobs:
 
     steps:
       - uses: actions/checkout@v3
+
       - name: Cache conda
         uses: actions/cache@v3
         env:
           CACHE_NUMBER: 0
         with:
           path: ~/conda_pkgs_dir
-          key:
-            ${{ runner.os }}-conda-${{ env.CACHE_NUMBER }}-${{
-            hashFiles('conda/environment.yml') }}
+          key: ${{ runner.os }}-conda-${{ env.CACHE_NUMBER }}-${{ hashFiles('conda/environment.yml') }}
+
       - name: Set installer URL
         id: set-installer-url
         run: |
           if [[ "${{ matrix.os }}" == "ubuntu-latest" ]]; then
             echo "installer-url=https://github.com/conda-forge/miniforge/releases/latest/download/Miniforge3-Linux-x86_64.sh" >> $GITHUB_ENV
           fi
+
       - uses: conda-incubator/setup-miniconda@v2
         with:
           installer-url: ${{ env.installer-url }}
           python-version: ${{ matrix.python-version }}
           channels: conda-forge, bioconda, defaults
           channel-priority: true
-          activate-environment: tallytrin
-          environment-file: conda/environment.yml
+
+      - name: Remove existing environment (if exists)
+        run: |
+          conda deactivate || true
+          conda env remove --name tallytrin || true
+
+      - name: Create conda environment
+        run: |
+          mamba env create --name tallytrin --file conda/environment.yml
+          conda activate tallytrin
+
       - name: Show conda
         run: |
           conda info
           conda list
           mamba list
-        
+
       - name: Install tallytrin
         run: pip install -e .
+
       - name: Lint with flake8
         run: |
           python -m pip install --upgrade pip
-          python -m pip install flake8 pytest pep8 nose
+          python -m pip install flake8 pytest pycodestyle
           # stop the build if there are Python syntax errors or undefined names
           flake8 . --count --select=E9,F63,F7,F82 --show-source --statistics
           # exit-zero treats all errors as warnings. The GitHub editor is 127 chars wide
           flake8 . --count --exit-zero --max-complexity=10 --max-line-length=127 --statistics
+
       - name: Test with pytest
         run: |
           pytest -v tests/test_import.py
