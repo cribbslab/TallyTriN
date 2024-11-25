@@ -12,7 +12,7 @@ For this message and a list of available keywords type::
 
     tallytrin --help
 
-To get help for a specify workflow, type::
+To get help for a specific workflow, type::
 
     tallytrin <workflow> --help
 '''
@@ -21,12 +21,12 @@ import os
 import sys
 import re
 import glob
-import imp
+import importlib.util
 import tallytrin
 
 
-def printListInColumns(l, ncolumns):
-    '''output list *l* in *ncolumns*.'''
+def print_list_in_columns(l, ncolumns):
+    '''Output list *l* in *ncolumns*.'''
     ll = len(l)
 
     if ll == 0:
@@ -34,7 +34,7 @@ def printListInColumns(l, ncolumns):
 
     max_width = max([len(x) for x in l]) + 3
     n = ll // ncolumns
-    if ll % 3 != 0:
+    if ll % ncolumns != 0:
         n += 1
 
     # build columns
@@ -60,7 +60,6 @@ def main(argv=None):
     argv = sys.argv
 
     # paths to look for pipelines:
-    #print(pipelines.__file__)
     path = os.path.abspath(os.path.dirname(tallytrin.__file__))
     relpath = os.path.abspath("../src")
 
@@ -73,7 +72,7 @@ def main(argv=None):
         print((globals()["__doc__"]))
         print("The list of available pipelines are:\n")
         print("{}\n".format(
-            printListInColumns(
+            print_list_in_columns(
                 sorted([os.path.basename(x)[len("pipeline_"):-len(".py")] for x in pipelines]),
                 2)))
         return
@@ -85,9 +84,21 @@ def main(argv=None):
     # remove 'tallytrin' from sys.argv
     del sys.argv[0]
 
-    (file, pathname, description) = imp.find_module(pipeline, paths)
+    spec = None
+    for path in paths:
+        try:
+            spec = importlib.util.spec_from_file_location(pipeline, os.path.join(path, f"{pipeline}.py"))
+            if spec is not None:
+                break
+        except FileNotFoundError:
+            continue
 
-    module = imp.load_module(pipeline, file, pathname, description)
+    if spec is None or spec.loader is None:
+        print(f"Error: pipeline '{command}' not found.")
+        sys.exit(1)
+
+    module = importlib.util.module_from_spec(spec)
+    spec.loader.exec_module(module)
 
     module.main(sys.argv)
 
