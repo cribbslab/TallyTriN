@@ -18,7 +18,7 @@ jobs:
       fail-fast: false
       matrix:
         os: ["ubuntu-latest"]
-        python-version: ["3.7", "3.8"]
+        python-version: ["3.10", "3.11", "3.12"]
 
     defaults:
       run:
@@ -35,20 +35,26 @@ jobs:
           key:
             ${{ runner.os }}-conda-${{ env.CACHE_NUMBER }}-${{
             hashFiles('conda/environment.yml') }}
+      - name: Set installer URL
+        id: set-installer-url
+        run: |
+          if [[ "${{ matrix.os }}" == "ubuntu-latest" ]]; then
+            echo "installer-url=https://github.com/conda-forge/miniforge/releases/latest/download/Miniforge3-Linux-x86_64.sh" >> $GITHUB_ENV
+          fi
       - uses: conda-incubator/setup-miniconda@v2
         with:
+          installer-url: ${{ env.installer-url }}
           python-version: ${{ matrix.python-version }}
           channels: conda-forge, bioconda, defaults
           channel-priority: true
           activate-environment: tallytrin
           environment-file: conda/environment.yml
-          miniforge-variant: Mambaforge
       - name: Show conda
         run: |
           conda info
           conda list
           mamba list
-        
+
       - name: Install tallytrin
         run: pip install -e .
       - name: Lint with flake8
