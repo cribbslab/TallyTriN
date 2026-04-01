@@ -11,7 +11,7 @@ def find_polyA_from_left(seq, min_len=12):
         end (int): end index (exclusive)
         polya_seq (str): the polyA sequence
     """
-    match = re.match(r'(A{' + str(min_len) + r',})', seq)
+    match = re.search(r'(A{' + str(min_len) + r',})', seq)
     if match:
         start = match.start()
         end = match.end()
