@@ -62,8 +62,8 @@ with pysam.FastxFile(args.infile) as fh:
 
                 outfile.write("@%s\n%s\n+\n%s\n" % (record.name, sequence, quality))
             else:
-                seq = record.sequence[:-200:]
-                m=regex.findall("(AAAAAAAAAAAAAAA){e<=0}", str(seq))
+                seq = record.sequence[-300:]
+                m=regex.findall("(AAAAAAAAAAAA){e<=0}", str(seq))
                 if m:
                     n +=1
                     outfile.write("@%s\n%s\n+\n%s\n" % (record.name, record.sequence, record.quality))

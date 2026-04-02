@@ -187,7 +187,7 @@ def polya_umi(infile, outfile):
         statement = """python %(PYTHON_ROOT)s/polya_umi_nocorrect.py --infile=%(infile)s --outname=%(outfile)s """
 
     else:
-        statement = '''python %(PYTHON_ROOT)s/polya_umi.py --infile=%(infile)s --outname=%(outfile)s --errors=%(error_removal)s'''
+        statement = '''python %(PYTHON_ROOT)s/n_polya_umi.py --infile=%(infile)s --outname=%(outfile)s --errors=%(error_removal)s'''
 
     P.run(statement, job_options='-t 24:00:00')
 
@@ -228,9 +228,9 @@ def mapping_trans(infile, outfile):
     writes the output to the specified outfile.
     '''
 
-    statement = '''minimap2 -ax map-ont -p 0.9 --end-bonus 10 -N 3 %(cdna_fasta)s %(infile)s  > %(outfile)s 2> %(outfile)s.log'''
+    statement = '''minimap2 -ax map-ont -t 8 -p 0.9 --end-bonus 10 -N 3 %(cdna_fasta)s %(infile)s  > %(outfile)s 2> %(outfile)s.log'''
 
-    P.run(statement, job_options='-t 48:00:00')
+    P.run(statement, job_options='-t 48:00:00', job_memory='4G', job_threads=8)
 
 
 @transform(mapping_trans,
@@ -276,7 +276,7 @@ def count_trans(infile, outfile):
 
     statement = '''umi_tools count --per-gene --gene-tag=XT -I %(infile)s -S %(outfile)s'''
 
-    P.run(statement, job_options='-t 24:00:00')
+    P.run(statement, job_options='-t 96:00:00')
 
 
 @transform(xt_tag,
@@ -291,7 +291,7 @@ def count_trans_unique(infile, outfile):
 
     statement = '''umi_tools count --per-gene --method=unique --gene-tag=XT -I %(infile)s -S %(outfile)s'''
 
-    P.run(statement, job_options='-t 24:00:00')
+    P.run(statement, job_options='-t 48:00:00')
 
 
 @transform(xt_tag,
@@ -308,7 +308,7 @@ def count_trans_noumis(infile, outfile):
 
     statement = '''python %(PYTHON_ROOT)s/trans_count.py --infile=%(infile)s --outfile=%(outfile)s'''
 
-    P.run(statement, job_options='-t 24:00:00')
+    P.run(statement, job_options='-t 48:00:00')
 
 
 @merge(count_trans, "counts_trans.dir/counts.tsv.gz")
@@ -371,9 +371,9 @@ def mapping_gene(infile, outfile):
         statement = """minimap2 -ax splice  -k 14 --split-prefix %(name)s --sam-hit-only --secondary=no --junc-bed %(junc_bed)s %(genome_fasta)s %(infile)s > %(outfile)s  2> %(outfile)s.log"""
 
     else:
-        statement = '''minimap2 -ax splice  -k 14 --sam-hit-only --secondary=no --junc-bed %(junc_bed)s %(genome_fasta)s %(infile)s > %(outfile)s  2> %(outfile)s.log'''
+        statement = '''minimap2 -ax splice -t 16 -k 14 --sam-hit-only --secondary=no --junc-bed %(junc_bed)s %(genome_fasta)s %(infile)s > %(outfile)s  2> %(outfile)s.log'''
 
-    P.run(statement, job_memory="60G", job_options='-t 72:00:00')
+    P.run(statement, job_memory='4G', job_options='-t 36:00:00', job_threads=16)
 
 
 @transform(mapping_gene,
@@ -425,7 +425,7 @@ def count_gene(infile, outfile):
 
     statement = '''umi_tools count --per-gene --gene-tag=XT -I %(infile)s -S %(outfile)s'''
 
-    P.run(statement, job_options='-t 24:00:00')
+    P.run(statement, job_options='-t 48:00:00')
 
 
 @merge(count_gene, "counts_genes.dir/counts_gene.tsv.gz")
@@ -445,7 +445,7 @@ def count_gene_unique(infile, outfile):
 
     statement = '''umi_tools count --per-gene --gene-tag=XT --method=unique -I %(infile)s -S %(outfile)s'''
 
-    P.run(statement, job_options='-t 24:00:00')
+    P.run(statement, job_options='-t 36:00:00')
 
 
 @merge(count_gene_unique, "counts_genes.dir/gene_counts_unique.tsv.gz")

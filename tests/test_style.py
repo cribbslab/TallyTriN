@@ -1,6 +1,7 @@
 import pycodestyle
 import glob
 import os
+import pytest
 
 # DIRECTORIES to examine
 EXPRESSIONS = (
@@ -27,24 +28,21 @@ IGNORE = {
 }
 
 
-def check_style(filename):
-    '''check style of filename.'''
+def _collect_style_files():
+    '''collect all Python files to check.'''
+    files = []
+    for label, expression in EXPRESSIONS:
+        for f in sorted(glob.glob(expression)):
+            if not os.path.isdir(f):
+                files.append(os.path.abspath(f))
+    return files
+
+
+@pytest.mark.parametrize("filename", _collect_style_files())
+def test_style(filename):
+    '''test style of a script.'''
 
     style_guide = pycodestyle.StyleGuide(quiet=True, ignore=IGNORE)
     report = style_guide.check_files([filename])
 
-    # count errors/warnings excluding those to ignore
     assert report.total_errors == 0, f"Style violations in {filename}"
-
-
-def test_style():
-    '''test style of scripts'''
-
-    for label, expression in EXPRESSIONS:
-        files = glob.glob(expression)
-        files.sort()
-
-        for f in files:
-            if os.path.isdir(f):
-                continue
-            yield check_style, os.path.abspath(f)
